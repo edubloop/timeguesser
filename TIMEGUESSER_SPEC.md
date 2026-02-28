@@ -308,7 +308,8 @@ After automated filtering, enforce deterministic quality checks only:
   4. No hard constraints (last resort)
 - **Year weight in diversity scoring**: Year gaps are weighted at 120× (e.g., a 20-year gap contributes 2,400 to diversity score)
 - **Era-bucket balancing**: Rounds are classified into 5 era buckets (pre-1950, 1950–1979, 1980–1999, 2000–2014, 2015+). Selection strongly favors candidates from new era buckets, targeting 3–4 distinct buckets per 5-round game. New-bucket bonus: +2,000; same-bucket penalty: -1,500; per-duplicate: -350.
-- **Cache-level era quota**: No single era bucket may exceed 30% of the public cache (max 15 of 50 images). Candidates from over-quota eras are skipped during cache refill, forcing a balanced distribution of historical and modern photos.
+- **Cache-level era quota**: No single era bucket may exceed 24% of the public cache (max 12 of 50 images). Candidates from over-quota eras are skipped during cache refill, forcing a balanced distribution across decades.
+- **Band caps for gameplay feel**: Cache ingest also applies soft old/new caps to reduce over-representation of very old sequences and preserve stronger 1960s-2010s variety.
 - **Sequence alternation**: After selection, rounds are reordered to alternate between older and newer photos, preventing clusters of similar-era rounds. Multiple orderings are tested (alternation, reverse, zigzag, permutations) to find one satisfying the consecutive 30-year gap.
 - Public photo refresh should follow the same diversity policy when a suitable replacement is available
 

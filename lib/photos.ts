@@ -146,9 +146,14 @@ const DIVERSITY_YEAR_WEIGHT = 120;
 const MIN_CONSECUTIVE_YEAR_GAP = 30;
 
 /** Maximum images per era bucket in the public cache (prevents modern-era domination) */
-const MAX_CACHE_PER_ERA = 15;
+const MAX_CACHE_PER_ERA = 12;
+
+/** Soft band caps to avoid over-dominance by very old images. */
+const MAX_CACHE_OLDER_BAND = 14;
+const MAX_CACHE_NEWER_BAND = 20;
 
 type EraBucket = 'pre_1950' | 'y1950_1979' | 'y1980_1999' | 'y2000_2014' | 'y2015_plus';
+type AgeBand = 'older' | 'middle' | 'newer';
 
 const CACHE_STORAGE_KEY = 'timeguesser.public.cache.v3';
 
@@ -166,35 +171,35 @@ const EMPTY_CACHE_STATE: CacheState = {
 // geocoded street photography — much higher quality than generic decade cats.
 const WIKIMEDIA_ROOT_CATEGORIES = [
   'Category:Street scenes',
-  'Category:Street scenes in the 1960s',
+  'Category:Street scenes in the 2010s',
   'Category:Streets by country',
-  'Category:Street scenes in the 1930s',
+  'Category:Street scenes in the 1960s',
   'Category:Street photography by city',
-  'Category:Street scenes in the 1970s',
+  'Category:Street scenes in the 2000s',
   'Category:Road signs by country',
-  'Category:Street scenes in the 1900s',
+  'Category:Street scenes in the 1970s',
   'Category:Traffic signs by country',
   'Category:Street scenes in the 1980s',
   'Category:Bus stops by country',
-  'Category:Street scenes in the 1940s',
-  'Category:Railway stations by country',
-  'Category:Street scenes in the 1890s',
-  'Category:Buildings by country',
-  'Category:Street scenes in the 1950s',
-  'Category:Storefronts',
-  'Category:Street scenes in the 1910s',
-  'Category:Markets by country',
-  'Category:Street scenes in the 1920s',
-  'Category:People by country',
   'Category:Street scenes in the 1990s',
+  'Category:Railway stations by country',
+  'Category:Street scenes in the 1950s',
+  'Category:Buildings by country',
+  'Category:Street scenes in the 2020s',
+  'Category:Storefronts',
+  'Category:Street scenes in the 1940s',
+  'Category:Markets by country',
+  'Category:Street scenes in the 1930s',
+  'Category:People by country',
+  'Category:Street scenes in the 1920s',
   'Category:Crowds',
-  'Category:Street scenes in the 1870s',
+  'Category:Street scenes in the 1910s',
   'Category:Festivals by country',
-  'Category:Street scenes in the 1880s',
+  'Category:Street scenes in the 1900s',
   'Category:Parades',
-  'Category:Street scenes by decade',
+  'Category:Historic street scenes',
   'Category:Cityscapes by country',
-  'Category:Black-and-white photographs of streets',
+  'Category:Street scenes by decade',
   'Category:Skylines by country',
   'Category:Parks by country',
   'Category:Harbours by country',
@@ -283,6 +288,12 @@ function eraBucket(year: number): EraBucket {
   if (year < 2000) return 'y1980_1999';
   if (year < 2015) return 'y2000_2014';
   return 'y2015_plus';
+}
+
+function ageBand(year: number): AgeBand {
+  if (year < 1950) return 'older';
+  if (year < 2000) return 'middle';
+  return 'newer';
 }
 
 function parseYear(value: unknown): number | null {
@@ -732,6 +743,51 @@ function uniqueEraBucketCount(rounds: RoundData[]): number {
   return new Set(rounds.map((round) => eraBucket(round.year))).size;
 }
 
+function ageBandCounts(rounds: RoundData[]): Record<AgeBand, number> {
+  const counts: Record<AgeBand, number> = { older: 0, middle: 0, newer: 0 };
+  for (const round of rounds) {
+    counts[ageBand(round.year)] += 1;
+  }
+  return counts;
+}
+
+function maxAgeBandRun(rounds: RoundData[]): number {
+  if (rounds.length === 0) return 0;
+  let maxRun = 1;
+  let run = 1;
+  for (let i = 1; i < rounds.length; i++) {
+    if (ageBand(rounds[i].year) === ageBand(rounds[i - 1].year)) {
+      run += 1;
+      maxRun = Math.max(maxRun, run);
+    } else {
+      run = 1;
+    }
+  }
+  return maxRun;
+}
+
+function meetsBandMixConstraints(selected: RoundData[], pool: RoundData[], targetCount: number): boolean {
+  if (targetCount < 5) return true;
+
+  const selectedCounts = ageBandCounts(selected);
+  const poolCounts = ageBandCounts(pool);
+
+  const olderAvailable = poolCounts.older > 0;
+  const middleAvailable = poolCounts.middle > 0;
+  const newerAvailable = poolCounts.newer > 0;
+
+  // If a band is available in pool, require at least one pick from it.
+  if (olderAvailable && selectedCounts.older < 1) return false;
+  if (middleAvailable && selectedCounts.middle < 1) return false;
+  if (newerAvailable && selectedCounts.newer < 1) return false;
+
+  // Keep games less predictable: avoid heavy very-old runs and over-clustering.
+  if (selectedCounts.older > 2) return false;
+  if (maxAgeBandRun(selected) > 2) return false;
+
+  return true;
+}
+
 function isRoundCompatible(
   candidate: RoundData,
   selected: RoundData[],
@@ -927,7 +983,7 @@ function selectDiverseRounds(
       const trimmed = selected.slice(0, count);
       // Try to find an ordering that meets the consecutive year gap target
       const ordered = findBestConsecutiveOrdering(trimmed, MIN_CONSECUTIVE_YEAR_GAP);
-      if (ordered) {
+      if (ordered && meetsBandMixConstraints(ordered, candidates, count)) {
         return { selected: ordered, stageLabel: stage.label };
       }
       // If no ordering satisfies the gap, still return with default alternation
@@ -939,8 +995,12 @@ function selectDiverseRounds(
   for (const stage of ROUND_DIVERSITY_STAGES) {
     const selected = selectRoundsWithStage(candidates, count, stage);
     if (selected.length >= count) {
+      const alternated = alternateRoundsByYear(selected.slice(0, count));
+      if (!meetsBandMixConstraints(alternated, candidates, count)) {
+        continue;
+      }
       return {
-        selected: alternateRoundsByYear(selected.slice(0, count)),
+        selected: alternated,
         stageLabel: `${stage.label}_no_consecutive_gap`,
       };
     }
@@ -1296,6 +1356,16 @@ async function refillPublicCache(
         continue;
       }
 
+      // Band caps: keep old/new from crowding out middle decades.
+      const candidateBand = ageBand(candidate.year);
+      const bandCounts = ageBandCounts(nextImages.map(candidateToRound));
+      if (candidateBand === 'older' && bandCounts.older >= MAX_CACHE_OLDER_BAND) {
+        continue;
+      }
+      if (candidateBand === 'newer' && bandCounts.newer >= MAX_CACHE_NEWER_BAND) {
+        continue;
+      }
+
       const validation = validatePublicCandidate(candidate, filters);
       if (validation.hardFail) {
         for (const reason of validation.reasons) {
@@ -1342,9 +1412,11 @@ async function refillPublicCache(
 
   if (__DEV__ && diagnosticsEnabled) {
     const eraDistribution: Record<string, number> = {};
+    const bandDistribution: Record<AgeBand, number> = { older: 0, middle: 0, newer: 0 };
     for (const img of trimmed) {
       const era = eraBucket(img.year);
       eraDistribution[era] = (eraDistribution[era] ?? 0) + 1;
+      bandDistribution[ageBand(img.year)] += 1;
     }
 
     console.info('[photos] cache refill diagnostics', {
@@ -1358,6 +1430,7 @@ async function refillPublicCache(
       rejectedByReason,
       cacheSize: trimmed.length,
       eraDistribution,
+      bandDistribution,
       wikimediaCategoryIndex,
       usedCategories,
     });
@@ -1451,6 +1524,8 @@ async function getPublicRoundsFromCache(
         minPairwiseDistanceKmAchieved: minDistanceForRounds(selected),
         geoBucketCount: uniqueGeoBucketCount(selected),
         eraBucketCount: uniqueEraBucketCount(selected),
+        bandDistribution: ageBandCounts(selected),
+        maxSameBandRun: maxAgeBandRun(selected),
         relaxationStageUsed: stageLabel,
       });
     }
