@@ -2,6 +2,7 @@ export const Spacing = {
   xs: 4,
   sm: 8,
   md: 12,
+  buttonY: 14,
   lg: 16,
   xl: 24,
   xxl: 32,
@@ -23,7 +24,9 @@ export const Layout = {
 } as const;
 
 export const TypeScale = {
+  displayLg: { fontSize: 52, lineHeight: 62, fontWeight: '800' as const },
   display: { fontSize: 34, lineHeight: 40, fontWeight: '700' as const },
+  displaySm: { fontSize: 28, lineHeight: 34, fontWeight: '700' as const },
   title1: { fontSize: 28, lineHeight: 34, fontWeight: '700' as const },
   title2: { fontSize: 22, lineHeight: 28, fontWeight: '600' as const },
   title3: { fontSize: 20, lineHeight: 25, fontWeight: '600' as const },

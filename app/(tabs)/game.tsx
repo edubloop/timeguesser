@@ -661,7 +661,7 @@ const styles = StyleSheet.create({
   },
   navButton: {
     paddingHorizontal: Spacing.xxl,
-    paddingVertical: 14,
+    paddingVertical: Spacing.buttonY,
     borderRadius: Radius.sheet,
   },
   navButtonText: {
@@ -797,7 +797,6 @@ const styles = StyleSheet.create({
   },
   hintBadgeText: {
     ...TypeScale.caption2,
-    fontSize: 10,
     fontWeight: '700',
   },
   hintToggle: {

@@ -6,7 +6,7 @@ import { Text, View, useThemeColor } from '@/components/Themed';
 import { Spacing, Radius, TypeScale } from '@/constants/theme';
 import { useTheme, ThemePreference } from '@/lib/ThemeContext';
 import { useSettings, MapProvider, TimerOption } from '@/lib/SettingsContext';
-import { PhotoSourcePreference, PublicSelectionFilters } from '@/lib/photos';
+import { PhotoSourcePreference, PublicSelectionFilters, PUBLIC_CACHE_TARGET } from '@/lib/photos';
 const themeOptions: { label: string; value: ThemePreference }[] = [
   { label: 'System', value: 'system' },
   { label: 'Light', value: 'light' },
@@ -227,7 +227,7 @@ export default function SettingsScreen() {
               <Text style={styles.sourceBadgeText}>Wikimedia</Text>
             </View>
             <Text style={[styles.helper, { color: secondaryText }]}> 
-              Public rounds use Wikimedia with local cache target of 50 assets.
+              Public rounds use Wikimedia with local cache target of {PUBLIC_CACHE_TARGET} assets.
             </Text>
 
             <View style={[styles.cacheStateCard, { borderColor, backgroundColor: tintSubtle }]}> 
@@ -254,7 +254,7 @@ export default function SettingsScreen() {
                 style={[styles.actionGhost, styles.singleAction, { borderColor, opacity: cacheActionLoading ? 0.6 : 1 }]}
                 onPress={handleFillPublicCache}
                 disabled={cacheActionLoading}>
-                <Text style={styles.actionGhostText}>Fill Cache to 50 Unseen</Text>
+                <Text style={styles.actionGhostText}>Fill Cache to {PUBLIC_CACHE_TARGET} Unseen</Text>
               </Pressable>
 
               <Pressable

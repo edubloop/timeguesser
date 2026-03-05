@@ -84,7 +84,7 @@ export default function PhotoViewerScreen() {
           </Pressable>
         ) : (
           <View style={[styles.photoFrame, { backgroundColor: 'transparent' }]}>
-            <Text style={[styles.fallback, { color: '#fff' }]}>
+            <Text style={[styles.fallback, { color: inverseText }]}>
               No photo available.
             </Text>
           </View>
@@ -97,14 +97,14 @@ export default function PhotoViewerScreen() {
           onPress={handleClose}
           accessibilityRole="button"
           accessibilityLabel="Close photo viewer">
-          <FontAwesome name="close" size={20} color="#fff" />
+          <FontAwesome name="close" size={20} color={inverseText} />
         </Pressable>
         <Pressable
           style={styles.iconButton}
           onPress={handleShare}
           accessibilityRole="button"
           accessibilityLabel="Share photo">
-          <FontAwesome name="share-alt" size={18} color="#fff" />
+          <FontAwesome name="share-alt" size={18} color={inverseText} />
         </Pressable>
       </View>
 

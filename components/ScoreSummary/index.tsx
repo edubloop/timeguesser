@@ -149,10 +149,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   totalScore: {
-    ...TypeScale.display,
-    fontSize: 52,
-    lineHeight: 62,
-    fontWeight: '800',
+    ...TypeScale.displayLg,
     textAlign: 'center',
   },
   maxScore: {

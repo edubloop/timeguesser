@@ -15,6 +15,7 @@ import {
   clearPublicImageCache,
   getPublicCacheSummary,
   fillPublicImageCacheToTarget,
+  PUBLIC_CACHE_TARGET,
 } from '@/lib/photos';
 import { LlmProvider, PROVIDER_MODELS } from '@/lib/hints';
 
@@ -120,7 +121,7 @@ const SettingsContext = createContext<SettingsContextValue>({
     seenImagesRecorded: 0,
     unseenImagesAvailable: 0,
     lastUpdatedAt: null,
-    targetUnseen: 50,
+    targetUnseen: PUBLIC_CACHE_TARGET,
     targetReached: false,
   }),
   hintProvider: DEFAULTS.hintProvider,
@@ -373,7 +374,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       publicImageSource,
       publicSelectionFilters,
       diagnosticsEnabled: photoDiagnosticsEnabled,
-      targetUnseen: 50,
+      targetUnseen: PUBLIC_CACHE_TARGET,
     });
   }, [publicImageSource, publicSelectionFilters, photoDiagnosticsEnabled]);
 

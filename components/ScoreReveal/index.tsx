@@ -178,8 +178,8 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
-    marginBottom: 4,
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   locationName: {
     flex: 1,
@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
   toggleButton: {
     borderWidth: 1,
     borderRadius: Radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
     marginTop: 1,
   },
   toggleButtonText: {
@@ -198,27 +198,26 @@ const styles = StyleSheet.create({
   },
   metaLine: {
     ...TypeScale.caption1,
-    marginBottom: 6,
+    marginBottom: Spacing.sm,
   },
   collapsedRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 4,
+    paddingTop: Spacing.xs,
   },
   collapsedLabel: {
     ...TypeScale.subhead,
   },
   collapsedValue: {
-    ...TypeScale.display,
-    fontSize: 28,
+    ...TypeScale.displaySm,
     fontVariant: ['tabular-nums'],
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: Spacing.xs,
   },
   rowLabel: {
     ...TypeScale.subhead,
@@ -229,13 +228,13 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    marginVertical: 10,
+    marginVertical: Spacing.md,
   },
   scoreRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 3,
+    paddingVertical: Spacing.xs,
   },
   scoreLabel: {
     ...TypeScale.caption1,
@@ -250,7 +249,6 @@ const styles = StyleSheet.create({
   },
   totalValue: {
     ...TypeScale.display,
-    fontSize: 34,
     textAlign: 'right',
   },
 });
