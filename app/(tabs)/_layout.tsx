@@ -34,7 +34,8 @@ export default function TabLayout() {
         },
         headerTintColor: palette.tint,
         headerShown: true,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{

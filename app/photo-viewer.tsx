@@ -1,12 +1,5 @@
 import { useEffect, useRef } from 'react';
-import {
-  StyleSheet,
-  Pressable,
-  Animated,
-  PanResponder,
-  ScrollView,
-  Share,
-} from 'react-native';
+import { StyleSheet, Pressable, Animated, PanResponder, ScrollView, Share } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -71,39 +64,43 @@ export default function PhotoViewerScreen() {
   return (
     <Animated.View
       style={[styles.container, { transform: [{ translateY }] }]}
-      {...panResponder.panHandlers}>
+      {...panResponder.panHandlers}
+    >
       <ScrollView
         style={styles.photoScroll}
         contentContainerStyle={styles.photoContent}
         minimumZoomScale={1}
         maximumZoomScale={4}
-        bouncesZoom>
+        bouncesZoom
+      >
         {uri ? (
           <Pressable style={styles.photoFrame} onLongPress={handleShare} delayLongPress={300}>
             <Image source={{ uri }} contentFit="contain" style={styles.photo} transition={180} />
           </Pressable>
         ) : (
           <View style={[styles.photoFrame, { backgroundColor: 'transparent' }]}>
-            <Text style={[styles.fallback, { color: inverseText }]}>
-              No photo available.
-            </Text>
+            <Text style={[styles.fallback, { color: inverseText }]}>No photo available.</Text>
           </View>
         )}
       </ScrollView>
 
-      <View style={[styles.topBar, { backgroundColor: 'transparent', top: insets.top + Spacing.lg }]}>
+      <View
+        style={[styles.topBar, { backgroundColor: 'transparent', top: insets.top + Spacing.lg }]}
+      >
         <Pressable
           style={styles.iconButton}
           onPress={handleClose}
           accessibilityRole="button"
-          accessibilityLabel="Close photo viewer">
+          accessibilityLabel="Close photo viewer"
+        >
           <FontAwesome name="close" size={20} color={inverseText} />
         </Pressable>
         <Pressable
           style={styles.iconButton}
           onPress={handleShare}
           accessibilityRole="button"
-          accessibilityLabel="Share photo">
+          accessibilityLabel="Share photo"
+        >
           <FontAwesome name="share-alt" size={18} color={inverseText} />
         </Pressable>
       </View>

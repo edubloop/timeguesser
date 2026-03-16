@@ -23,12 +23,7 @@ import YearPicker from '@/components/YearPicker';
 import RoundTimer from '@/components/RoundTimer';
 import ScoreReveal from '@/components/ScoreReveal';
 import { useSettings } from '@/lib/SettingsContext';
-import {
-  generateHint,
-  getHintPreview,
-  HintResult,
-  HintTier,
-} from '@/lib/hints';
+import { generateHint, getHintPreview, HintResult, HintTier } from '@/lib/hints';
 import { getReplacementPublicRound } from '@/lib/photos';
 import { formatWholeNumber } from '@/lib/numberFormat';
 import { Layout, Spacing, Radius, TypeScale } from '@/constants/theme';
@@ -131,10 +126,9 @@ export default function GameScreen() {
           <Text style={styles.emptyText}>Start a game from the Home screen</Text>
           <Pressable
             style={[styles.navButton, { backgroundColor: tint }]}
-            onPress={() => router.replace('/(tabs)')}>
-            <Text style={[styles.navButtonText, { color: inverseText }]}>
-              Go Home
-            </Text>
+            onPress={() => router.replace('/(tabs)')}
+          >
+            <Text style={[styles.navButtonText, { color: inverseText }]}>Go Home</Text>
           </Pressable>
         </View>
       </View>
@@ -395,7 +389,9 @@ export default function GameScreen() {
         <View style={[styles.yearRevealBanner, { backgroundColor: cardBg, borderColor }]}>
           <Text style={styles.yearRevealTitle}>Year Revealed (Hint Tier 5)</Text>
           <Text style={[styles.yearRevealValue, { color: tint }]}>{revealedYear}</Text>
-          <Text style={[styles.yearRevealWarning, { color: scorePoor }]}>Round score will be 0</Text>
+          <Text style={[styles.yearRevealWarning, { color: scorePoor }]}>
+            Round score will be 0
+          </Text>
         </View>
       )}
 
@@ -405,7 +401,8 @@ export default function GameScreen() {
           contentContainerStyle={styles.photoContent}
           minimumZoomScale={1}
           maximumZoomScale={3}
-          bouncesZoom>
+          bouncesZoom
+        >
           <Pressable onPress={handlePhotoTap} style={styles.photoPressable}>
             <Image
               source={{ uri: currentRoundData.imageUri }}
@@ -423,7 +420,8 @@ export default function GameScreen() {
             <Pressable
               style={[styles.refreshButton, { borderColor, backgroundColor: cardBg }]}
               disabled={refreshLoading}
-              onPress={handleRefreshPhoto}>
+              onPress={handleRefreshPhoto}
+            >
               {refreshLoading ? (
                 <ActivityIndicator size="small" color={tint} />
               ) : (
@@ -451,12 +449,14 @@ export default function GameScreen() {
           <View
             style={[
               styles.searchOverlay,
-              { backgroundColor: 'transparent', top: insets.top + Spacing.md, left: Layout.safeAreaPadding },
-            ]}>
-            <SearchBar
-              onLocationSelected={handleSearchLocation}
-              onSearch={handleSearchQuery}
-            />
+              {
+                backgroundColor: 'transparent',
+                top: insets.top + Spacing.md,
+                left: Layout.safeAreaPadding,
+              },
+            ]}
+          >
+            <SearchBar onLocationSelected={handleSearchLocation} onSearch={handleSearchQuery} />
           </View>
         )}
 
@@ -468,26 +468,30 @@ export default function GameScreen() {
               right: Layout.safeAreaPadding,
               bottom: insets.bottom + Spacing.lg,
             },
-          ]}>
+          ]}
+        >
           <Pressable
             style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
             accessibilityRole="button"
             accessibilityLabel="Zoom in"
-            onPress={() => mapRef.current?.zoomIn()}>
+            onPress={() => mapRef.current?.zoomIn()}
+          >
             <Text style={styles.zoomSymbol}>+</Text>
           </Pressable>
           <Pressable
             style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
             accessibilityRole="button"
             accessibilityLabel="Zoom out"
-            onPress={() => mapRef.current?.zoomOut()}>
+            onPress={() => mapRef.current?.zoomOut()}
+          >
             <Text style={styles.zoomSymbol}>-</Text>
           </Pressable>
           <Pressable
             style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
             accessibilityRole="button"
             accessibilityLabel="Reset map view"
-            onPress={() => mapRef.current?.resetView()}>
+            onPress={() => mapRef.current?.resetView()}
+          >
             <FontAwesome name="globe" size={16} color={tint} />
           </Pressable>
         </View>
@@ -497,8 +501,13 @@ export default function GameScreen() {
           <View
             style={[
               styles.hintOverlay,
-              { backgroundColor: 'transparent', top: insets.top + Spacing.md, right: Layout.safeAreaPadding },
-            ]}>
+              {
+                backgroundColor: 'transparent',
+                top: insets.top + Spacing.md,
+                right: Layout.safeAreaPadding,
+              },
+            ]}
+          >
             <View style={[styles.hintButtonRow, { backgroundColor: 'transparent' }]}>
               {/* Main hint action button */}
               <Pressable
@@ -506,12 +515,11 @@ export default function GameScreen() {
                 onPress={handleHintButtonPress}
                 accessibilityRole="button"
                 accessibilityLabel="Get hint"
-                disabled={hintsUsed >= MAX_HINTS || guessLocked}>
+                disabled={hintsUsed >= MAX_HINTS || guessLocked}
+              >
                 <FontAwesome name="lightbulb-o" size={20} color={tint} />
-                <View style={[styles.hintBadge, { backgroundColor: tint }]}> 
-                  <Text style={[styles.hintBadgeText, { color: inverseText }]}>
-                    {hintsUsed}
-                  </Text>
+                <View style={[styles.hintBadge, { backgroundColor: tint }]}>
+                  <Text style={[styles.hintBadgeText, { color: inverseText }]}>{hintsUsed}</Text>
                 </View>
               </Pressable>
 
@@ -519,7 +527,8 @@ export default function GameScreen() {
               {hintHistory.length > 0 && (
                 <Pressable
                   style={[styles.hintToggle, { backgroundColor: cardBg, borderColor }]}
-                  onPress={() => setShowHintHistory((prev) => !prev)}>
+                  onPress={() => setShowHintHistory((prev) => !prev)}
+                >
                   <FontAwesome
                     name={showHintHistory ? 'chevron-up' : 'chevron-down'}
                     size={10}
@@ -534,15 +543,15 @@ export default function GameScreen() {
               <View style={[styles.hintCard, { backgroundColor: tintSubtle, borderColor }]}>
                 <ScrollView
                   style={styles.hintHistoryScroll}
-                  contentContainerStyle={styles.hintHistoryContent}>
+                  contentContainerStyle={styles.hintHistoryContent}
+                >
                   {hintHistory.map((hint) => (
                     <View
                       key={`${hint.tier}-${hint.type}`}
-                      style={[styles.hintItem, { borderTopColor: borderColor }]}>
+                      style={[styles.hintItem, { borderTopColor: borderColor }]}
+                    >
                       <Text style={styles.hintTierLabel}>Tier {hint.tier}</Text>
-                      <Text style={[styles.hintText, { color: secondaryText }]}>
-                        {hint.text}
-                      </Text>
+                      <Text style={[styles.hintText, { color: secondaryText }]}>{hint.text}</Text>
                     </View>
                   ))}
                 </ScrollView>
@@ -588,34 +597,36 @@ export default function GameScreen() {
         transparent
         animationType="fade"
         statusBarTranslucent
-        onRequestClose={() => setShowHintModal(false)}>
+        onRequestClose={() => setShowHintModal(false)}
+      >
         <Pressable
           style={[styles.modalBackdrop, { backgroundColor: overlayColor }]}
-          onPress={() => setShowHintModal(false)}>
+          onPress={() => setShowHintModal(false)}
+        >
           <Pressable
             style={[styles.hintModal, { backgroundColor: bgColor, borderColor }]}
-            onPress={() => {}}>
+            onPress={() => {}}
+          >
             {hintPreview && (
               <>
                 <Text style={styles.hintModalTitle}>
                   Hint {hintPreview.tier} of {MAX_HINTS}
                 </Text>
-                <Text style={[styles.hintModalSubtitle, { color: tint }]}>
-                  {hintPreview.title}
-                </Text>
+                <Text style={[styles.hintModalSubtitle, { color: tint }]}>{hintPreview.title}</Text>
                 <Text style={[styles.hintModalDesc, { color: secondaryText }]}>
                   {hintPreview.description}
                 </Text>
                 <View style={[styles.hintModalCostRow, { backgroundColor: 'transparent' }]}>
                   <Text style={styles.hintModalCostLabel}>Cost:</Text>
-                    <Text
-                      style={[
-                        styles.hintModalCostValue,
-                        { color: hintPreview.cost === 0 ? tint : scorePoor },
-                      ]}>
-                      {hintPreview.costLabel}
-                    </Text>
-                  </View>
+                  <Text
+                    style={[
+                      styles.hintModalCostValue,
+                      { color: hintPreview.cost === 0 ? tint : scorePoor },
+                    ]}
+                  >
+                    {hintPreview.costLabel}
+                  </Text>
+                </View>
                 {hintPreview.scoringWarning && (
                   <Text style={[styles.hintModalWarning, { color: scorePoor }]}>
                     {hintPreview.scoringWarning}
@@ -624,12 +635,14 @@ export default function GameScreen() {
                 <View style={[styles.hintModalButtons, { backgroundColor: 'transparent' }]}>
                   <Pressable
                     style={[styles.hintModalCancel, { borderColor }]}
-                    onPress={() => setShowHintModal(false)}>
+                    onPress={() => setShowHintModal(false)}
+                  >
                     <Text style={styles.hintModalConfirmText}>Cancel</Text>
                   </Pressable>
                   <Pressable
                     style={[styles.hintModalConfirm, { backgroundColor: tint }]}
-                    onPress={handleGetHint}>
+                    onPress={handleGetHint}
+                  >
                     <Text style={[styles.hintModalConfirmText, { color: inverseText }]}>
                       Get Hint
                     </Text>

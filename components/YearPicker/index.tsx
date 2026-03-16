@@ -68,7 +68,8 @@ export default function YearPicker({ visible, onConfirm, onCancel }: YearPickerP
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={handleCancel}>
+      onRequestClose={handleCancel}
+    >
       <RNView style={[styles.overlay, { backgroundColor: overlayColor }]}>
         {/* Backdrop - tapping dismisses keyboard only */}
         <Pressable style={styles.backdrop} onPress={() => Keyboard.dismiss()} />
@@ -77,11 +78,13 @@ export default function YearPicker({ visible, onConfirm, onCancel }: YearPickerP
           style={styles.avoidingView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={0}
-          pointerEvents="box-none">
+          pointerEvents="box-none"
+        >
           <Pressable
             // Block taps from falling through to the backdrop
             onPress={() => {}}
-            style={[styles.sheet, { backgroundColor: bgColor, borderColor }]}>
+            style={[styles.sheet, { backgroundColor: bgColor, borderColor }]}
+          >
             <RNView style={[styles.handle, { backgroundColor: borderColor }]} />
 
             <Text style={styles.title}>What year was this photo taken?</Text>
@@ -91,8 +94,7 @@ export default function YearPicker({ visible, onConfirm, onCancel }: YearPickerP
               style={[
                 styles.yearInput,
                 {
-                  borderColor:
-                    isValid || normalizedYearText.length === 0 ? borderColor : scorePoor,
+                  borderColor: isValid || normalizedYearText.length === 0 ? borderColor : scorePoor,
                   color: textColor,
                 },
               ]}
@@ -122,11 +124,15 @@ export default function YearPicker({ visible, onConfirm, onCancel }: YearPickerP
               <Pressable
                 style={[
                   styles.confirmBtn,
-                  { backgroundColor: isValid ? tint : backgroundTertiary, opacity: isValid ? 1 : 0.5 },
+                  {
+                    backgroundColor: isValid ? tint : backgroundTertiary,
+                    opacity: isValid ? 1 : 0.5,
+                  },
                 ]}
                 onPress={handleConfirm}
                 hitSlop={12}
-                disabled={!isValid}>
+                disabled={!isValid}
+              >
                 <Text style={[styles.confirmText, { color: isValid ? inverseText : tertiaryText }]}>
                   Confirm
                 </Text>
@@ -139,7 +145,8 @@ export default function YearPicker({ visible, onConfirm, onCancel }: YearPickerP
       {Platform.OS === 'ios' && (
         <InputAccessoryView nativeID={INPUT_ACCESSORY_ID}>
           <RNView
-            style={[styles.accessory, { backgroundColor: bgColor, borderTopColor: borderColor }]}>
+            style={[styles.accessory, { backgroundColor: bgColor, borderTopColor: borderColor }]}
+          >
             <Pressable onPress={handleCancel} hitSlop={8}>
               <Text style={[styles.accessoryBtn, { color: secondaryText }]}>Cancel</Text>
             </Pressable>
@@ -149,7 +156,8 @@ export default function YearPicker({ visible, onConfirm, onCancel }: YearPickerP
                   styles.accessoryBtn,
                   styles.accessoryConfirm,
                   { color: isValid ? tint : tertiaryText },
-                ]}>
+                ]}
+              >
                 Confirm
               </Text>
             </Pressable>

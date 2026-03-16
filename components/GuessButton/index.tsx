@@ -39,11 +39,9 @@ export default function GuessButton({
         },
       ]}
       onPress={onPress}
-      disabled={disabled}>
-      <Text
-        style={[styles.text, { color: disabled ? tertiaryText : inverseText }]}>
-        {label}
-      </Text>
+      disabled={disabled}
+    >
+      <Text style={[styles.text, { color: disabled ? tertiaryText : inverseText }]}>{label}</Text>
     </Pressable>
   );
 }

@@ -17,7 +17,11 @@ interface ScoreRevealProps {
 
 const COUNTER_DURATION = 600;
 
-export default function ScoreReveal({ result, onRevealComplete, bottomInset = 0 }: ScoreRevealProps) {
+export default function ScoreReveal({
+  result,
+  onRevealComplete,
+  bottomInset = 0,
+}: ScoreRevealProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const tint = useThemeColor({}, 'tint');
@@ -47,7 +51,15 @@ export default function ScoreReveal({ result, onRevealComplete, bottomInset = 0 
   }, []);
 
   return (
-    <View style={[styles.container, { backgroundColor: 'transparent', paddingBottom: Math.max(Spacing.md, bottomInset + Spacing.sm) }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: 'transparent',
+          paddingBottom: Math.max(Spacing.md, bottomInset + Spacing.sm),
+        },
+      ]}
+    >
       <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
         {/* Header: title + toggle button */}
         <View style={[styles.headerRow, { backgroundColor: 'transparent' }]}>
@@ -56,7 +68,8 @@ export default function ScoreReveal({ result, onRevealComplete, bottomInset = 0 
           </Text>
           <Pressable
             style={[styles.toggleButton, { borderColor }]}
-            onPress={() => setIsExpanded((prev) => !prev)}>
+            onPress={() => setIsExpanded((prev) => !prev)}
+          >
             <Text style={styles.toggleButtonText}>
               {isExpanded ? 'Hide details' : 'Show details'}
             </Text>

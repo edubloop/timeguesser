@@ -57,7 +57,9 @@ export default function AnimatedCounter({
     };
   }, [value, duration, delay]);
 
-  return <Text style={[styles.text, style]}>{`${prefix}${formatWholeNumber(current)}${suffix}`}</Text>;
+  return (
+    <Text style={[styles.text, style]}>{`${prefix}${formatWholeNumber(current)}${suffix}`}</Text>
+  );
 }
 
 const styles = StyleSheet.create({

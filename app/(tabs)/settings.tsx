@@ -70,13 +70,15 @@ function OptionRow<T extends string | number>({
                 borderColor: isSelected ? tint : borderColor,
               },
             ]}
-            onPress={() => onSelect(option.value)}>
+            onPress={() => onSelect(option.value)}
+          >
             <Text
               style={[
                 styles.optionText,
                 isSelected && styles.optionTextSelected,
                 { color: isSelected ? inverseText : textColor },
-              ]}>
+              ]}
+            >
               {option.label}
             </Text>
           </Pressable>
@@ -214,60 +216,75 @@ export default function SettingsScreen() {
       <Text style={styles.sectionHeader}>Photos</Text>
       <View style={[styles.card, { backgroundColor: cardColor, borderColor }]}>
         <Text style={styles.label}>Photo Source</Text>
-        <OptionRow
-          options={photoSourceOptions}
-          selected={photoSource}
-          onSelect={setPhotoSource}
-        />
+        <OptionRow options={photoSourceOptions} selected={photoSource} onSelect={setPhotoSource} />
 
         {(photoSource === 'public' || photoSource === 'mixed') && (
           <>
             <Text style={[styles.label, styles.subLabel]}>Public Image Source</Text>
-            <View style={[styles.sourceBadge, { borderColor }]}> 
+            <View style={[styles.sourceBadge, { borderColor }]}>
               <Text style={styles.sourceBadgeText}>Wikimedia</Text>
             </View>
-            <Text style={[styles.helper, { color: secondaryText }]}> 
+            <Text style={[styles.helper, { color: secondaryText }]}>
               Public rounds use Wikimedia with local cache target of {PUBLIC_CACHE_TARGET} assets.
             </Text>
 
-            <View style={[styles.cacheStateCard, { borderColor, backgroundColor: tintSubtle }]}> 
-              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}> 
-                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>Images in cache</Text>
+            <View style={[styles.cacheStateCard, { borderColor, backgroundColor: tintSubtle }]}>
+              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}>
+                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>
+                  Images in cache
+                </Text>
                 <Text style={styles.cacheStateValue}>{cacheSummary.imagesInCache}</Text>
               </View>
-              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}> 
-                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>Seen images recorded</Text>
+              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}>
+                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>
+                  Seen images recorded
+                </Text>
                 <Text style={styles.cacheStateValue}>{cacheSummary.seenImagesRecorded}</Text>
               </View>
-              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}> 
-                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>Unseen currently available</Text>
+              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}>
+                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>
+                  Unseen currently available
+                </Text>
                 <Text style={styles.cacheStateValue}>{cacheSummary.unseenImagesAvailable}</Text>
               </View>
-              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}> 
+              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}>
                 <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>Last updated</Text>
                 <Text style={styles.cacheStateTimestamp}>{lastUpdatedLabel}</Text>
               </View>
             </View>
 
-            <View style={[styles.cacheActions, { backgroundColor: 'transparent' }]}> 
+            <View style={[styles.cacheActions, { backgroundColor: 'transparent' }]}>
               <Pressable
-                style={[styles.actionGhost, styles.singleAction, { borderColor, opacity: cacheActionLoading ? 0.6 : 1 }]}
+                style={[
+                  styles.actionGhost,
+                  styles.singleAction,
+                  { borderColor, opacity: cacheActionLoading ? 0.6 : 1 },
+                ]}
                 onPress={handleFillPublicCache}
-                disabled={cacheActionLoading}>
-                <Text style={styles.actionGhostText}>Fill Cache to {PUBLIC_CACHE_TARGET} Unseen</Text>
+                disabled={cacheActionLoading}
+              >
+                <Text style={styles.actionGhostText}>
+                  Fill Cache to {PUBLIC_CACHE_TARGET} Unseen
+                </Text>
               </Pressable>
 
               <Pressable
-                style={[styles.actionGhost, styles.singleAction, { borderColor, opacity: cacheActionLoading ? 0.6 : 1 }]}
+                style={[
+                  styles.actionGhost,
+                  styles.singleAction,
+                  { borderColor, opacity: cacheActionLoading ? 0.6 : 1 },
+                ]}
                 onPress={handleClearPublicCache}
-                disabled={cacheActionLoading}>
+                disabled={cacheActionLoading}
+              >
                 <Text style={styles.actionGhostText}>Clear Public Cache</Text>
               </Pressable>
             </View>
 
             <Pressable
               style={[styles.criteriaToggle, { borderColor }]}
-              onPress={() => setShowImageCriteria((prev) => !prev)}>
+              onPress={() => setShowImageCriteria((prev) => !prev)}
+            >
               <Text style={styles.criteriaToggleText}>Image Selection Criteria</Text>
               <FontAwesome
                 name={showImageCriteria ? 'chevron-up' : 'chevron-down'}
@@ -278,14 +295,17 @@ export default function SettingsScreen() {
 
             {showImageCriteria && (
               <>
-                <Text style={[styles.helper, { color: secondaryText }]}> 
+                <Text style={[styles.helper, { color: secondaryText }]}>
                   Evaluation mode: all filters default OFF.
                 </Text>
-                <View style={[styles.filterList, { backgroundColor: 'transparent' }]}> 
+                <View style={[styles.filterList, { backgroundColor: 'transparent' }]}>
                   {publicFilterOptions.map((filter) => {
                     const enabled = publicSelectionFilters[filter.key];
                     return (
-                      <View key={filter.key} style={[styles.filterRow, { backgroundColor: 'transparent' }]}> 
+                      <View
+                        key={filter.key}
+                        style={[styles.filterRow, { backgroundColor: 'transparent' }]}
+                      >
                         <Text style={styles.filterLabel}>{filter.label}</Text>
                         <Pressable
                           style={[
@@ -295,7 +315,8 @@ export default function SettingsScreen() {
                               borderColor,
                             },
                           ]}
-                          onPress={() => setPublicSelectionFilter(filter.key, !enabled)}>
+                          onPress={() => setPublicSelectionFilter(filter.key, !enabled)}
+                        >
                           <Text style={[styles.toggleText, enabled && { color: inverseText }]}>
                             {enabled ? 'ON' : 'OFF'}
                           </Text>
@@ -304,7 +325,7 @@ export default function SettingsScreen() {
                     );
                   })}
 
-                  <View style={[styles.filterRow, { backgroundColor: 'transparent' }]}> 
+                  <View style={[styles.filterRow, { backgroundColor: 'transparent' }]}>
                     <Text style={styles.filterLabel}>Show diagnostics</Text>
                     <Pressable
                       style={[
@@ -314,15 +335,24 @@ export default function SettingsScreen() {
                           borderColor,
                         },
                       ]}
-                      onPress={() => setPhotoDiagnosticsEnabled(!photoDiagnosticsEnabled)}>
-                      <Text style={[styles.toggleText, photoDiagnosticsEnabled && { color: inverseText }]}>
+                      onPress={() => setPhotoDiagnosticsEnabled(!photoDiagnosticsEnabled)}
+                    >
+                      <Text
+                        style={[
+                          styles.toggleText,
+                          photoDiagnosticsEnabled && { color: inverseText },
+                        ]}
+                      >
                         {photoDiagnosticsEnabled ? 'ON' : 'OFF'}
                       </Text>
                     </Pressable>
                   </View>
                 </View>
 
-                <Pressable style={[styles.resetFiltersButton, { borderColor }]} onPress={resetPublicSelectionFilters}>
+                <Pressable
+                  style={[styles.resetFiltersButton, { borderColor }]}
+                  onPress={resetPublicSelectionFilters}
+                >
                   <Text style={styles.resetFiltersText}>Reset Filters (All Off)</Text>
                 </Pressable>
               </>
@@ -330,15 +360,18 @@ export default function SettingsScreen() {
           </>
         )}
 
-        <View style={[styles.personalSection, { borderColor, backgroundColor: tintSubtle }]}> 
+        <View style={[styles.personalSection, { borderColor, backgroundColor: tintSubtle }]}>
           <Text style={styles.personalTitle}>Personal Photos</Text>
-          <Text style={[styles.helper, { color: secondaryText }]}> 
+          <Text style={[styles.helper, { color: secondaryText }]}>
             Personal photos available: {personalRounds.length}
           </Text>
 
-          <View style={[styles.actionRow, { backgroundColor: 'transparent' }]}> 
-            <Pressable style={[styles.actionButton, { backgroundColor: tint }]} onPress={handleImport}>
-              <Text style={[styles.actionText, { color: inverseText }]}> 
+          <View style={[styles.actionRow, { backgroundColor: 'transparent' }]}>
+            <Pressable
+              style={[styles.actionButton, { backgroundColor: tint }]}
+              onPress={handleImport}
+            >
+              <Text style={[styles.actionText, { color: inverseText }]}>
                 Import Personal Photos
               </Text>
             </Pressable>
@@ -369,7 +402,7 @@ export default function SettingsScreen() {
 
       <Text style={styles.sectionHeader}>Hints</Text>
       <View style={[styles.card, { backgroundColor: cardColor, borderColor }]}>
-        <View style={[styles.toggleRow, { backgroundColor: 'transparent' }]}> 
+        <View style={[styles.toggleRow, { backgroundColor: 'transparent' }]}>
           <Text style={styles.label}>Hints Enabled</Text>
           <Pressable
             style={[
@@ -379,24 +412,25 @@ export default function SettingsScreen() {
                 borderColor,
               },
             ]}
-            onPress={() => setHintsEnabled(!hintsEnabled)}>
+            onPress={() => setHintsEnabled(!hintsEnabled)}
+          >
             <Text style={[styles.toggleText, hintsEnabled && { color: inverseText }]}>
               {hintsEnabled ? 'ON' : 'OFF'}
             </Text>
           </Pressable>
         </View>
-        <Text style={[styles.helper, { color: secondaryText }]}> 
+        <Text style={[styles.helper, { color: secondaryText }]}>
           Deterministic map-based hints only: region, radius, exact location, and full answer tiers.
         </Text>
       </View>
 
       <Text style={styles.sectionHeader}>Future Improvements (Out of Scope)</Text>
-      <View style={[styles.card, { backgroundColor: cardColor, borderColor, opacity: 0.55 }]}> 
+      <View style={[styles.card, { backgroundColor: cardColor, borderColor, opacity: 0.55 }]}>
         <Text style={[styles.label, styles.compactLabel]}>LLM Hints</Text>
-        <Text style={[styles.helper, { color: secondaryText, marginTop: 0 }]}> 
+        <Text style={[styles.helper, { color: secondaryText, marginTop: 0 }]}>
           AI-powered hint commentary is intentionally out of scope for the current release.
         </Text>
-        <Text style={[styles.helper, { color: secondaryText }]}> 
+        <Text style={[styles.helper, { color: secondaryText }]}>
           Retained config (inactive): {hintProvider} / {hintModel}
         </Text>
       </View>

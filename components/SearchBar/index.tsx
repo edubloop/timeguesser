@@ -1,11 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import {
-  StyleSheet,
-  Pressable,
-  TextInput,
-  ActivityIndicator,
-  Keyboard,
-} from 'react-native';
+import { StyleSheet, Pressable, TextInput, ActivityIndicator, Keyboard } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { View, Text } from '@/components/Themed';
 import { useThemeColor } from '@/components/Themed';
@@ -81,62 +75,67 @@ export default function SearchBar({ onLocationSelected, onSearch }: SearchBarPro
 
   if (!expanded) {
     return (
-        <Pressable
-          style={[styles.iconButton, { backgroundColor: cardBg, borderColor }]}
-          accessibilityRole="button"
-          accessibilityLabel="Open map search"
-          onPress={() => setExpanded(true)}>
-          <FontAwesome name="search" size={20} color={tint} />
-        </Pressable>
-      );
+      <Pressable
+        style={[styles.iconButton, { backgroundColor: cardBg, borderColor }]}
+        accessibilityRole="button"
+        accessibilityLabel="Open map search"
+        onPress={() => setExpanded(true)}
+      >
+        <FontAwesome name="search" size={20} color={tint} />
+      </Pressable>
+    );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: cardBg, borderColor }]}>
       <View style={[styles.inputRow, { backgroundColor: 'transparent' }]}>
-          <FontAwesome
-            name="search"
-            size={16}
-            color={tertiaryText}
-            style={styles.inputIcon}
-          />
-          <TextInput
-            style={[styles.input, { color: textColor }]}
-            placeholder="Search location..."
-            placeholderTextColor={tertiaryText}
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={handleSearch}
+        <FontAwesome name="search" size={16} color={tertiaryText} style={styles.inputIcon} />
+        <TextInput
+          style={[styles.input, { color: textColor }]}
+          placeholder="Search location..."
+          placeholderTextColor={tertiaryText}
+          value={query}
+          onChangeText={setQuery}
+          onSubmitEditing={handleSearch}
           returnKeyType="search"
           autoFocus
         />
         {loading && <ActivityIndicator size="small" color={tint} />}
-          <Pressable
-            onPress={handleSearch}
-            style={({ pressed }) => [
-              styles.searchButton,
-              { borderColor, backgroundColor: pressed ? tintSubtle : 'transparent' },
-            ]}
-            disabled={loading || query.trim().length === 0}>
-            <Text
-              style={styles.searchButtonText}
-              lightColor={query.trim().length > 0 ? undefined : tertiaryText}
-              darkColor={query.trim().length > 0 ? undefined : tertiaryText}>
-              Go
-            </Text>
-          </Pressable>
-          <Pressable onPress={handleClose} style={styles.closeButton} accessibilityLabel="Close search">
-            <FontAwesome name="times" size={16} color={tertiaryText} />
-          </Pressable>
-        </View>
+        <Pressable
+          onPress={handleSearch}
+          style={({ pressed }) => [
+            styles.searchButton,
+            { borderColor, backgroundColor: pressed ? tintSubtle : 'transparent' },
+          ]}
+          disabled={loading || query.trim().length === 0}
+        >
+          <Text
+            style={styles.searchButtonText}
+            lightColor={query.trim().length > 0 ? undefined : tertiaryText}
+            darkColor={query.trim().length > 0 ? undefined : tertiaryText}
+          >
+            Go
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={handleClose}
+          style={styles.closeButton}
+          accessibilityLabel="Close search"
+        >
+          <FontAwesome name="times" size={16} color={tertiaryText} />
+        </Pressable>
+      </View>
 
       {results.length > 0 && (
-        <View style={[styles.results, { backgroundColor: 'transparent', borderTopColor: borderColor }]}>
+        <View
+          style={[styles.results, { backgroundColor: 'transparent', borderTopColor: borderColor }]}
+        >
           {results.map((result, index) => (
             <Pressable
               key={`${result.lat}-${result.lng}-${index}`}
               style={[styles.resultItem, { borderTopColor: borderColor }]}
-              onPress={() => handleSelect(result)}>
+              onPress={() => handleSelect(result)}
+            >
               <Text style={styles.resultText} numberOfLines={1}>
                 {result.name}
               </Text>
@@ -147,9 +146,7 @@ export default function SearchBar({ onLocationSelected, onSearch }: SearchBarPro
 
       {!loading && errorText.length > 0 && (
         <View style={[styles.errorWrap, { backgroundColor: 'transparent' }]}>
-          <Text style={[styles.errorText, { color: scorePoor }]}>
-            {errorText}
-          </Text>
+          <Text style={[styles.errorText, { color: scorePoor }]}>{errorText}</Text>
         </View>
       )}
     </View>

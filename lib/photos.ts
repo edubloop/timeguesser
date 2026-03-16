@@ -242,7 +242,10 @@ const HISTORICAL_SIGNAL_TERMS = [
   '1930s',
 ];
 
-const PLACE_BBOXES: Record<string, { minLat: number; maxLat: number; minLng: number; maxLng: number }> = {
+const PLACE_BBOXES: Record<
+  string,
+  { minLat: number; maxLat: number; minLng: number; maxLng: number }
+> = {
   arizona: { minLat: 31.0, maxLat: 37.1, minLng: -114.9, maxLng: -109.0 },
   kansas: { minLat: 37.0, maxLat: 40.0, minLng: -102.1, maxLng: -94.6 },
   netherlands: { minLat: 50.7, maxLat: 53.8, minLng: 3.0, maxLng: 7.3 },
@@ -313,8 +316,7 @@ function parseYear(value: unknown): number | null {
 
 function parseLatLng(exif: Record<string, unknown>): { lat: number; lng: number } | null {
   const latRaw = exif.GPSLatitude ?? exif.latitude ?? exif.Latitude ?? exif.lat ?? exif.GPSLat;
-  const lngRaw =
-    exif.GPSLongitude ?? exif.longitude ?? exif.Longitude ?? exif.lng ?? exif.GPSLng;
+  const lngRaw = exif.GPSLongitude ?? exif.longitude ?? exif.Longitude ?? exif.lng ?? exif.GPSLng;
 
   const toNumber = (value: unknown): number | null => {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -453,19 +455,13 @@ function validatePublicCandidate(
   if (candidate.yearConfidence === 'low') {
     reasons.push('year_source_low_confidence');
   }
-  if (
-    candidate.contentYearHint &&
-    Math.abs(candidate.contentYearHint - candidate.year) > 20
-  ) {
+  if (candidate.contentYearHint && Math.abs(candidate.contentYearHint - candidate.year) > 20) {
     reasons.push('content_year_conflict');
   }
   if (candidate.locationConflictDetected) {
     reasons.push('content_location_conflict');
   }
-  if (
-    candidate.yearSource === 'upload_timestamp' &&
-    candidate.historicalContextSignal
-  ) {
+  if (candidate.yearSource === 'upload_timestamp' && candidate.historicalContextSignal) {
     reasons.push('historical_upload_conflict');
   }
 
@@ -494,12 +490,14 @@ function validatePublicCandidate(
   if (!geoClues && !temporalClues) warnings.push('Insufficient location/time clues.');
   if (!peopleContext) warnings.push('No explicit people context detected.');
 
-  if (filters.requireStreetScene && !streetScene) reasons.push('Street/public-place context required.');
+  if (filters.requireStreetScene && !streetScene)
+    reasons.push('Street/public-place context required.');
   if (filters.requirePeopleContext && !peopleContext) reasons.push('People context required.');
   if (filters.requireGeoClues && !geoClues) reasons.push('Geographic clues required.');
   if (filters.requireTemporalClues && !temporalClues) reasons.push('Temporal clues required.');
   if (filters.rejectIndoorOnly && indoorOnly) reasons.push('Indoor-only scene rejected.');
-  if (filters.rejectLowSignalObjects && rejectedScene) reasons.push('Low-signal object scene rejected.');
+  if (filters.rejectLowSignalObjects && rejectedScene)
+    reasons.push('Low-signal object scene rejected.');
   if (filters.enforceGuessabilityThreshold && score < PUBLIC_PASS_THRESHOLD) {
     reasons.push(`Guessability below ${PUBLIC_PASS_THRESHOLD}.`);
   }
@@ -528,7 +526,13 @@ function validatePublicCandidate(
       };
     }
 
-    return { score: Math.max(0, Math.min(100, score)), pass: false, hardFail: true, reasons, warnings };
+    return {
+      score: Math.max(0, Math.min(100, score)),
+      pass: false,
+      hardFail: true,
+      reasons,
+      warnings,
+    };
   }
 
   return {
@@ -662,7 +666,8 @@ function extractYearWithProvenance(args: {
   const contentText = `${args.title} ${args.description ?? ''} ${args.categoryText}`.toLowerCase();
   const contentYearHint = extractContentYearHint(contentText);
   const historicalContextSignal =
-    includesAny(contentText, HISTORICAL_SIGNAL_TERMS) || (contentYearHint !== null && contentYearHint < 1975);
+    includesAny(contentText, HISTORICAL_SIGNAL_TERMS) ||
+    (contentYearHint !== null && contentYearHint < 1975);
 
   if (contentYearHint) {
     return {
@@ -766,7 +771,11 @@ function maxAgeBandRun(rounds: RoundData[]): number {
   return maxRun;
 }
 
-function meetsBandMixConstraints(selected: RoundData[], pool: RoundData[], targetCount: number): boolean {
+function meetsBandMixConstraints(
+  selected: RoundData[],
+  pool: RoundData[],
+  targetCount: number
+): boolean {
   if (targetCount < 5) return true;
 
   const selectedCounts = ageBandCounts(selected);
@@ -808,7 +817,9 @@ function diversityScore(candidate: RoundData, selected: RoundData[]): number {
 
   let minYearGap = Infinity;
   let minDistanceGap = Infinity;
-  const selectedBuckets = new Set(selected.map((round) => geoBucket(round.location.lat, round.location.lng)));
+  const selectedBuckets = new Set(
+    selected.map((round) => geoBucket(round.location.lat, round.location.lng))
+  );
   for (const round of selected) {
     minYearGap = Math.min(minYearGap, Math.abs(candidate.year - round.year));
     minDistanceGap = Math.min(minDistanceGap, distanceKm(candidate.location, round.location));
@@ -959,7 +970,8 @@ function selectRoundsWithStage(
 
     const best = [...eligible].sort(
       (a, b) =>
-        diversityScore(b, selected) + eraBalanceScore(b, selected, count) -
+        diversityScore(b, selected) +
+        eraBalanceScore(b, selected, count) -
         (diversityScore(a, selected) + eraBalanceScore(a, selected, count))
     )[0];
     selected.push(best);
@@ -1096,15 +1108,14 @@ async function fetchWikimediaFileMembers(
   return {
     titles: members
       .map((member: any) => member?.title)
-      .filter((title: unknown): title is string => typeof title === 'string' && title.startsWith('File:')),
+      .filter(
+        (title: unknown): title is string => typeof title === 'string' && title.startsWith('File:')
+      ),
     nextCursor: String(data?.continue?.cmcontinue ?? ''),
   };
 }
 
-async function fetchWikimediaSubcategoryMembers(
-  category: string,
-  limit = 8
-): Promise<string[]> {
+async function fetchWikimediaSubcategoryMembers(category: string, limit = 8): Promise<string[]> {
   const response = await fetch(
     `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&list=categorymembers&cmtitle=${encodeURIComponent(
       category
@@ -1115,7 +1126,10 @@ async function fetchWikimediaSubcategoryMembers(
   const members = Array.isArray(data?.query?.categorymembers) ? data.query.categorymembers : [];
   return members
     .map((member: any) => member?.title)
-    .filter((title: unknown): title is string => typeof title === 'string' && title.startsWith('Category:'));
+    .filter(
+      (title: unknown): title is string =>
+        typeof title === 'string' && title.startsWith('Category:')
+    );
 }
 
 async function fetchWikimediaImageInfoByTitles(
@@ -1313,7 +1327,11 @@ async function refillPublicCache(
 
     let candidates: PublicPhotoCandidate[] = [];
     if (provider === 'wikimedia') {
-      for (let rotation = 0; rotation < 5 && nextImages.length < PUBLIC_CACHE_TARGET; rotation += 1) {
+      for (
+        let rotation = 0;
+        rotation < 5 && nextImages.length < PUBLIC_CACHE_TARGET;
+        rotation += 1
+      ) {
         const category = WIKIMEDIA_ROOT_CATEGORIES[wikimediaCategoryIndex];
         const cursor = wikimediaCursors[category] ?? '';
         const fetched = await fetchWikimediaCandidatesFromCategory(
@@ -1455,7 +1473,10 @@ async function ensureCacheReady(
   let attempts = 0;
   while (attempts < 4) {
     const unseenCount = state.images.length;
-    if (unseenCount >= minUnseen && state.images.length >= Math.min(PUBLIC_CACHE_TARGET, minUnseen)) {
+    if (
+      unseenCount >= minUnseen &&
+      state.images.length >= Math.min(PUBLIC_CACHE_TARGET, minUnseen)
+    ) {
       break;
     }
     if (state.images.length >= PUBLIC_CACHE_TARGET) {
@@ -1690,17 +1711,20 @@ export async function buildRoundsForGame({
     if (personalRounds.length >= roundsPerGame) {
       return pickN(personalRounds, roundsPerGame);
     }
-    return shuffle([...personalRounds, ...pickN(publicRounds, roundsPerGame - personalRounds.length)]).slice(
-      0,
-      roundsPerGame
-    );
+    return shuffle([
+      ...personalRounds,
+      ...pickN(publicRounds, roundsPerGame - personalRounds.length),
+    ]).slice(0, roundsPerGame);
   }
 
   const mixedPool = [...personalRounds, ...publicRounds];
   if (mixedPool.length >= roundsPerGame) {
     return pickN(mixedPool, roundsPerGame);
   }
-  return [...mixedPool, ...pickN(publicRounds, roundsPerGame - mixedPool.length)].slice(0, roundsPerGame);
+  return [...mixedPool, ...pickN(publicRounds, roundsPerGame - mixedPool.length)].slice(
+    0,
+    roundsPerGame
+  );
 }
 
 export async function getReplacementPublicRound({

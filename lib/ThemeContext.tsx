@@ -35,8 +35,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       });
   }, []);
 
-  const theme: ResolvedTheme =
-    preference === 'system' ? (systemScheme ?? 'light') : preference;
+  const theme: ResolvedTheme = preference === 'system' ? (systemScheme ?? 'light') : preference;
 
   const setPreference = useCallback((pref: ThemePreference) => {
     setPreferenceState(pref);

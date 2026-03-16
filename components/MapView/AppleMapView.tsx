@@ -31,9 +31,7 @@ function calculateDistance(a: Coordinate, b: Coordinate): number {
   const sinLng = Math.sin(dLng / 2);
   const h =
     sinLat * sinLat +
-    Math.cos((a.lat * Math.PI) / 180) *
-      Math.cos((b.lat * Math.PI) / 180) *
-      sinLng * sinLng;
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * sinLng * sinLng;
   return Math.round(2 * R * Math.asin(Math.sqrt(h)));
 }
 
@@ -120,7 +118,8 @@ export default function AppleMapView({
       showsUserLocation={false}
       showsCompass={false}
       rotateEnabled={false}
-      pitchEnabled={false}>
+      pitchEnabled={false}
+    >
       {pinCoordinate && (
         <Marker
           coordinate={{

@@ -23,7 +23,8 @@ export type MapProvider = 'apple' | 'google';
 export type TimerOption = 0 | 30 | 60 | 90 | 120;
 
 const SETTINGS_STORAGE_KEY = 'timeguesser.settings.v1';
-const DEV_USE_TEST_PUBLIC_SOURCE = __DEV__ && process.env.EXPO_PUBLIC_USE_TEST_PUBLIC_SOURCE === '1';
+const DEV_USE_TEST_PUBLIC_SOURCE =
+  __DEV__ && process.env.EXPO_PUBLIC_USE_TEST_PUBLIC_SOURCE === '1';
 
 interface PersistedSettings {
   mapProvider: MapProvider;
@@ -152,20 +153,18 @@ function normalizeLoadedSettings(value: unknown): PersistedSettings {
   const hintProvider: LlmProvider = rawProvider === 'mock' ? 'google' : rawProvider;
   const allowedModels = PROVIDER_MODELS[hintProvider];
   const hintModel =
-    raw.hintModel && allowedModels.includes(raw.hintModel)
-      ? raw.hintModel
-      : allowedModels[0];
+    raw.hintModel && allowedModels.includes(raw.hintModel) ? raw.hintModel : allowedModels[0];
 
   const personalRounds = Array.isArray(raw.personalRounds)
     ? raw.personalRounds
         .filter((round): round is RoundData => {
           return Boolean(
             round &&
-              typeof round.id === 'string' &&
-              typeof round.imageUri === 'string' &&
-              typeof round.year === 'number' &&
-              typeof round.location?.lat === 'number' &&
-              typeof round.location?.lng === 'number'
+            typeof round.id === 'string' &&
+            typeof round.imageUri === 'string' &&
+            typeof round.year === 'number' &&
+            typeof round.location?.lat === 'number' &&
+            typeof round.location?.lng === 'number'
           );
         })
         .map((round) => ({ ...round, source: 'personal' as const }))
@@ -196,7 +195,8 @@ function normalizeLoadedSettings(value: unknown): PersistedSettings {
       requireTemporalClues: raw.publicSelectionFilters?.requireTemporalClues ?? false,
       rejectIndoorOnly: raw.publicSelectionFilters?.rejectIndoorOnly ?? false,
       rejectLowSignalObjects: raw.publicSelectionFilters?.rejectLowSignalObjects ?? false,
-      enforceGuessabilityThreshold: raw.publicSelectionFilters?.enforceGuessabilityThreshold ?? false,
+      enforceGuessabilityThreshold:
+        raw.publicSelectionFilters?.enforceGuessabilityThreshold ?? false,
     },
     photoDiagnosticsEnabled: raw.photoDiagnosticsEnabled ?? false,
   };
@@ -212,9 +212,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [personalRounds, setPersonalRounds] = useState<RoundData[]>(DEFAULTS.personalRounds);
   const [hintProvider, setHintProviderState] = useState<LlmProvider>(DEFAULTS.hintProvider);
   const [hintModel, setHintModelState] = useState<string>(DEFAULTS.hintModel);
-  const [autoHintFallback, setAutoHintFallbackState] = useState<boolean>(
-    DEFAULTS.autoHintFallback
-  );
+  const [autoHintFallback, setAutoHintFallbackState] = useState<boolean>(DEFAULTS.autoHintFallback);
   const [hintsEnabled, setHintsEnabledState] = useState<boolean>(DEFAULTS.hintsEnabled);
   const [publicSelectionFilters, setPublicSelectionFilters] = useState<PublicSelectionFilters>(
     DEFAULTS.publicSelectionFilters
@@ -409,7 +407,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         photoDiagnosticsEnabled,
         setPhotoDiagnosticsEnabled,
         allowAiRuntimeSwitching: ALLOW_AI_RUNTIME_SWITCHING,
-      }}>
+      }}
+    >
       {children}
     </SettingsContext.Provider>
   );

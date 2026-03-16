@@ -1,4 +1,5 @@
 # AGENTS.md — TimeGuesser
+<!-- workspace-kit: v1.2.0 | synced: 2026-03-16 -->
 
 ## Architecture
 
@@ -27,20 +28,20 @@ ThemeProvider → SettingsProvider → GameProvider → NavThemeProvider → Sta
 
 **Reading order**: For any change, read the spec first (`TIMEGUESSER_SPEC.md`), then the file(s) for the area you're touching, then check the hard constraints below.
 
-| Area | File | Why |
-|------|------|-----|
-| Spec | `TIMEGUESSER_SPEC.md` | Authoritative product/technical spec |
-| Design | `TIMEGUESSER_DESIGN_SYSTEM.md` | Colors, typography, spacing, component specs |
-| Scoring | `constants/scoring.ts` | All scoring constants and hint costs |
-| Scoring logic | `lib/scoring.ts` | Haversine distance, score formulas |
-| Game state | `lib/gameState.tsx` | Reducer actions, RoundData/RoundResult types |
-| Photo pipeline | `lib/photos.ts` | Wikimedia fetch, cache, diversity, filters |
-| Hints | `lib/hints.ts` | Tier logic, macro-regions, circle generation |
-| Settings | `lib/SettingsContext.tsx` | All persisted settings, defaults, migration |
-| Design tokens | `constants/theme.ts` | Spacing, Radius, Layout, TypeScale |
-| Colors | `constants/Colors.ts` | Light/dark palettes |
-| Game screen | `app/(tabs)/game.tsx` | Main gameplay (940 lines, most complex screen — refactoring candidate, avoid making it larger) |
-| Deferred work | `future_roadmap.md` | Items intentionally out of scope |
+| Area           | File                           | Why                                                                                            |
+| -------------- | ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Spec           | `TIMEGUESSER_SPEC.md`          | Authoritative product/technical spec                                                           |
+| Design         | `TIMEGUESSER_DESIGN_SYSTEM.md` | Colors, typography, spacing, component specs                                                   |
+| Scoring        | `constants/scoring.ts`         | All scoring constants and hint costs                                                           |
+| Scoring logic  | `lib/scoring.ts`               | Haversine distance, score formulas                                                             |
+| Game state     | `lib/gameState.tsx`            | Reducer actions, RoundData/RoundResult types                                                   |
+| Photo pipeline | `lib/photos.ts`                | Wikimedia fetch, cache, diversity, filters                                                     |
+| Hints          | `lib/hints.ts`                 | Tier logic, macro-regions, circle generation                                                   |
+| Settings       | `lib/SettingsContext.tsx`      | All persisted settings, defaults, migration                                                    |
+| Design tokens  | `constants/theme.ts`           | Spacing, Radius, Layout, TypeScale                                                             |
+| Colors         | `constants/Colors.ts`          | Light/dark palettes                                                                            |
+| Game screen    | `app/(tabs)/game.tsx`          | Main gameplay (940 lines, most complex screen — refactoring candidate, avoid making it larger) |
+| Deferred work  | `future_roadmap.md`            | Items intentionally out of scope                                                               |
 
 ---
 
@@ -49,6 +50,7 @@ ThemeProvider → SettingsProvider → GameProvider → NavThemeProvider → Sta
 These values are load-bearing for game balance, UX consistency, or spec compliance. **Do not change without explicit approval.**
 
 ### Scoring formula (`constants/scoring.ts`, `lib/scoring.ts`)
+
 - `MAX_LOCATION_SCORE = 5000`, `MAX_TIME_SCORE = 5000`, `MAX_ROUND_SCORE = 10000`
 - `ROUNDS_PER_GAME = 5`, `MAX_GAME_SCORE = 50000`
 - `MAX_DISTANCE_KM = 12000`, `LOCATION_SCORE_CURVE_POWER = 2`
@@ -58,12 +60,14 @@ These values are load-bearing for game balance, UX consistency, or spec complian
 - Score floor: round total never below 0
 
 ### Hint tier costs (`constants/scoring.ts`)
+
 - `HINT_TIER_COSTS = [0, 1000, 1000, 1000, 1000]`
 - Tier 4 → location score forced to 0
 - Tier 5 → round total forced to 0
 - `HINT_TIER2_RADIUS_KM = 1000`, `HINT_TIER3_RADIUS_KM = 250`
 
 ### Diversity thresholds (`lib/photos.ts`)
+
 - `ROUND_DIVERSITY_STAGES`: strict 30y/1000km → relaxed 20y/700km → 10y/400km → fallback
 - `MIN_CONSECUTIVE_YEAR_GAP = 30`
 - `GEO_BUCKET_DEGREES = 1.5`
@@ -74,6 +78,7 @@ These values are load-bearing for game balance, UX consistency, or spec complian
 - `PUBLIC_CACHE_MAX = 50`
 
 ### Design tokens (`constants/theme.ts`, `constants/Colors.ts`)
+
 - Spacing scale: xs(4) sm(8) md(12) buttonY(14) lg(16) xl(24) xxl(32) xxxl(48) — 4px base unit (buttonY is the sole exception)
 - Radius: sm(4) md(6) lg(8) sheet(12) pill(999)
 - TypeScale: 13 named sizes from displayLg(52px) to caption2(11px) — do not add or remove levels
@@ -81,6 +86,7 @@ These values are load-bearing for game balance, UX consistency, or spec complian
 - Accent tint: light `#1A8A7D`, dark `#2BBFAD`
 
 ### Architecture invariants
+
 - No backend — all logic runs on-device
 - No LLM/AI API calls in current scope (deterministic hints only)
 - Portrait locked globally, landscape only in photo-viewer

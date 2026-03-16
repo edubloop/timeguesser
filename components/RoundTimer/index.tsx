@@ -26,6 +26,7 @@ export default function RoundTimer({ duration, onTimeUp, paused = false }: Round
   const tint = useThemeColor({}, 'tint');
   const cardBg = useThemeColor({}, 'card');
   const borderColor = useThemeColor({}, 'border');
+  const scorePoor = useThemeColor({}, 'scorePoor');
 
   useEffect(() => {
     setRemaining(duration);
@@ -64,16 +65,13 @@ export default function RoundTimer({ duration, onTimeUp, paused = false }: Round
 
   if (duration <= 0) return null;
 
-  const scorePoor = useThemeColor({}, 'scorePoor');
   const isUrgent = remaining <= 10;
   const textColor = isUrgent ? scorePoor : tint;
   const barColor = isUrgent ? scorePoor : tint;
 
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
-  const display = minutes > 0
-    ? `${minutes}:${seconds.toString().padStart(2, '0')}`
-    : `${seconds}s`;
+  const display = minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${seconds}s`;
 
   return (
     <View style={[styles.container, { backgroundColor: cardBg, borderColor }]}>

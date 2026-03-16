@@ -64,6 +64,7 @@ TimeGuesser is a mobile game where players view a photo and guess both **where**
 ```
 
 ### Photo Area (top, max 40% of screen height)
+
 - Displays the round's photo, scaled to fit within the area
 - Pinch-to-zoom supported inline
 - Double-tap opens full-screen photo viewer (see below)
@@ -71,6 +72,7 @@ TimeGuesser is a mobile game where players view a photo and guess both **where**
 - In public-source rounds, allow a "Refresh Photo" action once per round before Guess is locked
 
 ### Map Area (bottom, remaining ~60%)
+
 - Interactive map (Google Maps or Apple Maps, selectable in settings)
 - Tap anywhere on map to drop a pin
 - Tap elsewhere to reposition pin (only one pin at a time, freely movable until Guess is pressed)
@@ -81,6 +83,7 @@ TimeGuesser is a mobile game where players view a photo and guess both **where**
 - Floating hint icon (💡) in top-right corner of map area
 
 ### Guess Button (bottom of screen)
+
 - Disabled/dimmed until a pin has been placed
 - Tapping Guess:
   1. Locks in the player's location (pin can no longer be moved)
@@ -105,15 +108,16 @@ TimeGuesser is a mobile game where players view a photo and guess both **where**
 
 The hint system has 5 tiers. All tiers are **deterministic** (no LLM dependency). Tiers 1–3 progressively reveal the target location on the map. Tiers 4–5 reveal exact answers with scoring consequences.
 
-| Tier | Type | Cost | Map effect | Scoring effect |
-|------|------|------|------------|----------------|
-| 1 | Coarse location | Free | Zoom to continent/sub-continent region containing target | None |
-| 2 | Regional radius | -1,000 | Show ~1,000 km radius circle; target is inside but not centered | None (standard hint penalty) |
-| 3 | Tight radius | -1,000 | Show ~250 km radius circle; target is inside but not centered | None (standard hint penalty) |
-| 4 | Exact location | -1,000 | Drop answer pin on exact location | **Location score forced to 0** |
-| 5 | Full answer | -1,000 | Show exact location + year; skip year picker on submit | **Round total forced to 0** |
+| Tier | Type            | Cost   | Map effect                                                      | Scoring effect                 |
+| ---- | --------------- | ------ | --------------------------------------------------------------- | ------------------------------ |
+| 1    | Coarse location | Free   | Zoom to continent/sub-continent region containing target        | None                           |
+| 2    | Regional radius | -1,000 | Show ~1,000 km radius circle; target is inside but not centered | None (standard hint penalty)   |
+| 3    | Tight radius    | -1,000 | Show ~250 km radius circle; target is inside but not centered   | None (standard hint penalty)   |
+| 4    | Exact location  | -1,000 | Drop answer pin on exact location                               | **Location score forced to 0** |
+| 5    | Full answer     | -1,000 | Show exact location + year; skip year picker on submit          | **Round total forced to 0**    |
 
 ### Hint Interaction
+
 - Tapping the hint button opens a **Hint Modal** (not an inline card).
 - The modal shows: next tier number, what it reveals, and its point cost.
 - Player chooses `Cancel` or `Get Hint`.
@@ -124,6 +128,7 @@ The hint system has 5 tiers. All tiers are **deterministic** (no LLM dependency)
 - Tiers are sequential — must use Tier 1 before Tier 2, etc.
 
 ### Hint Map Reveals
+
 - **Tier 1**: Map camera fits to a predefined macro-region bounding box derived from the target coordinates (e.g., North America, Western Europe, Southeast Asia). The target is somewhere within this region.
 - **Tier 2**: A translucent circle (~1,000 km radius) appears on the map. The circle contains the target but the target is offset from center (random bearing, 200–600 km offset) so the exact location is not given away.
 - **Tier 3**: Same as Tier 2 but with ~250 km radius and 50–150 km offset.
@@ -131,6 +136,7 @@ The hint system has 5 tiers. All tiers are **deterministic** (no LLM dependency)
 - **Tier 5**: Year is revealed in a persistent banner. Year picker is skipped on guess submission. Round total becomes 0.
 
 ### Guess Flow with Hints
+
 - If Tier 5 has been used, pressing `GUESS` skips the year picker and auto-submits with the revealed year.
 - If Tier 4 has been used, location score is 0 regardless of where the player placed their pin.
 - Hint reveals (map overlays, year banner) persist through submission and into the score reveal phase.
@@ -140,18 +146,21 @@ The hint system has 5 tiers. All tiers are **deterministic** (no LLM dependency)
 ## Photo Sources
 
 Two sources are supported:
+
 - Wikimedia Commons (public, primary)
 - User uploads (personal)
 
 ### Wikimedia Commons (Primary Source)
 
 #### API Access
+
 - Free, no API key required
 - MediaWiki API: `https://commons.wikimedia.org/w/api.php`
 - Geosearch endpoint for coordinate-based queries
 - Category-based queries for thematic browsing
 
 #### Target Categories (High Guessability)
+
 Goal: photos with environmental context clues such as people, architecture, signage, vehicles, vegetation, and infrastructure.
 
 Crawl subcategories recursively from these parent groups:
@@ -206,7 +215,9 @@ Crawl subcategories recursively from these parent groups:
   - Photographs by decade
 
 #### Metadata Requirements
+
 Every photo must have:
+
 - GPS coordinates (Location template or EXIF geodata)
 - Date (EXIF `DateTimeOriginal`, category date hint, or structured description)
 - Minimum resolution: longest edge >= 1024px
@@ -214,6 +225,7 @@ Every photo must have:
 - License: Creative Commons or Public Domain only
 
 #### Metadata Provenance & Confidence
+
 - For each candidate, track provenance and confidence for both year and location:
   - `yearValue`, `yearSource`, `yearConfidence`
   - `locationValue`, `locationSource`, `locationConfidence`
@@ -225,18 +237,22 @@ Every photo must have:
 - Public gameplay selection should prefer medium/high-confidence metadata and reject low-confidence mismatches.
 
 #### Exclusion Filters (Automated)
+
 Reject photos matching these patterns:
+
 - Categories containing terms such as logos, diagrams, maps, charts, flags, coats of arms, icons, symbols, paintings, drawings, illustrations, scans, screenshots, studio, still life, microscopy, x-ray, satellite
 - File names containing terms such as logo, icon, diagram, map, chart, flag, coat_of_arms
 - Images with no identifiable outdoor/environmental context
 
 #### Consistency Safeguards (Public Mode)
+
 - Reject if year is only inferred from upload timestamp and content indicates historical context.
 - Reject if inferred content year and selected year conflict beyond threshold (default: 20 years).
 - Reject if inferred location text strongly conflicts with GPS region/country.
 - Reject if year/location confidence is below public minimum threshold.
 
 Suggested reject reason labels:
+
 - `year_source_low_confidence`
 - `content_year_conflict`
 - `content_location_conflict`
@@ -244,13 +260,16 @@ Suggested reject reason labels:
 - `missing_trusted_year`
 
 #### Quality Gate (Current)
+
 After automated filtering, enforce deterministic quality checks only:
+
 - Metadata validity (GPS + usable year source)
 - Scene/context suitability checks
 - Exclusion terms and artwork/media rejection
 - Confidence + conflict safeguards
 
 #### Ingestion Pipeline
+
 1. Query Wikimedia API by target category (recursive subcategories)
 2. Filter: GPS + date + resolution + file type + license
 3. Exclude by category/filename patterns + artwork/media checks
@@ -258,6 +277,7 @@ After automated filtering, enforce deterministic quality checks only:
 5. Persist gameplay-ready round data in local cache (app-managed)
 
 #### App-Only Wikimedia Fetch Strategy (Current)
+
 - Rotate across a predefined set of high-guessability root categories
 - Persist per-category API cursors locally to avoid repeatedly pulling the same first-page files
 - Sample files from both direct category members and selected subcategories
@@ -265,15 +285,18 @@ After automated filtering, enforce deterministic quality checks only:
 - Continue rotating/refilling until cache target is met or fetch attempts are exhausted
 
 #### Volume Estimate
+
 - Wikimedia Commons geocoded images: ~5.2M
 - Target categories after deterministic metadata/content filtering: ~100K–500K
 - Usable game photos: ~30K–250K
 
 ### Public Source Modes
+
 - `Wikimedia`: production public rounds source
 - `Test Set`: local development fallback only (not user-facing in production settings)
 
 ### Filter Toggle System (Evaluation Mode)
+
 - Scope: public validation flow (and public portion of mixed mode)
 - Default: all optional selection filters OFF
 - Playability gate remains ON (GPS + date required)
@@ -288,6 +311,7 @@ After automated filtering, enforce deterministic quality checks only:
 - Diagnostics should expose: fetched, metadata-pass, strict-pass, selected, skipped-as-seen, fallback reason
 
 ### Local Cache & Seen Ledger
+
 - Maintain local public cache with hard cap of 50 assets
 - Cache stores normalized metadata + local image URI
 - Persist seen ledger key (`provider + providerImageId`) separately from cache
@@ -296,6 +320,7 @@ After automated filtering, enforce deterministic quality checks only:
 - Cache refill should avoid immediate repetition by rotating category cursors and skipping already-seen provider IDs
 
 ### Round Diversity (Strict-First)
+
 - Public round selection should maximize both location and year variance within a 5-round game
 - **Consecutive year gap target**: After round selection and reordering, consecutive rounds in the final sequence must differ by at least **30 years**. The system tries multiple orderings (alternation, zigzag, permutations for ≤6 rounds) to satisfy this constraint before falling back.
 - Default pairwise strict constraints:
@@ -314,9 +339,11 @@ After automated filtering, enforce deterministic quality checks only:
 - Public photo refresh should follow the same diversity policy when a suitable replacement is available
 
 ### Historical Candidate Relaxation
+
 - Photos with `yearSource === 'content_inferred'` and `yearConfidence === 'medium'` are allowed through the validation pipeline even if they trigger consistency safeguard reasons (e.g., `content_year_conflict`, `missing_trusted_year`). These are downgraded from hard-fail to soft validation with a `relaxed_content_inferred_year_validation` warning, allowing more pre-2000 historical photos into the candidate pool.
 
 ### Startup Cleanup & Refill
+
 - On app start:
   1. remove cached assets marked seen/played
   2. keep seen metadata in ledger
@@ -325,6 +352,7 @@ After automated filtering, enforce deterministic quality checks only:
 - On low unseen supply, log diagnostics and apply fallback policy
 
 ### Diversity Diagnostics
+
 - When diagnostics are enabled, log per-game selection metrics:
   - selected years
   - minimum year gap achieved
@@ -336,6 +364,7 @@ After automated filtering, enforce deterministic quality checks only:
   - rejected candidate counts by reason label
 
 ### User Photo Upload (Personal Source)
+
 - Player can upload photos from device library
 - App reads EXIF metadata to extract GPS + date
 - Warn user when required metadata is missing
@@ -370,7 +399,9 @@ After automated filtering, enforce deterministic quality checks only:
 The app must support swapping between Google Maps and Apple Maps (MapKit JS / react-native-maps).
 
 ### Unified Interface
+
 Create a `MapProvider` abstraction with the following capabilities:
+
 - `renderMap()` — displays the interactive map
 - `placePin(lat, lng)` — drops a pin at coordinates
 - `movePin(lat, lng)` — repositions the existing pin
@@ -381,6 +412,7 @@ Create a `MapProvider` abstraction with the following capabilities:
 - `searchLocation(query)` — geocoding for the search bar
 
 ### Provider Toggle
+
 - Setting in the app settings screen
 - Default to Apple Maps on iOS
 - Google Maps requires a Google Maps API key

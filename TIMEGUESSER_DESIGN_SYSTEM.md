@@ -14,59 +14,59 @@ All colors are defined as design tokens. The app supports light and dark themes 
 
 ### Core Palette
 
-| Token | Light | Dark | Usage |
-|-------|-------|------|-------|
-| `background.primary` | `#FFFFFF` | `#121214` | Main screen background |
-| `background.secondary` | `#F5F5F7` | `#1C1C1E` | Cards, sheets, grouped content |
-| `background.tertiary` | `#EBEBED` | `#2C2C2E` | Hover states, subtle fills |
-| `background.overlay` | `rgba(0,0,0,0.5)` | `rgba(0,0,0,0.7)` | Full-screen photo viewer backdrop |
+| Token                  | Light             | Dark              | Usage                             |
+| ---------------------- | ----------------- | ----------------- | --------------------------------- |
+| `background.primary`   | `#FFFFFF`         | `#121214`         | Main screen background            |
+| `background.secondary` | `#F5F5F7`         | `#1C1C1E`         | Cards, sheets, grouped content    |
+| `background.tertiary`  | `#EBEBED`         | `#2C2C2E`         | Hover states, subtle fills        |
+| `background.overlay`   | `rgba(0,0,0,0.5)` | `rgba(0,0,0,0.7)` | Full-screen photo viewer backdrop |
 
 ### Text
 
-| Token | Light | Dark | Usage |
-|-------|-------|------|-------|
-| `text.primary` | `#1A1A1C` | `#F5F5F7` | Headings, primary content |
-| `text.secondary` | `#6B6B70` | `#98989D` | Supporting text, labels |
-| `text.tertiary` | `#98989D` | `#6B6B70` | Timestamps, metadata, subtle info |
-| `text.inverse` | `#FFFFFF` | `#1A1A1C` | Text on accent backgrounds |
+| Token            | Light     | Dark      | Usage                             |
+| ---------------- | --------- | --------- | --------------------------------- |
+| `text.primary`   | `#1A1A1C` | `#F5F5F7` | Headings, primary content         |
+| `text.secondary` | `#6B6B70` | `#98989D` | Supporting text, labels           |
+| `text.tertiary`  | `#98989D` | `#6B6B70` | Timestamps, metadata, subtle info |
+| `text.inverse`   | `#FFFFFF` | `#1A1A1C` | Text on accent backgrounds        |
 
 ### Accent — Teal/Blue
 
 The primary accent evokes maps, water, exploration. Used sparingly for interactive elements and key moments.
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `accent.primary` | `#1A8A7D` | Primary buttons, active states, links |
-| `accent.primaryHover` | `#15756A` | Button press state |
-| `accent.subtle` | `#E8F5F3` (light) / `#1A2F2D` (dark) | Accent backgrounds, hint cards |
-| `accent.muted` | `#B0D9D4` (light) / `#2A4A46` (dark) | Secondary accent fills |
+| Token                 | Value                                | Usage                                 |
+| --------------------- | ------------------------------------ | ------------------------------------- |
+| `accent.primary`      | `#1A8A7D`                            | Primary buttons, active states, links |
+| `accent.primaryHover` | `#15756A`                            | Button press state                    |
+| `accent.subtle`       | `#E8F5F3` (light) / `#1A2F2D` (dark) | Accent backgrounds, hint cards        |
+| `accent.muted`        | `#B0D9D4` (light) / `#2A4A46` (dark) | Secondary accent fills                |
 
 ### Scoring & Feedback
 
-| Token | Value | Usage |
-|-------|-------|-------|
+| Token             | Value     | Usage                    |
+| ----------------- | --------- | ------------------------ |
 | `score.excellent` | `#1A8A7D` | High score (>80% of max) |
-| `score.good` | `#5B9E4D` | Good score (50-80%) |
-| `score.fair` | `#C4953A` | Fair score (20-50%) |
-| `score.poor` | `#B85A3A` | Low score (<20%) |
+| `score.good`      | `#5B9E4D` | Good score (50-80%)      |
+| `score.fair`      | `#C4953A` | Fair score (20-50%)      |
+| `score.poor`      | `#B85A3A` | Low score (<20%)         |
 
 ### Map UI
 
-| Token | Light | Dark | Usage |
-|-------|-------|------|-------|
-| `map.pinPlayer` | `#1A8A7D` | `#2BBFAD` | Player's guess pin |
-| `map.pinAnswer` | `#C4953A` | `#E8B04A` | Actual location pin |
+| Token              | Light     | Dark      | Usage                         |
+| ------------------ | --------- | --------- | ----------------------------- |
+| `map.pinPlayer`    | `#1A8A7D` | `#2BBFAD` | Player's guess pin            |
+| `map.pinAnswer`    | `#C4953A` | `#E8B04A` | Actual location pin           |
 | `map.distanceLine` | `#B85A3A` | `#D97B5A` | Line between guess and answer |
-| `map.searchBar` | `#FFFFFF` | `#2C2C2E` | Search overlay background |
+| `map.searchBar`    | `#FFFFFF` | `#2C2C2E` | Search overlay background     |
 
 ### Shadows
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `shadow.sm` | `0 1px 3px rgba(0,0,0,0.08)` | Inline cards, subtle lift |
-| `shadow.md` | `0 4px 12px rgba(0,0,0,0.10)` | Floating buttons (🔍, 💡), search bar |
-| `shadow.lg` | `0 8px 24px rgba(0,0,0,0.14)` | Bottom sheets, modals |
-| `shadow.xl` | `0 16px 48px rgba(0,0,0,0.18)` | Score reveal card |
+| Token       | Value                          | Usage                                 |
+| ----------- | ------------------------------ | ------------------------------------- |
+| `shadow.sm` | `0 1px 3px rgba(0,0,0,0.08)`   | Inline cards, subtle lift             |
+| `shadow.md` | `0 4px 12px rgba(0,0,0,0.10)`  | Floating buttons (🔍, 💡), search bar |
+| `shadow.lg` | `0 8px 24px rgba(0,0,0,0.14)`  | Bottom sheets, modals                 |
+| `shadow.xl` | `0 16px 48px rgba(0,0,0,0.18)` | Score reveal card                     |
 
 ---
 
@@ -76,21 +76,22 @@ San Francisco (system font) throughout. The native iOS font ensures the app feel
 
 ### Type Scale
 
-| Token | Size | Weight | Line Height | Usage |
-|-------|------|--------|-------------|-------|
-| `display` | 34px | Bold (700) | 40px | Game over score, big moments |
-| `title1` | 28px | Bold (700) | 34px | Screen titles |
-| `title2` | 22px | Semibold (600) | 28px | Section headers, round number |
-| `title3` | 20px | Semibold (600) | 25px | Card titles |
-| `headline` | 17px | Semibold (600) | 22px | Button labels, emphasis |
-| `body` | 17px | Regular (400) | 22px | Primary body text |
-| `callout` | 16px | Regular (400) | 21px | Hint text, descriptions |
-| `subhead` | 15px | Regular (400) | 20px | Secondary information |
-| `footnote` | 13px | Regular (400) | 18px | Metadata, timestamps, fine print |
-| `caption1` | 12px | Medium (500) | 16px | Labels, badges, score breakdowns |
-| `caption2` | 11px | Regular (400) | 13px | Legal, attribution |
+| Token      | Size | Weight         | Line Height | Usage                            |
+| ---------- | ---- | -------------- | ----------- | -------------------------------- |
+| `display`  | 34px | Bold (700)     | 40px        | Game over score, big moments     |
+| `title1`   | 28px | Bold (700)     | 34px        | Screen titles                    |
+| `title2`   | 22px | Semibold (600) | 28px        | Section headers, round number    |
+| `title3`   | 20px | Semibold (600) | 25px        | Card titles                      |
+| `headline` | 17px | Semibold (600) | 22px        | Button labels, emphasis          |
+| `body`     | 17px | Regular (400)  | 22px        | Primary body text                |
+| `callout`  | 16px | Regular (400)  | 21px        | Hint text, descriptions          |
+| `subhead`  | 15px | Regular (400)  | 20px        | Secondary information            |
+| `footnote` | 13px | Regular (400)  | 18px        | Metadata, timestamps, fine print |
+| `caption1` | 12px | Medium (500)   | 16px        | Labels, badges, score breakdowns |
+| `caption2` | 11px | Regular (400)  | 13px        | Legal, attribution               |
 
 ### Typographic Rules
+
 - Use **Semibold** for emphasis, not Bold — keeps the editorial tone
 - Score numbers use `display` size with **tabular (monospaced) numerals** so digits don't shift during animation
 - Hint confidence percentages (e.g., "70% sure") use `callout` with `text.secondary` color
@@ -103,26 +104,26 @@ San Francisco (system font) throughout. The native iOS font ensures the app feel
 
 An 4px base unit. All spacing should be a multiple of 4.
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `space.xs` | 4px | Tight gaps, icon padding |
-| `space.sm` | 8px | Between related elements |
-| `space.md` | 12px | Inner padding of compact components |
-| `space.lg` | 16px | Standard padding, card insets |
-| `space.xl` | 24px | Section spacing, generous padding |
-| `space.2xl` | 32px | Major section breaks |
-| `space.3xl` | 48px | Screen-level padding top/bottom |
+| Token       | Value | Usage                               |
+| ----------- | ----- | ----------------------------------- |
+| `space.xs`  | 4px   | Tight gaps, icon padding            |
+| `space.sm`  | 8px   | Between related elements            |
+| `space.md`  | 12px  | Inner padding of compact components |
+| `space.lg`  | 16px  | Standard padding, card insets       |
+| `space.xl`  | 24px  | Section spacing, generous padding   |
+| `space.2xl` | 32px  | Major section breaks                |
+| `space.3xl` | 48px  | Screen-level padding top/bottom     |
 
 ### Layout Constants
 
-| Token | Value | Notes |
-|-------|-------|-------|
-| `layout.photoMaxHeight` | 40% | Maximum photo area height (percentage of safe area) |
-| `layout.borderRadius.sm` | 4px | Small elements (badges, chips) |
-| `layout.borderRadius.md` | 6px | Buttons, input fields |
-| `layout.borderRadius.lg` | 8px | Cards, hint cards, search bar |
-| `layout.borderRadius.sheet` | 12px | Bottom sheets (top corners only) |
-| `layout.safeAreaPadding` | 16px | Horizontal padding from screen edges |
+| Token                       | Value | Notes                                               |
+| --------------------------- | ----- | --------------------------------------------------- |
+| `layout.photoMaxHeight`     | 40%   | Maximum photo area height (percentage of safe area) |
+| `layout.borderRadius.sm`    | 4px   | Small elements (badges, chips)                      |
+| `layout.borderRadius.md`    | 6px   | Buttons, input fields                               |
+| `layout.borderRadius.lg`    | 8px   | Cards, hint cards, search bar                       |
+| `layout.borderRadius.sheet` | 12px  | Bottom sheets (top corners only)                    |
+| `layout.safeAreaPadding`    | 16px  | Horizontal padding from screen edges                |
 
 ---
 
@@ -218,47 +219,54 @@ All animations are snappy and responsive. No sluggish transitions. The app shoul
 
 ### Timing
 
-| Token | Duration | Easing | Usage |
-|-------|----------|--------|-------|
-| `anim.instant` | 80ms | `easeOut` | Button press feedback, color changes |
-| `anim.fast` | 120ms | `easeOut` | Icon transitions, micro-interactions |
-| `anim.standard` | 150ms | `easeInOut` | Most transitions, card appearances |
-| `anim.entrance` | 200ms | `easeOut` | Elements entering the screen |
-| `anim.exit` | 120ms | `easeIn` | Elements leaving (faster than entering) |
+| Token           | Duration | Easing      | Usage                                   |
+| --------------- | -------- | ----------- | --------------------------------------- |
+| `anim.instant`  | 80ms     | `easeOut`   | Button press feedback, color changes    |
+| `anim.fast`     | 120ms    | `easeOut`   | Icon transitions, micro-interactions    |
+| `anim.standard` | 150ms    | `easeInOut` | Most transitions, card appearances      |
+| `anim.entrance` | 200ms    | `easeOut`   | Elements entering the screen            |
+| `anim.exit`     | 120ms    | `easeIn`    | Elements leaving (faster than entering) |
 
 ### Specific Animations
 
 **Pin drop**
+
 - Duration: 200ms
 - Easing: `easeOut` with slight overshoot (1.05 scale → 1.0)
 - Small shadow expands on landing
 
 **Distance line draw**
+
 - Duration: 400ms (this one is longer for dramatic effect)
 - Easing: `easeInOut`
 - Line draws from player pin to answer pin progressively
 - Distance label fades in at midpoint of line
 
 **Score counter tick-up**
+
 - Duration: 600ms total
 - Numbers count up from 0 to final score
 - Use `requestAnimationFrame` with ease-out curve (fast at start, slows at end)
 
 **Hint card reveal**
+
 - Duration: `anim.entrance` (200ms)
 - Slides in from right + fades in simultaneously
 - Confidence percentage types in character by character (typewriter, 40ms/char)
 
 **Search bar expand**
+
 - Duration: `anim.standard` (150ms)
 - Scales from 40×40 (button size) to full width
 - Input auto-focuses after animation completes
 
 **Screen transitions**
+
 - Use default iOS push/pop transitions via Expo Router
 - Don't override native navigation animations
 
 **Full-screen photo viewer**
+
 - Open: photo zooms from its inline position to full-screen (250ms, `easeOut`)
 - Close: reverse zoom or swipe-down with velocity-based dismiss
 
@@ -268,19 +276,20 @@ All animations are snappy and responsive. No sluggish transitions. The app shoul
 
 Use SF Symbols (iOS system icons) for native consistency. Fallback to Lucide icons if needed in React Native.
 
-| Icon | SF Symbol | Lucide Fallback | Usage |
-|------|-----------|-----------------|-------|
-| Search | `magnifyingglass` | `Search` | Map search button |
-| Hint | `lightbulb` | `Lightbulb` | Hint button |
-| Close | `xmark` | `X` | Dismiss full-screen, close search |
-| Share | `square.and.arrow.up` | `Share` | Share sheet in photo viewer |
-| Settings | `gearshape` | `Settings` | Settings tab |
-| Timer | `clock` | `Clock` | Round timer display |
-| Pin | `mappin` | `MapPin` | Location markers |
-| Check | `checkmark` | `Check` | Confirm/submit |
-| Arrow back | `chevron.left` | `ChevronLeft` | Navigation back |
+| Icon       | SF Symbol             | Lucide Fallback | Usage                             |
+| ---------- | --------------------- | --------------- | --------------------------------- |
+| Search     | `magnifyingglass`     | `Search`        | Map search button                 |
+| Hint       | `lightbulb`           | `Lightbulb`     | Hint button                       |
+| Close      | `xmark`               | `X`             | Dismiss full-screen, close search |
+| Share      | `square.and.arrow.up` | `Share`         | Share sheet in photo viewer       |
+| Settings   | `gearshape`           | `Settings`      | Settings tab                      |
+| Timer      | `clock`               | `Clock`         | Round timer display               |
+| Pin        | `mappin`              | `MapPin`        | Location markers                  |
+| Check      | `checkmark`           | `Check`         | Confirm/submit                    |
+| Arrow back | `chevron.left`        | `ChevronLeft`   | Navigation back                   |
 
 ### Icon Sizing
+
 - Floating buttons: 20px
 - Tab bar: 24px
 - Navigation bar: 22px
@@ -304,12 +313,14 @@ Dark mode is not just inverted colors. It's a distinct treatment:
 ## Responsive Behavior
 
 ### iPhone (375–430px width)
+
 - Photo area: 40% of safe area height
 - Single-column layout throughout
 - Floating buttons: 40×40px
 - Guess button: full width with 16px horizontal padding
 
 ### iPad (744–1032px width)
+
 - Same vertical stack layout (portrait locked)
 - Photo area: 40% of safe area height (more generous at larger sizes)
 - Content max-width: 600px, centered (prevents overly wide layouts on iPad Pro)
@@ -319,6 +330,7 @@ Dark mode is not just inverted colors. It's a distinct treatment:
 - Score reveal cards: max-width 500px
 
 ### Safe Areas
+
 - Always respect iOS safe area insets (notch, Dynamic Island, home indicator)
 - Photo area starts below safe area top
 - Guess button bottom padding includes safe area bottom inset

@@ -14,11 +14,7 @@ interface ScoreSummaryProps {
   onPlayAgain: () => void;
 }
 
-export default function ScoreSummary({
-  results,
-  totalScore,
-  onPlayAgain,
-}: ScoreSummaryProps) {
+export default function ScoreSummary({ results, totalScore, onPlayAgain }: ScoreSummaryProps) {
   const tint = useThemeColor({}, 'tint');
   const cardBg = useThemeColor({}, 'card');
   const borderColor = useThemeColor({}, 'border');
@@ -40,7 +36,7 @@ export default function ScoreSummary({
             delay={300}
             style={[styles.totalScore, { color: tint }]}
           />
-          <Text style={[styles.maxScore, { color: secondaryText }]}> 
+          <Text style={[styles.maxScore, { color: secondaryText }]}>
             out of {formatWholeNumber(MAX_GAME_SCORE)} ({percentage}%)
           </Text>
         </View>
@@ -50,11 +46,12 @@ export default function ScoreSummary({
       {results.map((result, index) => (
         <Animated.View
           key={result.roundData.id}
-          entering={FadeInDown.delay(600 + index * 150).duration(400)}>
+          entering={FadeInDown.delay(600 + index * 150).duration(400)}
+        >
           <View style={[styles.roundCard, { backgroundColor: cardBg, borderColor }]}>
             <View style={[styles.roundHeader, { backgroundColor: 'transparent' }]}>
               <Text style={styles.roundTitle}>Round {index + 1}</Text>
-              <Text style={[styles.roundScore, { color: tint }]}> 
+              <Text style={[styles.roundScore, { color: tint }]}>
                 {formatWholeNumber(result.totalScore)}
               </Text>
             </View>
@@ -97,12 +94,8 @@ export default function ScoreSummary({
 
       {/* Play again button */}
       <Animated.View entering={FadeInDown.delay(600 + results.length * 150).duration(400)}>
-        <Pressable
-          style={[styles.button, { backgroundColor: tint }]}
-          onPress={onPlayAgain}>
-          <Text style={[styles.buttonText, { color: inverseText }]}>
-            Play Again
-          </Text>
+        <Pressable style={[styles.button, { backgroundColor: tint }]} onPress={onPlayAgain}>
+          <Text style={[styles.buttonText, { color: inverseText }]}>Play Again</Text>
         </Pressable>
       </Animated.View>
     </ScrollView>

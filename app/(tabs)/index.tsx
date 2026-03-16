@@ -31,15 +31,13 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>TimeGuesser</Text>
-      <Text style={[styles.subtitle, { color: secondaryText }]}>
-        Guess where and when
-      </Text>
+      <Text style={[styles.subtitle, { color: secondaryText }]}>Guess where and when</Text>
 
       <View style={[styles.info, { backgroundColor: 'transparent' }]}>
-        <Text style={[styles.infoText, { color: secondaryText }]}> 
+        <Text style={[styles.infoText, { color: secondaryText }]}>
           {ROUNDS_PER_GAME} rounds &middot; {formatWholeNumber(MAX_GAME_SCORE)} max points
         </Text>
-        <Text style={[styles.infoText, { color: secondaryText }]}> 
+        <Text style={[styles.infoText, { color: secondaryText }]}>
           Source: {photoSource}
           {photoSource !== 'personal' ? ` [${publicImageSource}]` : ''}
           {photoSource !== 'public' ? ` (${personalRounds.length} personal)` : ''}
@@ -49,13 +47,12 @@ export default function HomeScreen() {
       <Pressable
         style={[styles.button, { backgroundColor: tint }]}
         disabled={starting}
-        onPress={handleStartGame}>
+        onPress={handleStartGame}
+      >
         {starting ? (
           <ActivityIndicator color={inverseText} />
         ) : (
-          <Text style={[styles.buttonText, { color: inverseText }]}>
-            Start Game
-          </Text>
+          <Text style={[styles.buttonText, { color: inverseText }]}>Start Game</Text>
         )}
       </Pressable>
     </View>

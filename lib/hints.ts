@@ -85,11 +85,7 @@ function seededRandom(seed: string): number {
 }
 
 /** Offset a coordinate by distance (km) at a given bearing (degrees) */
-function offsetCoordinate(
-  coord: Coordinate,
-  distanceKm: number,
-  bearingDeg: number
-): Coordinate {
+function offsetCoordinate(coord: Coordinate, distanceKm: number, bearingDeg: number): Coordinate {
   const R = 6371;
   const lat1 = (coord.lat * Math.PI) / 180;
   const lng1 = (coord.lng * Math.PI) / 180;

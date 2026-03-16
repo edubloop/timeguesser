@@ -24,10 +24,9 @@ export default function ResultsScreen() {
         <Text style={styles.emptyText}>Complete a game to see your results</Text>
         <Pressable
           style={[styles.button, { backgroundColor: tint }]}
-          onPress={() => router.replace('/(tabs)')}>
-          <Text style={[styles.buttonText, { color: inverseText }]}>
-            Go Home
-          </Text>
+          onPress={() => router.replace('/(tabs)')}
+        >
+          <Text style={[styles.buttonText, { color: inverseText }]}>Go Home</Text>
         </Pressable>
       </View>
     );
