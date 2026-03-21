@@ -31,20 +31,9 @@ export default function AnimatedCounter({
 
   const animatedProps = useAnimatedProps(() => {
     const rounded = Math.round(animatedValue.value);
-    const sign = rounded < 0 ? '-' : '';
-    const raw = `${Math.abs(rounded)}`;
-    let grouped = '';
-
-    for (let i = 0; i < raw.length; i += 1) {
-      const reverseIndex = raw.length - i;
-      grouped = raw[reverseIndex - 1] + grouped;
-      if (reverseIndex > 1 && i % 3 === 2) {
-        grouped = `.${grouped}`;
-      }
-    }
 
     return {
-      text: `${prefix}${sign}${grouped}${suffix}`,
+      text: `${prefix}${rounded}${suffix}`,
     };
   });
 

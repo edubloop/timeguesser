@@ -55,7 +55,7 @@ jobs:
           open -a Simulator
 
       - name: Build and run iOS app on simulator
-        run: npm run ios -- --simulator "iPhone 16"
+        run: npm run ios -- --device "iPhone 16"
 
       - name: Run Maestro photo viewer smoke flow
         run: maestro test .maestro/photo-viewer.yaml

@@ -69,12 +69,13 @@ export default function GoogleMapView({
           800
         );
       },
-      fitToCoordinates: (coords) => {
+      fitToCoordinates: (coords, edgePadding) => {
         if (coords.length === 0) return;
+        const pad = edgePadding ?? { top: 80, right: 80, bottom: 80, left: 80 };
         internalRef.current?.fitToCoordinates(
           coords.map((c) => ({ latitude: c.lat, longitude: c.lng })),
           {
-            edgePadding: { top: 80, right: 80, bottom: 80, left: 80 },
+            edgePadding: pad,
             animated: false,
           }
         );

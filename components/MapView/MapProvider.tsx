@@ -4,7 +4,10 @@ import { GeocodingResult } from '@/lib/geocoding';
 /** Unified interface for map providers */
 export interface MapProviderRef {
   flyTo: (lat: number, lng: number, zoom?: number) => void;
-  fitToCoordinates: (coords: Coordinate[]) => void;
+  fitToCoordinates: (
+    coords: Coordinate[],
+    edgePadding?: { top: number; right: number; bottom: number; left: number }
+  ) => void;
   zoomIn: () => void;
   zoomOut: () => void;
   resetView: () => void;

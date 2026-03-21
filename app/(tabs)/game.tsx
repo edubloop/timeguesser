@@ -230,6 +230,7 @@ export default function GameScreen() {
     setShowHintModal(false);
     setShowHintHistory(false);
     pendingGuessPinRef.current = null;
+    mapRef.current?.resetView();
   }, [state.currentRound]);
 
   useEffect(() => {
@@ -272,7 +273,16 @@ export default function GameScreen() {
       setRevealComplete(false);
       setLockedGuessPin(null);
 
-      mapRef.current?.fitToCoordinates([pin, currentRoundData.location]);
+      // Delay fit so the polyline renders first; use large bottom padding
+      // to keep both pins visible above the score overlay card.
+      setTimeout(() => {
+        mapRef.current?.fitToCoordinates([pin, currentRoundData.location], {
+          top: 80,
+          right: 60,
+          bottom: 320,
+          left: 60,
+        });
+      }, 150);
 
       if (revealOverlayTimerRef.current) {
         clearTimeout(revealOverlayTimerRef.current);

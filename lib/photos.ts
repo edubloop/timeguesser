@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ROUNDS_PER_GAME } from '@/constants/scoring';
 import type { RoundData } from '@/lib/gameState';
 import { TEST_ROUNDS } from '@/lib/testPhotos';
-import { searchLocations } from '@/lib/geocoding';
+import { searchLocations, reverseGeocode } from '@/lib/geocoding';
 import {
   parseLOCDate,
   parseLOCLatLng,
@@ -2491,6 +2491,12 @@ async function refillPublicCache(
 
         const accepted = tryAcceptCandidate(candidate, nextImages, seen, existing, filters, stats);
         if (!accepted) continue;
+
+        // Reverse-geocode if location label is unknown
+        if (accepted.displayLocation === 'Unknown location' && candidate.location) {
+          const placeName = await reverseGeocode(candidate.location.lat, candidate.location.lng);
+          if (placeName) accepted.displayLocation = placeName;
+        }
 
         // Download the image
         const localUri = await downloadToLocal(candidate.imageUri, accepted.cacheId);

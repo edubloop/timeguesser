@@ -13,6 +13,29 @@ interface OpenMeteoGeoItem {
   feature_code?: string;
 }
 
+/**
+ * Reverse-geocode coordinates to a place name using OpenStreetMap Nominatim.
+ * Returns a short label like "Algiers, Algeria" or null on failure.
+ */
+export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10&accept-language=en`,
+      { headers: { 'User-Agent': 'TimeGuesserApp/1.0' } }
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    const addr = data?.address;
+    if (!addr) return null;
+    const city = addr.city ?? addr.town ?? addr.village ?? addr.hamlet ?? addr.county ?? '';
+    const country = addr.country ?? '';
+    const parts = [city, country].filter((p: string) => p.length > 0);
+    return parts.length > 0 ? parts.join(', ') : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function searchLocations(query: string, limit = 5): Promise<GeocodingResult[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
