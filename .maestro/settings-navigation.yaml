@@ -7,7 +7,7 @@ appId: com.timeguesser.app
 
 # Navigate to settings
 - tapOn:
-    point: '78%,96%'
+    id: 'tab-settings'
 
 - waitForAnimationToEnd
 - takeScreenshot: settings-screen
@@ -20,7 +20,7 @@ appId: com.timeguesser.app
 
 # Navigate back
 - tapOn:
-    point: '22%,96%'
+    id: 'tab-home'
 
 - waitForAnimationToEnd
 - assertVisible:

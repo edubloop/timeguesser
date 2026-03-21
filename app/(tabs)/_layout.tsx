@@ -19,6 +19,8 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        lazy: true,
+        freezeOnBlur: true,
         tabBarActiveTintColor: palette.tabIconSelected,
         tabBarInactiveTintColor: palette.tabIconDefault,
         tabBarStyle: {
@@ -41,6 +43,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          tabBarButtonTestID: 'tab-home',
         }}
       />
       <Tabs.Screen
@@ -64,6 +67,7 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
+          tabBarButtonTestID: 'tab-settings',
         }}
       />
     </Tabs>

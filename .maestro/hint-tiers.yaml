@@ -12,28 +12,34 @@ appId: com.timeguesser.app
 
 # Use Tier 1 hint (free — no penalty)
 - tapOn:
-    label: 'Get hint'
+    id: 'hint-open'
 - waitForAnimationToEnd
+- assertVisible:
+    id: 'hint-modal'
 - tapOn:
-    point: '70%,60%'
+    id: 'hint-confirm'
 - waitForAnimationToEnd
 - takeScreenshot: hint-tier-1
 
 # Use Tier 2 hint (−1000 penalty)
 - tapOn:
-    label: 'Get hint'
+    id: 'hint-open'
 - waitForAnimationToEnd
+- assertVisible:
+    id: 'hint-modal'
 - tapOn:
-    point: '70%,60%'
+    id: 'hint-confirm'
 - waitForAnimationToEnd
 - takeScreenshot: hint-tier-2
 
 # Use Tier 3 hint (−1000 penalty)
 - tapOn:
-    label: 'Get hint'
+    id: 'hint-open'
 - waitForAnimationToEnd
+- assertVisible:
+    id: 'hint-modal'
 - tapOn:
-    point: '70%,60%'
+    id: 'hint-confirm'
 - waitForAnimationToEnd
 - takeScreenshot: hint-tier-3
 
@@ -41,9 +47,8 @@ appId: com.timeguesser.app
 - tapOn:
     point: '50%,70%'
 - tapOn:
-    text: 'GUESS'
-- tapOn:
-    point: '50%,56%'
+    id: 'guess-button'
+- waitForAnimationToEnd
 - inputText: '1990'
 - tapOn:
     text: 'Confirm'

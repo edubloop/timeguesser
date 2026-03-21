@@ -24,12 +24,9 @@ appId: com.timeguesser.app
 
 # Confirm guess button should now be active
 - tapOn:
-    text: 'GUESS'
+    id: 'guess-button'
 
 - waitForAnimationToEnd
-
-- tapOn:
-    point: '50%,56%'
 
 # Year picker: enter and confirm a year
 - inputText: '1975'
@@ -46,5 +43,4 @@ appId: com.timeguesser.app
 
 # Continue to next round
 - tapOn:
-    label: 'NEXT ROUND'
-    optional: true
+    id: 'next-round-button'
