@@ -1,5 +1,6 @@
 import { type Coordinate, hintPenalty, roundScore } from './scoring';
 import { ROUNDS_PER_GAME } from '@/constants/scoring';
+import type { PhotoLicense } from './photos';
 
 export interface RoundData {
   id: string;
@@ -9,6 +10,12 @@ export interface RoundData {
   imageUri: string;
   label: string;
   locationLabel?: string;
+  attribution?: {
+    license: PhotoLicense;
+    author?: string;
+    institutionName?: string;
+    originalUrl?: string;
+  };
 }
 
 export interface RoundResult {

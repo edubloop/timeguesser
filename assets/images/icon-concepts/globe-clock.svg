@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#172554"/>
+    </radialGradient>
+    <linearGradient id="ocean" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A3E635"/>
+      <stop offset="100%" stop-color="#4D7C0F"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+
+  <g transform="translate(512 520)">
+    <circle cx="0" cy="0" r="300" fill="url(#ocean)"/>
+
+    <path d="M-180 -130 C-260 -30 -235 75 -150 135 C-45 205 55 185 110 110 C170 35 140 -35 80 -95 C20 -155 -100 -205 -180 -130Z" fill="url(#land)"/>
+    <path d="M135 -170 C190 -130 220 -75 185 -10 C155 45 90 40 50 5 C5 -35 5 -95 45 -140 C75 -175 110 -185 135 -170Z" fill="url(#land)"/>
+    <path d="M-40 145 C20 120 70 140 105 185 C130 220 105 255 60 265 C5 278 -65 253 -85 215 C-105 178 -90 160 -40 145Z" fill="url(#land)"/>
+
+    <g stroke="#BAE6FD" stroke-width="11" fill="none" opacity="0.8">
+      <ellipse cx="0" cy="0" rx="300" ry="120"/>
+      <ellipse cx="0" cy="0" rx="300" ry="210"/>
+      <ellipse cx="0" cy="0" rx="120" ry="300"/>
+      <ellipse cx="0" cy="0" rx="210" ry="300"/>
+    </g>
+
+    <circle cx="195" cy="195" r="126" fill="#F8FAFC" stroke="#0F172A" stroke-width="18"/>
+    <line x1="195" y1="195" x2="195" y2="126" stroke="#0F172A" stroke-width="17" stroke-linecap="round"/>
+    <line x1="195" y1="195" x2="243" y2="228" stroke="#0F172A" stroke-width="17" stroke-linecap="round"/>
+    <circle cx="195" cy="195" r="10" fill="#0F172A"/>
+  </g>
+</svg>

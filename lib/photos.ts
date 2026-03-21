@@ -5,10 +5,65 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ROUNDS_PER_GAME } from '@/constants/scoring';
 import type { RoundData } from '@/lib/gameState';
 import { TEST_ROUNDS } from '@/lib/testPhotos';
+import { searchLocations } from '@/lib/geocoding';
+import {
+  parseLOCDate,
+  parseLOCLatLng,
+  mapLOCRights,
+  mapEuropeanaRights,
+  classifyRegion,
+  type GeoRegion,
+} from '@/lib/locHelpers';
+
+/** Wikimedia category object shape */
+interface WikiCategory {
+  title: string;
+}
+
+/** Single field in Wikimedia extmetadata */
+interface WikiMetaField {
+  value: string;
+  source?: string;
+}
+
+/** Wikimedia extmetadata map (EXIF / license metadata) */
+interface WikiExtMetadata {
+  LicenseShortName?: WikiMetaField;
+  UsageTerms?: WikiMetaField;
+  DateTimeOriginal?: WikiMetaField;
+  DateTime?: WikiMetaField;
+  ImageDescription?: WikiMetaField;
+  [key: string]: WikiMetaField | undefined;
+}
+
+/** Single image info entry returned by Wikimedia imageinfo API */
+interface WikiImageInfo {
+  url?: string;
+  mime?: string;
+  width?: number;
+  height?: number;
+  timestamp?: string;
+  extmetadata?: WikiExtMetadata;
+}
+
+/** Page shape returned by Wikimedia query API */
+interface WikiUnknownPage {
+  title?: string;
+  imageinfo?: WikiImageInfo[];
+  categories?: WikiCategory[];
+  [key: string]: unknown;
+}
 
 export type PhotoSourcePreference = 'public' | 'personal' | 'mixed';
-export type PublicImageSource = 'wikimedia' | 'test';
-type PublicProvider = 'wikimedia' | 'test';
+export type PublicImageSource =
+  | 'wikimedia'
+  | 'loc'
+  | 'europeana'
+  | 'wikimedia+loc+europeana'
+  | 'test';
+type PublicProvider = 'wikimedia' | 'loc' | 'europeana' | 'test';
+
+export type PhotoLicense = 'cc0' | 'public_domain' | 'cc_by' | 'cc_by_sa';
 
 export interface PublicSelectionFilters {
   requireStreetScene: boolean;
@@ -69,26 +124,70 @@ interface ReplacementArgs {
   diagnosticsEnabled?: boolean;
 }
 
-interface PublicPhotoCandidate {
+/** Source-agnostic candidate produced by any PhotoSourceAdapter — input to the curation pipeline. */
+interface NormalizedPhotoCandidate {
   provider: PublicProvider;
   providerImageId: string;
   imageUri: string;
+  thumbnailUri?: string;
   location: { lat: number; lng: number };
-  locationSource: 'gps_exif' | 'content_inferred';
+  locationSource: 'gps_exif' | 'structured_metadata' | 'content_inferred';
   locationConfidence: 'high' | 'medium' | 'low';
   year: number;
   yearSource: 'capture_exif' | 'structured_metadata' | 'content_inferred' | 'upload_timestamp';
   yearConfidence: 'high' | 'medium' | 'low';
   title: string;
   description?: string;
-  categories?: any[];
+  tags?: string[];
+  // Attribution — required for display; all adapters must populate these
+  license: PhotoLicense;
+  author?: string;
+  institutionName?: string;
+  originalUrl?: string;
+  // Optional scoring signals
   contentYearHint?: number;
   historicalContextSignal?: boolean;
   locationConflictDetected?: boolean;
+  region?: GeoRegion;
+}
+
+/** Per-provider pagination state — generalises the old wikimediaCategoryIndex/wikimediaCursors. */
+interface ProviderCursorState {
+  wikimediaCategoryIndex: number;
+  wikimediaCursors: Record<string, string>;
+  locPage: number;
+  locQueryIndex: number;
+  europeanaStart: number;
+  europeanaQueryIndex: number;
+  // Per-era pagination for targeted fills
+  locEraPages?: Record<string, number>;
+  locEraQueryIndices?: Record<string, number>;
+  europeanaEraStarts?: Record<string, number>;
+  europeanaEraQueryIndices?: Record<string, number>;
+  failedCells?: string[];
+}
+
+/** Interface all image-source adapters must implement. */
+interface FetchTargetHint {
+  era?: EraBucket;
+}
+
+interface PhotoSourceAdapter {
+  provider: PublicProvider;
+  fetchCandidates(
+    cursor: ProviderCursorState,
+    limit: number,
+    diagnosticsEnabled: boolean,
+    target?: FetchTargetHint
+  ): Promise<{
+    candidates: NormalizedPhotoCandidate[];
+    nextCursor: ProviderCursorState;
+    rejectedByReason: Record<string, number>;
+  }>;
 }
 
 interface CandidateExtractionResult {
-  candidates: PublicPhotoCandidate[];
+  candidates: NormalizedPhotoCandidate[];
   rejectedByReason: Record<string, number>;
 }
 
@@ -114,21 +213,28 @@ interface CachedPublicImage {
   description?: string;
   fetchedAt: number;
   lastUsedAt?: number;
+  // Attribution fields (optional for backwards compatibility with v3 cached images)
+  license?: PhotoLicense;
+  author?: string;
+  institutionName?: string;
+  originalUrl?: string;
+  region?: GeoRegion;
 }
 
 interface CacheState {
   images: CachedPublicImage[];
   seenLedger: string[];
-  wikimediaCategoryIndex: number;
-  wikimediaCursors: Record<string, string>;
+  providerCursors: ProviderCursorState;
   updatedAt: number;
 }
 
 const PUBLIC_PASS_THRESHOLD = 70;
 const PUBLIC_REJECT_THRESHOLD = 49;
-const PUBLIC_CACHE_MAX = 50;
-export const PUBLIC_CACHE_TARGET = 50;
+const PUBLIC_CACHE_MAX = 120;
+export const PUBLIC_CACHE_TARGET = 120;
 const PUBLIC_FETCH_CAP = 180;
+const WIKIMEDIA_USER_AGENT =
+  'TimeGuesserApp/1.0 (https://github.com/timeguesser; contact@timeguesser.app)';
 const CACHE_NEARBY_KM_THRESHOLD = 30;
 const CACHE_NEARBY_YEAR_THRESHOLD = 5;
 
@@ -145,23 +251,35 @@ const DIVERSITY_YEAR_WEIGHT = 120;
 /** Minimum year gap between consecutive rounds after alternation reordering */
 const MIN_CONSECUTIVE_YEAR_GAP = 30;
 
-/** Maximum images per era bucket in the public cache (prevents modern-era domination) */
-const MAX_CACHE_PER_ERA = 12;
+/** Maximum images per era bucket in the public cache (prevents single-era domination) */
+const MAX_CACHE_PER_ERA = 30;
 
-/** Soft band caps to avoid over-dominance by very old images. */
-const MAX_CACHE_OLDER_BAND = 14;
-const MAX_CACHE_NEWER_BAND = 20;
+/** Maximum images per geographic region in the public cache (prevents LOC/Europeana skew) */
+const MAX_CACHE_PER_REGION = 20;
+
+/** Soft band caps to avoid over-dominance by very old or very new images. */
+const MAX_CACHE_OLDER_BAND = 35;
+const MAX_CACHE_NEWER_BAND = 45;
 
 type EraBucket = 'pre_1950' | 'y1950_1979' | 'y1980_1999' | 'y2000_2014' | 'y2015_plus';
 type AgeBand = 'older' | 'middle' | 'newer';
 
-const CACHE_STORAGE_KEY = 'timeguesser.public.cache.v3';
+const CACHE_STORAGE_KEY = 'timeguesser.public.cache.v4';
+const LEGACY_V3_KEY = 'timeguesser.public.cache.v3';
+
+const EMPTY_PROVIDER_CURSORS: ProviderCursorState = {
+  wikimediaCategoryIndex: 0,
+  wikimediaCursors: {},
+  locPage: 1,
+  locQueryIndex: 0,
+  europeanaStart: 1,
+  europeanaQueryIndex: 0,
+};
 
 const EMPTY_CACHE_STATE: CacheState = {
   images: [],
   seenLedger: [],
-  wikimediaCategoryIndex: 0,
-  wikimediaCursors: {},
+  providerCursors: EMPTY_PROVIDER_CURSORS,
   updatedAt: 0,
 };
 
@@ -204,6 +322,47 @@ const WIKIMEDIA_ROOT_CATEGORIES = [
   'Category:Parks by country',
   'Category:Harbours by country',
 ];
+
+/** Era-targeted category subsets for gap-driven Wikimedia fills. */
+const WIKIMEDIA_ERA_CATEGORIES: Record<EraBucket, string[]> = {
+  pre_1950: [
+    'Category:Street scenes in the 1900s',
+    'Category:Street scenes in the 1910s',
+    'Category:Street scenes in the 1920s',
+    'Category:Street scenes in the 1930s',
+    'Category:Street scenes in the 1940s',
+    'Category:Historic street scenes',
+    'Category:Markets by country',
+    'Category:Harbours by country',
+  ],
+  y1950_1979: [
+    'Category:Street scenes in the 1950s',
+    'Category:Street scenes in the 1960s',
+    'Category:Street scenes in the 1970s',
+    'Category:Parades',
+    'Category:Festivals by country',
+  ],
+  y1980_1999: [
+    'Category:Street scenes in the 1980s',
+    'Category:Street scenes in the 1990s',
+    'Category:Storefronts',
+    'Category:Bus stops by country',
+    'Category:Railway stations by country',
+  ],
+  y2000_2014: [
+    'Category:Street scenes in the 2000s',
+    'Category:Street scenes in the 2010s',
+    'Category:Cityscapes by country',
+    'Category:Buildings by country',
+  ],
+  y2015_plus: [
+    'Category:Street scenes in the 2020s',
+    'Category:Street photography by city',
+    'Category:Streets by country',
+    'Category:Skylines by country',
+    'Category:Parks by country',
+  ],
+};
 
 const EXCLUSION_TERMS = [
   'logo',
@@ -392,6 +551,10 @@ function includesAny(text: string, words: string[]): boolean {
   return words.some((word) => normalized.includes(word));
 }
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function seenKey(provider: string, providerImageId: string): string {
   return `${provider}:${providerImageId}`;
 }
@@ -402,6 +565,31 @@ function cacheId(provider: string, providerImageId: string): string {
 
 async function readCacheState(): Promise<CacheState> {
   try {
+    // v3 → v4 migration: carry over images and seenLedger, initialise providerCursors from old fields
+    const rawV3 = await AsyncStorage.getItem(LEGACY_V3_KEY);
+    if (rawV3) {
+      const v3 = JSON.parse(rawV3);
+      if (Array.isArray(v3?.images) && Array.isArray(v3?.seenLedger)) {
+        const migrated: CacheState = {
+          images: v3.images,
+          seenLedger: v3.seenLedger,
+          providerCursors: {
+            ...EMPTY_PROVIDER_CURSORS,
+            wikimediaCategoryIndex:
+              typeof v3.wikimediaCategoryIndex === 'number' ? v3.wikimediaCategoryIndex : 0,
+            wikimediaCursors:
+              v3.wikimediaCursors && typeof v3.wikimediaCursors === 'object'
+                ? v3.wikimediaCursors
+                : {},
+          },
+          updatedAt: Number(v3.updatedAt) || Date.now(),
+        };
+        await AsyncStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(migrated));
+        await AsyncStorage.removeItem(LEGACY_V3_KEY);
+        return migrated;
+      }
+    }
+
     const raw = await AsyncStorage.getItem(CACHE_STORAGE_KEY);
     if (!raw) return EMPTY_CACHE_STATE;
     const parsed = JSON.parse(raw);
@@ -411,12 +599,10 @@ async function readCacheState(): Promise<CacheState> {
     return {
       images: parsed.images,
       seenLedger: parsed.seenLedger,
-      wikimediaCategoryIndex:
-        typeof parsed.wikimediaCategoryIndex === 'number' ? parsed.wikimediaCategoryIndex : 0,
-      wikimediaCursors:
-        parsed.wikimediaCursors && typeof parsed.wikimediaCursors === 'object'
-          ? parsed.wikimediaCursors
-          : {},
+      providerCursors:
+        parsed.providerCursors && typeof parsed.providerCursors === 'object'
+          ? { ...EMPTY_PROVIDER_CURSORS, ...parsed.providerCursors }
+          : EMPTY_PROVIDER_CURSORS,
       updatedAt: Number(parsed.updatedAt) || Date.now(),
     };
   } catch {
@@ -432,7 +618,7 @@ async function writeCacheState(state: CacheState): Promise<void> {
 }
 
 function validatePublicCandidate(
-  candidate: PublicPhotoCandidate,
+  candidate: NormalizedPhotoCandidate,
   filters: PublicSelectionFilters
 ): ValidationResult {
   const reasons: string[] = [];
@@ -562,6 +748,15 @@ function candidateToRound(candidate: CachedPublicImage): RoundData {
     imageUri: candidate.localUri,
     label,
     locationLabel,
+    attribution:
+      candidate.license != null
+        ? {
+            license: candidate.license,
+            author: candidate.author,
+            institutionName: candidate.institutionName,
+            originalUrl: candidate.originalUrl,
+          }
+        : undefined,
   };
 }
 
@@ -582,10 +777,10 @@ function sanitizeDisplayTitle(raw: string): string {
 function inferLocationLabel(
   title: string,
   description: string | undefined,
-  categories: any[]
+  tags: string[]
 ): string {
-  const categoryTitles = categories
-    .map((category) => String(category?.title ?? '').replace(/^Category:/, ''))
+  const categoryTitles = tags
+    .map((tag) => String(tag ?? '').replace(/^Category:/, ''))
     .filter((value) => value.length > 0);
 
   const text = `${title} ${description ?? ''} ${categoryTitles.join(' ')}`;
@@ -625,15 +820,15 @@ function extractContentYearHint(text: string): number | null {
 }
 
 function extractYearWithProvenance(args: {
-  ext: any;
+  ext: WikiExtMetadata;
   timestamp: unknown;
   title: string;
   description?: string;
   categoryText: string;
 }): {
   year: number | null;
-  yearSource: PublicPhotoCandidate['yearSource'];
-  yearConfidence: PublicPhotoCandidate['yearConfidence'];
+  yearSource: NormalizedPhotoCandidate['yearSource'];
+  yearConfidence: NormalizedPhotoCandidate['yearConfidence'];
   contentYearHint: number | null;
   historicalContextSignal: boolean;
 } {
@@ -1024,7 +1219,10 @@ function selectDiverseRounds(
   };
 }
 
-function isNearDuplicate(candidate: PublicPhotoCandidate, existing: CachedPublicImage): boolean {
+function isNearDuplicate(
+  candidate: NormalizedPhotoCandidate,
+  existing: CachedPublicImage
+): boolean {
   const km = distanceKm(candidate.location, existing.location);
   const yearGap = Math.abs(candidate.year - existing.year);
   return km <= CACHE_NEARBY_KM_THRESHOLD && yearGap <= CACHE_NEARBY_YEAR_THRESHOLD;
@@ -1037,20 +1235,212 @@ async function downloadToLocal(uri: string, id: string): Promise<string | null> 
     const safe = id.replace(/[^a-zA-Z0-9_-]/g, '_');
     const path = `${base}timeguesser-public-${safe}.jpg`;
     const res = await FileSystem.downloadAsync(uri, path);
+
+    if (typeof res.status === 'number' && (res.status < 200 || res.status >= 300)) {
+      await FileSystem.deleteAsync(path, { idempotent: true }).catch(() => {});
+      return null;
+    }
+
+    const headers = (res.headers ?? {}) as Record<string, string | undefined>;
+    const contentType = (headers['content-type'] ?? headers['Content-Type'] ?? '').toLowerCase();
+    if (contentType && !contentType.startsWith('image/')) {
+      await FileSystem.deleteAsync(path, { idempotent: true }).catch(() => {});
+      return null;
+    }
+
     return res.uri;
   } catch {
     return null;
   }
 }
 
+// ─── Library of Congress ─────────────────────────────────────────────────────
+
+/** Queries to rotate through for LOC photo discovery. Each maps to a curated collection. */
+const LOC_SEARCH_QUERIES: Array<{ params: string; label: string; eraHint: EraBucket }> = [
+  // ── Pre-1950 ──────────────────────────────────────────────────────────────
+  {
+    params: 'q=farm+security+administration+street+photograph&fa=access-restricted:false',
+    label: 'fsa_owi',
+    eraHint: 'pre_1950',
+  },
+  {
+    params: 'q=detroit+publishing+company+city+street&fa=access-restricted:false',
+    label: 'detroit_pub',
+    eraHint: 'pre_1950',
+  },
+  {
+    params: 'q=matson+photograph+collection+street&fa=access-restricted:false',
+    label: 'matson',
+    eraHint: 'pre_1950',
+  },
+  {
+    params: 'q=harbor+waterfront+photograph&fa=access-restricted:false',
+    label: 'harbor',
+    eraHint: 'pre_1950',
+  },
+  {
+    params: 'q=market+bazaar+photograph&fa=access-restricted:false',
+    label: 'market',
+    eraHint: 'pre_1950',
+  },
+  {
+    params: 'q=city+street+outdoor+photograph&fa=access-restricted:false',
+    label: 'street_general',
+    eraHint: 'pre_1950',
+  },
+  {
+    params: 'q=town+square+photograph&fa=access-restricted:false',
+    label: 'town_square',
+    eraHint: 'pre_1950',
+  },
+  {
+    params: 'q=panoramic+city+view&fa=access-restricted:false',
+    label: 'panoramic',
+    eraHint: 'pre_1950',
+  },
+  {
+    params: 'q=railroad+station+depot+photograph&fa=access-restricted:false',
+    label: 'railroad',
+    eraHint: 'pre_1950',
+  },
+  // ── 1950-1979 ─────────────────────────────────────────────────────────────
+  {
+    params: 'q=look+magazine+photograph+street&fa=access-restricted:false',
+    label: 'look_magazine',
+    eraHint: 'y1950_1979',
+  },
+  {
+    params: 'q=us+news+world+report+photograph+city&fa=access-restricted:false',
+    label: 'us_news',
+    eraHint: 'y1950_1979',
+  },
+  {
+    params: 'q=civil+rights+march+photograph&fa=access-restricted:false',
+    label: 'civil_rights',
+    eraHint: 'y1950_1979',
+  },
+  // ── 2000+ ─────────────────────────────────────────────────────────────────
+  {
+    params: 'q=carol+highsmith+photograph+street&fa=access-restricted:false',
+    label: 'highsmith',
+    eraHint: 'y2000_2014',
+  },
+];
+
+const EUROPEANA_SEARCH_QUERIES: Array<{
+  q: string;
+  qf: string[];
+  label: string;
+  eraHint: EraBucket;
+}> = [
+  // ── Era-targeted generic queries ──────────────────────────────────────────
+  {
+    q: 'street scene photograph',
+    qf: ['TYPE:IMAGE', 'IMAGE_SIZE:large', 'YEAR:[1900 TO 1949]'],
+    label: 'street_pre1950',
+    eraHint: 'pre_1950',
+  },
+  {
+    q: 'street city photograph',
+    qf: ['TYPE:IMAGE', 'IMAGE_SIZE:large', 'YEAR:[1950 TO 1979]'],
+    label: 'street_1950_79',
+    eraHint: 'y1950_1979',
+  },
+  {
+    q: 'daily life photograph',
+    qf: ['TYPE:IMAGE', 'IMAGE_SIZE:large', 'YEAR:[1950 TO 1979]'],
+    label: 'daily_1950_79',
+    eraHint: 'y1950_1979',
+  },
+  {
+    q: 'city street photograph',
+    qf: ['TYPE:IMAGE', 'IMAGE_SIZE:large', 'YEAR:[1980 TO 1999]'],
+    label: 'street_1980_99',
+    eraHint: 'y1980_1999',
+  },
+  {
+    q: 'street photograph',
+    qf: ['TYPE:IMAGE', 'IMAGE_SIZE:large', 'YEAR:[2000 TO 2025]'],
+    label: 'street_2000plus',
+    eraHint: 'y2000_2014',
+  },
+  // ── Deutsche Fotothek with year ranges ────────────────────────────────────
+  {
+    q: 'street scene',
+    qf: [
+      'DATA_PROVIDER:"Deutsche Fotothek"',
+      'TYPE:IMAGE',
+      'IMAGE_SIZE:large',
+      'YEAR:[1900 TO 1949]',
+    ],
+    label: 'fotothek_pre1950',
+    eraHint: 'pre_1950',
+  },
+  {
+    q: 'street scene',
+    qf: [
+      'DATA_PROVIDER:"Deutsche Fotothek"',
+      'TYPE:IMAGE',
+      'IMAGE_SIZE:large',
+      'YEAR:[1950 TO 1999]',
+    ],
+    label: 'fotothek_postwar',
+    eraHint: 'y1950_1979',
+  },
+  // ── Non-German providers for geographic diversity ─────────────────────────
+  {
+    q: 'photograph city',
+    qf: ['DATA_PROVIDER:"Riksantikvarieämbetet"', 'TYPE:IMAGE', 'IMAGE_SIZE:large'],
+    label: 'sweden',
+    eraHint: 'y1950_1979',
+  },
+  {
+    q: 'photograph street',
+    qf: ['DATA_PROVIDER:"Nationaal Archief"', 'TYPE:IMAGE', 'IMAGE_SIZE:large'],
+    label: 'netherlands',
+    eraHint: 'y1950_1979',
+  },
+  // ── Topical with year filtering ───────────────────────────────────────────
+  {
+    q: 'harbor port city',
+    qf: ['TYPE:IMAGE', 'IMAGE_SIZE:large', 'YEAR:[1900 TO 1979]'],
+    label: 'harbor_vintage',
+    eraHint: 'pre_1950',
+  },
+  {
+    q: 'market bazaar outdoor',
+    qf: ['TYPE:IMAGE', 'IMAGE_SIZE:large', 'YEAR:[1900 TO 1979]'],
+    label: 'market_vintage',
+    eraHint: 'pre_1950',
+  },
+];
+
+// ─── Wikimedia helpers ────────────────────────────────────────────────────────
+
+function mapWikimediaLicense(ext: WikiExtMetadata): PhotoLicense {
+  const licenseShort = String(ext?.LicenseShortName?.value ?? '').toLowerCase();
+  const usageTerms = String(ext?.UsageTerms?.value ?? '').toLowerCase();
+  const text = `${licenseShort} ${usageTerms}`;
+  if (text.includes('cc0') || text.includes('cc-zero')) return 'cc0';
+  if (text.includes('public domain')) return 'public_domain';
+  if (text.includes('cc by-sa') || text.includes('cc-by-sa')) return 'cc_by_sa';
+  // Default for CC-BY and any other already-accepted license
+  return 'cc_by';
+}
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, '').trim();
+}
+
 interface WikimediaFetchResult {
-  candidates: PublicPhotoCandidate[];
+  candidates: NormalizedPhotoCandidate[];
   rejectedByReason: Record<string, number>;
   nextCursor: string;
   category: string;
 }
 
-function asWikiCategoriesText(categories: any[]): string {
+function asWikiCategoriesText(categories: WikiCategory[]): string {
   return categories
     .map((category) => String(category?.title ?? ''))
     .join(' ')
@@ -1079,7 +1469,7 @@ function hasAllowedMime(mime: string): boolean {
   return mime === 'image/jpeg' || mime === 'image/png';
 }
 
-function hasAllowedLicense(ext: any): boolean {
+function hasAllowedLicense(ext: WikiExtMetadata): boolean {
   const licenseShort = String(ext?.LicenseShortName?.value ?? '').toLowerCase();
   const usageTerms = String(ext?.UsageTerms?.value ?? '').toLowerCase();
   const licenseText = `${licenseShort} ${usageTerms}`;
@@ -1097,17 +1487,24 @@ async function fetchWikimediaFileMembers(
   limit = 40
 ): Promise<{ titles: string[]; nextCursor: string }> {
   const continueParam = cursor ? `&cmcontinue=${encodeURIComponent(cursor)}` : '';
-  const response = await fetch(
-    `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&list=categorymembers&cmtitle=${encodeURIComponent(
-      category
-    )}&cmtype=file&cmlimit=${Math.min(50, Math.max(10, limit))}${continueParam}`
-  );
-  if (!response.ok) return { titles: [], nextCursor: '' };
+  const url = `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&list=categorymembers&cmtitle=${encodeURIComponent(
+    category
+  )}&cmtype=file&cmlimit=${Math.min(50, Math.max(10, limit))}${continueParam}`;
+  await delay(200); // polite rate limiting
+  let response: Response;
+  try {
+    response = await fetch(url, { headers: { 'Api-User-Agent': WIKIMEDIA_USER_AGENT } });
+  } catch {
+    return { titles: [], nextCursor: '' };
+  }
+  if (!response.ok) {
+    return { titles: [], nextCursor: '' };
+  }
   const data = await response.json();
   const members = Array.isArray(data?.query?.categorymembers) ? data.query.categorymembers : [];
   return {
     titles: members
-      .map((member: any) => member?.title)
+      .map((member: WikiCategory) => member?.title)
       .filter(
         (title: unknown): title is string => typeof title === 'string' && title.startsWith('File:')
       ),
@@ -1116,16 +1513,18 @@ async function fetchWikimediaFileMembers(
 }
 
 async function fetchWikimediaSubcategoryMembers(category: string, limit = 8): Promise<string[]> {
+  await delay(200);
   const response = await fetch(
     `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&list=categorymembers&cmtitle=${encodeURIComponent(
       category
-    )}&cmtype=subcat&cmlimit=${Math.min(20, Math.max(5, limit))}`
+    )}&cmtype=subcat&cmlimit=${Math.min(20, Math.max(5, limit))}`,
+    { headers: { 'Api-User-Agent': WIKIMEDIA_USER_AGENT } }
   );
   if (!response.ok) return [];
   const data = await response.json();
   const members = Array.isArray(data?.query?.categorymembers) ? data.query.categorymembers : [];
   return members
-    .map((member: any) => member?.title)
+    .map((member: WikiCategory) => member?.title)
     .filter(
       (title: unknown): title is string =>
         typeof title === 'string' && title.startsWith('Category:')
@@ -1142,7 +1541,7 @@ async function fetchWikimediaImageInfoByTitles(
     chunks.push(titles.slice(i, i + 25));
   }
 
-  const candidates: PublicPhotoCandidate[] = [];
+  const candidates: NormalizedPhotoCandidate[] = [];
   const rejectedByReason: Record<string, number> = {};
 
   for (const chunk of chunks) {
@@ -1157,14 +1556,18 @@ async function fetchWikimediaImageInfoByTitles(
       cllimit: '20',
     });
 
+    await delay(200);
     const response = await fetch('https://commons.wikimedia.org/w/api.php', {
       method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'Api-User-Agent': WIKIMEDIA_USER_AGENT,
+      },
       body: params.toString(),
     });
     if (!response.ok) continue;
     const data = await response.json();
-    const pages = Object.values(data?.query?.pages ?? {}) as any[];
+    const pages = Object.values(data?.query?.pages ?? {}) as WikiUnknownPage[];
 
     pages.forEach((page) => {
       const info = page?.imageinfo?.[0];
@@ -1219,6 +1622,7 @@ async function fetchWikimediaImageInfoByTitles(
 
       const locationConflictDetected = detectLocationConflictFromText(haystack, { lat, lng });
 
+      const pageTitle = String(page.title ?? '');
       candidates.push({
         provider: 'wikimedia',
         providerImageId: String(page.pageid),
@@ -1231,7 +1635,11 @@ async function fetchWikimediaImageInfoByTitles(
         yearConfidence: yearMeta.yearConfidence,
         title,
         description,
-        categories,
+        tags: categories.map((c) => c.title),
+        license: mapWikimediaLicense(ext),
+        author: ext?.Artist?.value ? stripHtml(String(ext.Artist.value)) : undefined,
+        institutionName: 'Wikimedia Commons',
+        originalUrl: `https://commons.wikimedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, '_'))}`,
         contentYearHint: yearMeta.contentYearHint ?? undefined,
         historicalContextSignal: yearMeta.historicalContextSignal,
         locationConflictDetected,
@@ -1272,9 +1680,575 @@ async function fetchWikimediaCandidatesFromCategory(
   };
 }
 
+// ─── Source Adapters ─────────────────────────────────────────────────────────
+
+const wikimediaAdapter: PhotoSourceAdapter = {
+  provider: 'wikimedia',
+  async fetchCandidates(cursor, limit, _diagnosticsEnabled, target) {
+    const cursors = { ...cursor.wikimediaCursors };
+    const allCandidates: NormalizedPhotoCandidate[] = [];
+    const rejectedByReason: Record<string, number> = {};
+
+    // When era-targeted, pick from the matching category bucket
+    const eraCats = target?.era ? WIKIMEDIA_ERA_CATEGORIES[target.era] : null;
+    let categoryIndex = cursor.wikimediaCategoryIndex;
+
+    const rotations = eraCats ? 3 : 2;
+    for (let rotation = 0; rotation < rotations; rotation++) {
+      const category = eraCats
+        ? eraCats[categoryIndex % eraCats.length]
+        : WIKIMEDIA_ROOT_CATEGORIES[categoryIndex % WIKIMEDIA_ROOT_CATEGORIES.length];
+      const catCursor = cursors[category] ?? '';
+      const fetched = await fetchWikimediaCandidatesFromCategory(
+        category,
+        catCursor,
+        Math.min(PUBLIC_FETCH_CAP, Math.max(90, limit))
+      );
+      for (const [reason, count] of Object.entries(fetched.rejectedByReason)) {
+        rejectedByReason[reason] = (rejectedByReason[reason] ?? 0) + count;
+      }
+      cursors[fetched.category] = fetched.nextCursor;
+      categoryIndex = eraCats
+        ? (categoryIndex + 1) % eraCats.length
+        : nextCategoryIndex(categoryIndex);
+      allCandidates.push(...fetched.candidates);
+    }
+
+    return {
+      candidates: allCandidates,
+      nextCursor: { ...cursor, wikimediaCategoryIndex: categoryIndex, wikimediaCursors: cursors },
+      rejectedByReason,
+    };
+  },
+};
+
+const locAdapter: PhotoSourceAdapter = {
+  provider: 'loc',
+  async fetchCandidates(cursor, limit, _diagnosticsEnabled, target) {
+    const empty = (r: Record<string, number> = {}) => ({
+      candidates: [] as NormalizedPhotoCandidate[],
+      nextCursor: cursor,
+      rejectedByReason: r,
+    });
+    // Dev-gated: set EXPO_PUBLIC_ENABLE_LOC_SOURCE=1 to enable
+    if (process.env.EXPO_PUBLIC_ENABLE_LOC_SOURCE !== '1') {
+      return empty();
+    }
+
+    const allCandidates: NormalizedPhotoCandidate[] = [];
+    const rejectedByReason: Record<string, number> = {};
+
+    // When era-targeted, filter queries to matching era and use per-era cursor
+    const eraQueries = target?.era
+      ? LOC_SEARCH_QUERIES.filter((q) => q.eraHint === target.era)
+      : LOC_SEARCH_QUERIES;
+    const queries = eraQueries.length > 0 ? eraQueries : LOC_SEARCH_QUERIES;
+    const eraKey = target?.era ?? '__default';
+    const locPage = cursor.locEraPages?.[eraKey] ?? cursor.locPage;
+    const locQueryIndex = cursor.locEraQueryIndices?.[eraKey] ?? cursor.locQueryIndex;
+    const queryEntry = queries[locQueryIndex % queries.length];
+    const perPage = Math.min(25, limit);
+
+    await delay(500); // polite rate limiting
+    const url = `https://www.loc.gov/photos/?fo=json&${queryEntry.params}&sp=${locPage}&c=${perPage}`;
+    let data: Record<string, unknown> | null = null;
+    try {
+      const response = await fetch(url);
+      if (response.ok) data = await response.json();
+    } catch {
+      return empty({ loc_fetch_error: 1 });
+    }
+
+    const results: unknown[] = Array.isArray(data?.results) ? (data.results as unknown[]) : [];
+
+    for (const raw of results) {
+      const item = raw as Record<string, unknown>;
+
+      // Image URL — pick the highest-resolution variant from image_url (last entry
+      // is typically the largest, e.g. 1024px "v.jpg"). Strip URL fragment (#h=&w=).
+      const imageUrlArrAll = Array.isArray(item.image_url) ? item.image_url : [];
+      const imageUrlArr = imageUrlArrAll.filter(
+        (u: unknown): u is string => typeof u === 'string' && /\.(jpg|jpeg|gif|png|tif)/i.test(u)
+      );
+      const rawImageUri = imageUrlArr.length > 0 ? imageUrlArr[imageUrlArr.length - 1] : null;
+      const imageUri = typeof rawImageUri === 'string' ? rawImageUri.split('#')[0] : null;
+      if (!imageUri) {
+        rejectedByReason.loc_no_image_url = (rejectedByReason.loc_no_image_url ?? 0) + 1;
+        continue;
+      }
+
+      // License: search results lack rights_information (only available at item level).
+      // Fall back to access_restricted=false → public_domain for LOC photo collections.
+      const rightsInfoStr =
+        typeof item.rights_information === 'string' ? item.rights_information : undefined;
+      const license =
+        mapLOCRights(rightsInfoStr) ??
+        (item.access_restricted === false ? ('public_domain' as const) : null);
+      if (!license) {
+        rejectedByReason.loc_rejected_license = (rejectedByReason.loc_rejected_license ?? 0) + 1;
+        continue;
+      }
+
+      // Year
+      const dateStr =
+        (typeof item.date === 'string' ? item.date : null) ??
+        (Array.isArray(item.created_published) && typeof item.created_published[0] === 'string'
+          ? item.created_published[0]
+          : null);
+      const title = typeof item.title === 'string' ? item.title : 'LOC photo';
+      const description =
+        Array.isArray(item.description) && typeof item.description[0] === 'string'
+          ? item.description[0]
+          : undefined;
+
+      let year = parseLOCDate(dateStr);
+      let yearSource: NormalizedPhotoCandidate['yearSource'] = 'structured_metadata';
+      let yearConfidence: NormalizedPhotoCandidate['yearConfidence'] = 'medium';
+
+      if (!year) {
+        const hint = extractContentYearHint(`${title} ${description ?? ''}`);
+        if (!hint) {
+          rejectedByReason.loc_no_year = (rejectedByReason.loc_no_year ?? 0) + 1;
+          continue;
+        }
+        year = hint;
+        yearSource = 'content_inferred';
+        // Promote to medium if the inferred year matches the query's era hint
+        yearConfidence =
+          queryEntry.eraHint && eraBucket(hint) === queryEntry.eraHint ? 'medium' : 'low';
+      }
+
+      // Location: prefer structured lat/lng, fall back to Open-Meteo geocoding
+      const latlongRaw =
+        (typeof item.latlong === 'string' ? item.latlong : null) ??
+        (typeof item.coordinates === 'string' ? item.coordinates : null);
+      let location = parseLOCLatLng(latlongRaw);
+      let locationSource: NormalizedPhotoCandidate['locationSource'] = 'structured_metadata';
+      let locationConfidence: NormalizedPhotoCandidate['locationConfidence'] = 'medium';
+
+      if (!location) {
+        // Open-Meteo geocoder works best with a single place name (no commas).
+        // Prefer city; fall back to state, then first location entry.
+        const city = Array.isArray(item.location_city) ? item.location_city[0] : null;
+        const state = Array.isArray(item.location_state) ? item.location_state[0] : null;
+        const locationText =
+          (typeof city === 'string' && city.length > 0 ? city : null) ??
+          (typeof state === 'string' && state.length > 0 ? state : null) ??
+          (Array.isArray(item.location)
+            ? item.location.find(
+                (s: unknown) => typeof s === 'string' && s.length > 0 && s !== 'united states'
+              )
+            : null) ??
+          '';
+
+        if (locationText) {
+          const geo = await searchLocations(locationText, 1);
+          if (geo[0]) {
+            location = { lat: geo[0].lat, lng: geo[0].lng };
+            locationSource = 'content_inferred';
+            locationConfidence = 'low';
+          }
+        }
+      }
+
+      if (!location) {
+        rejectedByReason.loc_no_location = (rejectedByReason.loc_no_location ?? 0) + 1;
+        continue;
+      }
+
+      const subjects = Array.isArray(item.subject) ? item.subject.map(String) : [];
+      const providerImageId =
+        (typeof item.id === 'string' ? item.id : null) ??
+        (typeof item.url === 'string' ? item.url : null) ??
+        imageUri;
+
+      allCandidates.push({
+        provider: 'loc',
+        providerImageId,
+        imageUri,
+        thumbnailUri: imageUrlArr.length > 1 ? imageUrlArr[0].split('#')[0] : undefined,
+        location,
+        locationSource,
+        locationConfidence,
+        year,
+        yearSource,
+        yearConfidence,
+        title,
+        description,
+        tags: subjects,
+        license,
+        author:
+          Array.isArray(item.contributor) && typeof item.contributor[0] === 'string'
+            ? item.contributor[0]
+            : undefined,
+        institutionName: 'Library of Congress',
+        originalUrl: typeof item.url === 'string' ? item.url : undefined,
+      });
+    }
+
+    // Advance cursor: next page if results came back; otherwise rotate to next query
+    const hasResults = results.length > 0;
+    const nextPage = hasResults ? locPage + 1 : 1;
+    const nextQIndex = hasResults ? locQueryIndex : locQueryIndex + 1;
+    return {
+      candidates: allCandidates,
+      nextCursor: {
+        ...cursor,
+        locPage: nextPage,
+        locQueryIndex: nextQIndex,
+        locEraPages: { ...(cursor.locEraPages ?? {}), [eraKey]: nextPage },
+        locEraQueryIndices: { ...(cursor.locEraQueryIndices ?? {}), [eraKey]: nextQIndex },
+      },
+      rejectedByReason,
+    };
+  },
+};
+
+const europeanaAdapter: PhotoSourceAdapter = {
+  provider: 'europeana',
+  async fetchCandidates(cursor, limit, _diagnosticsEnabled, target) {
+    const empty = (r: Record<string, number> = {}) => ({
+      candidates: [] as NormalizedPhotoCandidate[],
+      nextCursor: cursor,
+      rejectedByReason: r,
+    });
+    // Dev-gated: set EXPO_PUBLIC_ENABLE_EUROPEANA_SOURCE=1 to enable
+    if (process.env.EXPO_PUBLIC_ENABLE_EUROPEANA_SOURCE !== '1') {
+      return empty();
+    }
+    const apiKey = process.env.EXPO_PUBLIC_EUROPEANA_API_KEY ?? '';
+    if (!apiKey) {
+      return empty({ europeana_no_api_key: 1 });
+    }
+
+    const allCandidates: NormalizedPhotoCandidate[] = [];
+    const rejectedByReason: Record<string, number> = {};
+
+    // When era-targeted, filter queries to matching era and use per-era cursor
+    const eraQueries = target?.era
+      ? EUROPEANA_SEARCH_QUERIES.filter((q) => q.eraHint === target.era)
+      : EUROPEANA_SEARCH_QUERIES;
+    const queries = eraQueries.length > 0 ? eraQueries : EUROPEANA_SEARCH_QUERIES;
+    const eraKey = target?.era ?? '__default';
+    const europeanaStart = cursor.europeanaEraStarts?.[eraKey] ?? cursor.europeanaStart;
+    const europeanaQueryIndex =
+      cursor.europeanaEraQueryIndices?.[eraKey] ?? cursor.europeanaQueryIndex;
+    const queryEntry = queries[europeanaQueryIndex % queries.length];
+    const rows = Math.min(25, limit);
+
+    await delay(300); // polite rate limiting
+    const qfParam = queryEntry.qf.map((f) => `qf=${encodeURIComponent(f)}`).join('&');
+    const url =
+      `https://api.europeana.eu/record/v2/search.json` +
+      `?wskey=${encodeURIComponent(apiKey)}` +
+      `&query=${encodeURIComponent(queryEntry.q)}` +
+      `&${qfParam}` +
+      `&reusability=open` +
+      `&rows=${rows}` +
+      `&start=${europeanaStart}` +
+      `&profile=rich`;
+
+    let data: Record<string, unknown> | null = null;
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        data = await response.json();
+      } else {
+        rejectedByReason.europeana_http_error = (rejectedByReason.europeana_http_error ?? 0) + 1;
+      }
+    } catch {
+      return empty({ europeana_fetch_error: 1 });
+    }
+
+    const items: unknown[] = Array.isArray(data?.items) ? (data.items as unknown[]) : [];
+
+    for (const raw of items) {
+      const item = raw as Record<string, unknown>;
+
+      // Image URL — required; upgrade http→https for iOS ATS compliance
+      const rawImageUri =
+        (Array.isArray(item.edmIsShownBy) && typeof item.edmIsShownBy[0] === 'string'
+          ? item.edmIsShownBy[0]
+          : null) ?? (typeof item.edmIsShownBy === 'string' ? item.edmIsShownBy : null);
+      // Fallback: edmPreview is Europeana's own HTTPS thumbnail proxy
+      const previewUri =
+        typeof item.edmPreview === 'string'
+          ? item.edmPreview
+          : Array.isArray(item.edmPreview) && typeof item.edmPreview[0] === 'string'
+            ? item.edmPreview[0]
+            : null;
+      const imageUri = rawImageUri ? rawImageUri.replace(/^http:\/\//i, 'https://') : previewUri;
+      if (!imageUri) {
+        rejectedByReason.europeana_no_image_url =
+          (rejectedByReason.europeana_no_image_url ?? 0) + 1;
+        continue;
+      }
+
+      // License — rights field can be string or array
+      const rightsRaw = Array.isArray(item.rights)
+        ? (item.rights[0] as string | undefined)
+        : ((item['europeanaRights'] as string | undefined) ?? (item.rights as string | undefined));
+      const license = mapEuropeanaRights(rightsRaw);
+      if (!license) {
+        rejectedByReason.europeana_rejected_license =
+          (rejectedByReason.europeana_rejected_license ?? 0) + 1;
+        continue;
+      }
+
+      // Title
+      const titleRaw = Array.isArray(item.title) ? item.title[0] : item.title;
+      const title =
+        typeof titleRaw === 'string' && titleRaw.length > 0 ? titleRaw : 'Europeana photo';
+
+      // Description
+      const descRaw = (() => {
+        const d = item.dcDescriptionLangAware as Record<string, unknown> | undefined;
+        if (d) {
+          const en = d.en;
+          return Array.isArray(en) ? en[0] : typeof en === 'string' ? en : undefined;
+        }
+        return undefined;
+      })();
+      const description = typeof descRaw === 'string' ? descRaw : undefined;
+
+      // Year — try multiple Europeana fields, fall back to content extraction
+      let year: number | null = null;
+      let yearSource: NormalizedPhotoCandidate['yearSource'] = 'structured_metadata';
+      let yearConfidence: NormalizedPhotoCandidate['yearConfidence'] = 'medium';
+
+      // 1. Try item.year (array of strings like ["1930"])
+      const yearRaw = Array.isArray(item.year) ? item.year[0] : item.year;
+      if (typeof yearRaw === 'string' || typeof yearRaw === 'number') {
+        const parsed = parseInt(String(yearRaw), 10);
+        if (!Number.isNaN(parsed) && parsed >= 1800 && parsed <= new Date().getFullYear()) {
+          year = parsed;
+        }
+      }
+
+      // 2. Try edmTimespanBegin (ISO date string like "1930-01-01")
+      if (!year) {
+        const tsBegin = Array.isArray(item.edmTimespanBegin)
+          ? item.edmTimespanBegin[0]
+          : item.edmTimespanBegin;
+        if (typeof tsBegin === 'string') {
+          const m = tsBegin.match(/(\d{4})/);
+          if (m) {
+            const parsed = parseInt(m[1], 10);
+            if (parsed >= 1800 && parsed <= new Date().getFullYear()) year = parsed;
+          }
+        }
+      }
+
+      // 3. Try edmTimespanLabel / edmTimespanLabelLangAware (common in Deutsche Fotothek)
+      if (!year) {
+        const tsLabel = Array.isArray(item.edmTimespanLabel)
+          ? item.edmTimespanLabel[0]
+          : item.edmTimespanLabel;
+        const tsStr =
+          typeof tsLabel === 'string'
+            ? tsLabel
+            : tsLabel &&
+                typeof tsLabel === 'object' &&
+                'def' in (tsLabel as Record<string, unknown>)
+              ? String((tsLabel as Record<string, string>).def)
+              : null;
+        if (tsStr) {
+          const m = tsStr.match(/(\d{4})/);
+          if (m) {
+            const parsed = parseInt(m[1], 10);
+            if (parsed >= 1800 && parsed <= new Date().getFullYear()) year = parsed;
+          }
+        }
+      }
+      if (!year) {
+        const langMap = item.edmTimespanLabelLangAware as Record<string, unknown> | undefined;
+        if (langMap) {
+          for (const vals of Object.values(langMap)) {
+            const str = Array.isArray(vals) ? String(vals[0] ?? '') : String(vals ?? '');
+            const m = str.match(/(\d{4})/);
+            if (m) {
+              const parsed = parseInt(m[1], 10);
+              if (parsed >= 1800 && parsed <= new Date().getFullYear()) {
+                year = parsed;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // 4. Try dctermsCreated / dcDate / lang-aware variants
+      if (!year) {
+        for (const field of ['dctermsCreated', 'dcDate']) {
+          const val = Array.isArray(item[field]) ? item[field][0] : item[field];
+          if (typeof val === 'string') {
+            const m = val.match(/(\d{4})/);
+            if (m) {
+              const parsed = parseInt(m[1], 10);
+              if (parsed >= 1800 && parsed <= new Date().getFullYear()) {
+                year = parsed;
+                break;
+              }
+            }
+          }
+        }
+        if (!year) {
+          for (const field of ['dcDateLangAware', 'dctermsCreatedLangAware']) {
+            const langMap = item[field] as Record<string, unknown> | undefined;
+            if (langMap) {
+              for (const vals of Object.values(langMap)) {
+                const str = Array.isArray(vals) ? String(vals[0] ?? '') : String(vals ?? '');
+                const m = str.match(/(\d{4})/);
+                if (m) {
+                  const parsed = parseInt(m[1], 10);
+                  if (parsed >= 1800 && parsed <= new Date().getFullYear()) {
+                    year = parsed;
+                    break;
+                  }
+                }
+              }
+              if (year) break;
+            }
+          }
+        }
+      }
+
+      // 5. Fall back to title/description content extraction
+      if (!year) {
+        const hint = extractContentYearHint(`${title} ${description ?? ''}`);
+        if (!hint) {
+          rejectedByReason.europeana_no_year = (rejectedByReason.europeana_no_year ?? 0) + 1;
+          continue;
+        }
+        year = hint;
+        yearSource = 'content_inferred';
+        // Promote to medium if the inferred year matches the query's era hint
+        yearConfidence =
+          queryEntry.eraHint && eraBucket(hint) === queryEntry.eraHint ? 'medium' : 'low';
+      }
+
+      // Location — prefer edmPlaceLatitude/Longitude; fall back to geocoding country
+      let location: { lat: number; lng: number } | null = null;
+      let locationSource: NormalizedPhotoCandidate['locationSource'] = 'content_inferred';
+      let locationConfidence: NormalizedPhotoCandidate['locationConfidence'] = 'low';
+
+      const edmLat = Array.isArray(item.edmPlaceLatitude)
+        ? item.edmPlaceLatitude[0]
+        : item.edmPlaceLatitude;
+      const edmLng = Array.isArray(item.edmPlaceLongitude)
+        ? item.edmPlaceLongitude[0]
+        : item.edmPlaceLongitude;
+      const parsedLat = parseFloat(String(edmLat ?? ''));
+      const parsedLng = parseFloat(String(edmLng ?? ''));
+      if (
+        Number.isFinite(parsedLat) &&
+        Number.isFinite(parsedLng) &&
+        Math.abs(parsedLat) <= 90 &&
+        Math.abs(parsedLng) <= 180
+      ) {
+        location = { lat: parsedLat, lng: parsedLng };
+        locationSource = 'structured_metadata';
+        locationConfidence = 'medium';
+      }
+
+      const countryRaw = Array.isArray(item.country) ? item.country[0] : item.country;
+      const dataProviderRaw = Array.isArray(item.dataProvider)
+        ? item.dataProvider[0]
+        : item.dataProvider;
+
+      if (!location) {
+        // Fall back to geocoding — use country name only (Open-Meteo needs single place names)
+        const locationText = typeof countryRaw === 'string' ? countryRaw : '';
+        if (locationText) {
+          const geo = await searchLocations(locationText, 1);
+          if (geo[0]) {
+            location = { lat: geo[0].lat, lng: geo[0].lng };
+          }
+        }
+      }
+
+      if (!location) {
+        rejectedByReason.europeana_no_location = (rejectedByReason.europeana_no_location ?? 0) + 1;
+        continue;
+      }
+
+      const providerImageId =
+        (typeof item.id === 'string' ? item.id : null) ??
+        (typeof item.guid === 'string' ? item.guid : null) ??
+        imageUri;
+
+      const authorRaw = Array.isArray(item.dcCreator) ? item.dcCreator[0] : item.dcCreator;
+
+      allCandidates.push({
+        provider: 'europeana',
+        providerImageId,
+        imageUri,
+        location,
+        locationSource,
+        locationConfidence,
+        year,
+        yearSource,
+        yearConfidence,
+        title,
+        description,
+        tags: [],
+        license,
+        author: typeof authorRaw === 'string' ? authorRaw : undefined,
+        institutionName: typeof dataProviderRaw === 'string' ? dataProviderRaw : 'Europeana',
+        originalUrl: typeof item.guid === 'string' ? item.guid : undefined,
+      });
+    }
+
+    // Advance cursor: next page if results came back; otherwise rotate to next query
+    const hasResults = items.length > 0;
+    const nextStart = hasResults ? europeanaStart + rows : 1;
+    const nextQIndex = hasResults ? europeanaQueryIndex : europeanaQueryIndex + 1;
+    return {
+      candidates: allCandidates,
+      nextCursor: {
+        ...cursor,
+        europeanaStart: nextStart,
+        europeanaQueryIndex: nextQIndex,
+        europeanaEraStarts: { ...(cursor.europeanaEraStarts ?? {}), [eraKey]: nextStart },
+        europeanaEraQueryIndices: {
+          ...(cursor.europeanaEraQueryIndices ?? {}),
+          [eraKey]: nextQIndex,
+        },
+      },
+      rejectedByReason,
+    };
+  },
+};
+
+const ADAPTERS: Record<PublicProvider, PhotoSourceAdapter> = {
+  wikimedia: wikimediaAdapter,
+  loc: locAdapter,
+  europeana: europeanaAdapter,
+  test: {
+    provider: 'test',
+    async fetchCandidates(cursor, _limit, _diagnosticsEnabled) {
+      return {
+        candidates: [] as NormalizedPhotoCandidate[],
+        nextCursor: cursor,
+        rejectedByReason: {} as Record<string, number>,
+      };
+    },
+  },
+};
+
 function providersForSource(source: PublicImageSource): PublicProvider[] {
-  if (source === 'wikimedia') return ['wikimedia'];
-  return ['test'];
+  switch (source) {
+    case 'wikimedia':
+      return ['wikimedia'];
+    case 'loc':
+      return ['loc'];
+    case 'europeana':
+      return ['europeana'];
+    case 'wikimedia+loc+europeana':
+      return ['wikimedia', 'loc', 'europeana'];
+    default:
+      return ['test'];
+  }
 }
 
 async function cleanupSeenAssets(state: CacheState): Promise<CacheState> {
@@ -1297,133 +2271,253 @@ async function cleanupSeenAssets(state: CacheState): Promise<CacheState> {
   return { ...state, images: kept };
 }
 
+// ─── Gap-driven fill helpers ─────────────────────────────────────────────────
+
+const ALL_ERAS: EraBucket[] = ['pre_1950', 'y1950_1979', 'y1980_1999', 'y2000_2014', 'y2015_plus'];
+
+/** Provider routing: which source is best for a given era? */
+function providersForEra(era: EraBucket, available: PublicProvider[]): PublicProvider[] {
+  const ranking: Record<EraBucket, PublicProvider[]> = {
+    pre_1950: ['loc', 'europeana', 'wikimedia'],
+    y1950_1979: ['loc', 'europeana', 'wikimedia'],
+    y1980_1999: ['europeana', 'wikimedia', 'loc'],
+    y2000_2014: ['wikimedia', 'europeana', 'loc'],
+    y2015_plus: ['wikimedia', 'europeana', 'loc'],
+  };
+  return ranking[era].filter((p) => available.includes(p));
+}
+
+/** How many images each era should ideally have (sums to ~120). */
+function eraTarget(era: EraBucket): number {
+  switch (era) {
+    case 'pre_1950':
+      return 30;
+    case 'y1950_1979':
+      return 28;
+    case 'y1980_1999':
+      return 24;
+    case 'y2000_2014':
+      return 20;
+    case 'y2015_plus':
+      return 18;
+  }
+}
+
+/** Count images per era in the cache. */
+function eraCounts(images: Array<{ year: number }>): Record<EraBucket, number> {
+  const counts: Record<EraBucket, number> = {
+    pre_1950: 0,
+    y1950_1979: 0,
+    y1980_1999: 0,
+    y2000_2014: 0,
+    y2015_plus: 0,
+  };
+  for (const img of images) counts[eraBucket(img.year)] += 1;
+  return counts;
+}
+
+// ─── Candidate acceptance pipeline (shared by all rounds) ────────────────────
+
+function tryAcceptCandidate(
+  candidate: NormalizedPhotoCandidate,
+  nextImages: CachedPublicImage[],
+  seen: Set<string>,
+  existing: Set<string>,
+  filters: PublicSelectionFilters,
+  stats: {
+    metadataPass: number;
+    strictPass: number;
+    skippedAsSeen: number;
+    downloaded: number;
+    rejectedByReason: Record<string, number>;
+    acceptedByConfidence: Record<string, number>;
+  }
+): CachedPublicImage | null {
+  stats.metadataPass += 1;
+
+  const key = seenKey(candidate.provider, candidate.providerImageId);
+  if (seen.has(key) || existing.has(key)) {
+    stats.skippedAsSeen += 1;
+    return null;
+  }
+
+  if (nextImages.some((cached) => isNearDuplicate(candidate, cached))) return null;
+
+  // Era cap
+  const candidateEra = eraBucket(candidate.year);
+  if (nextImages.filter((img) => eraBucket(img.year) === candidateEra).length >= MAX_CACHE_PER_ERA)
+    return null;
+
+  // Region cap
+  const candidateRegion =
+    candidate.region ?? classifyRegion(candidate.location.lat, candidate.location.lng);
+  if (
+    candidateRegion !== 'unknown' &&
+    nextImages.filter((img) => img.region === candidateRegion).length >= MAX_CACHE_PER_REGION
+  )
+    return null;
+
+  // Band caps
+  const candidateBand = ageBand(candidate.year);
+  const bandCts = ageBandCounts(nextImages.map(candidateToRound));
+  if (candidateBand === 'older' && bandCts.older >= MAX_CACHE_OLDER_BAND) return null;
+  if (candidateBand === 'newer' && bandCts.newer >= MAX_CACHE_NEWER_BAND) return null;
+
+  // Validation
+  const validation = validatePublicCandidate(candidate, filters);
+  if (validation.hardFail) {
+    for (const reason of validation.reasons) {
+      stats.rejectedByReason[reason] = (stats.rejectedByReason[reason] ?? 0) + 1;
+    }
+    return null;
+  }
+  if (validation.pass) stats.strictPass += 1;
+  if (filters.enforceGuessabilityThreshold && !validation.pass) return null;
+
+  return {
+    cacheId: cacheId(candidate.provider, candidate.providerImageId),
+    provider: candidate.provider,
+    providerImageId: candidate.providerImageId,
+    remoteUri: candidate.imageUri,
+    localUri: '', // placeholder — caller downloads
+    location: candidate.location,
+    year: candidate.year,
+    title: candidate.title,
+    displayTitle: sanitizeDisplayTitle(candidate.title),
+    displayLocation: inferLocationLabel(
+      sanitizeDisplayTitle(candidate.title),
+      candidate.description,
+      candidate.tags ?? []
+    ),
+    description: candidate.description,
+    fetchedAt: Date.now(),
+    license: candidate.license,
+    author: candidate.author,
+    institutionName: candidate.institutionName,
+    originalUrl: candidate.originalUrl,
+    region: candidateRegion,
+  } as CachedPublicImage;
+}
+
+// ─── Main refill function ────────────────────────────────────────────────────
+
 async function refillPublicCache(
   state: CacheState,
   publicImageSource: PublicImageSource,
   filters: PublicSelectionFilters,
   diagnosticsEnabled: boolean
 ): Promise<CacheState> {
-  if (publicImageSource === 'test') {
-    return state;
-  }
+  if (publicImageSource === 'test') return state;
 
   const seen = new Set(state.seenLedger);
   const existing = new Set(state.images.map((img) => seenKey(img.provider, img.providerImageId)));
   const providers = providersForSource(publicImageSource);
-  let fetchedCandidates = 0;
-  let metadataPass = 0;
-  let strictPass = 0;
-  let skippedAsSeen = 0;
-  let downloaded = 0;
-  const rejectedByReason: Record<string, number> = {};
-  const acceptedByConfidence = { high: 0, medium: 0, low: 0 };
-  let wikimediaCategoryIndex = state.wikimediaCategoryIndex;
-  const wikimediaCursors = { ...state.wikimediaCursors };
-  const usedCategories: string[] = [];
+  const stats = {
+    fetchedCandidates: 0,
+    metadataPass: 0,
+    strictPass: 0,
+    skippedAsSeen: 0,
+    downloaded: 0,
+    rejectedByReason: {} as Record<string, number>,
+    acceptedByConfidence: { high: 0, medium: 0, low: 0 } as Record<string, number>,
+  };
+  let providerCursors = { ...state.providerCursors };
+  const eraFailCount: Record<string, number> = {};
+  for (const cell of providerCursors.failedCells ?? []) eraFailCount[cell] = 2; // already exhausted
 
   const nextImages = [...state.images];
-  for (const provider of providers) {
+
+  // ── Gap-driven multi-round fill ───────────────────────────────────────────
+  for (let round = 0; round < 6; round++) {
     if (nextImages.length >= PUBLIC_CACHE_TARGET) break;
 
-    let candidates: PublicPhotoCandidate[] = [];
-    if (provider === 'wikimedia') {
-      for (
-        let rotation = 0;
-        rotation < 5 && nextImages.length < PUBLIC_CACHE_TARGET;
-        rotation += 1
-      ) {
-        const category = WIKIMEDIA_ROOT_CATEGORIES[wikimediaCategoryIndex];
-        const cursor = wikimediaCursors[category] ?? '';
-        const fetched = await fetchWikimediaCandidatesFromCategory(
-          category,
-          cursor,
-          Math.min(PUBLIC_FETCH_CAP, Math.max(90, PUBLIC_CACHE_TARGET * 2))
-        );
+    // 1. Find era gaps — which eras need more images?
+    const counts = eraCounts(nextImages);
+    const gaps = ALL_ERAS.filter((era) => (eraFailCount[era] ?? 0) < 2)
+      .map((era) => ({ era, deficit: eraTarget(era) - counts[era] }))
+      .filter((g) => g.deficit > 0)
+      .sort((a, b) => b.deficit - a.deficit);
 
-        usedCategories.push(fetched.category);
-        for (const [reason, count] of Object.entries(fetched.rejectedByReason)) {
-          rejectedByReason[reason] = (rejectedByReason[reason] ?? 0) + count;
-        }
-        wikimediaCursors[fetched.category] = fetched.nextCursor;
-        wikimediaCategoryIndex = nextCategoryIndex(wikimediaCategoryIndex);
-        candidates.push(...fetched.candidates);
-      }
+    if (gaps.length === 0) break;
+
+    // 2. Dispatch targeted fetches — one per gap, up to 4 in parallel
+    //    Allow same provider for different eras (they use per-era cursors)
+    type DispatchEntry = {
+      era: EraBucket;
+      provider: PublicProvider;
+      promise: Promise<{
+        candidates: NormalizedPhotoCandidate[];
+        nextCursor: ProviderCursorState;
+        rejectedByReason: Record<string, number>;
+      }>;
+    };
+    const dispatches: DispatchEntry[] = [];
+
+    for (const gap of gaps.slice(0, 4)) {
+      const bestProviders = providersForEra(gap.era, providers);
+      const provider = bestProviders[0];
+      if (!provider) continue;
+      const adapter = ADAPTERS[provider];
+      dispatches.push({
+        era: gap.era,
+        provider,
+        promise: adapter.fetchCandidates(
+          providerCursors,
+          Math.min(PUBLIC_FETCH_CAP, Math.max(90, PUBLIC_CACHE_TARGET * 2)),
+          diagnosticsEnabled,
+          { era: gap.era }
+        ),
+      });
     }
 
-    fetchedCandidates += candidates.length;
+    // 3. Await all fetches
+    const results = await Promise.allSettled(dispatches.map((d) => d.promise));
 
-    for (const candidate of candidates) {
-      if (nextImages.length >= PUBLIC_CACHE_TARGET) break;
-      metadataPass += 1;
-
-      const key = seenKey(candidate.provider, candidate.providerImageId);
-      if (seen.has(key) || existing.has(key)) {
-        skippedAsSeen += 1;
-        continue;
+    // 4. Process candidates from each result
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === 'rejected') continue;
+      const { candidates, nextCursor, rejectedByReason: reasons } = result.value;
+      providerCursors = { ...providerCursors, ...nextCursor };
+      for (const [reason, count] of Object.entries(reasons)) {
+        stats.rejectedByReason[reason] = (stats.rejectedByReason[reason] ?? 0) + count;
       }
 
-      const nearDuplicate = nextImages.some((cached) => isNearDuplicate(candidate, cached));
-      if (nearDuplicate) {
-        continue;
-      }
+      stats.fetchedCandidates += candidates.length;
+      let acceptedThisRound = 0;
 
-      // Era quota: prevent any single era bucket from dominating the cache
-      const candidateEra = eraBucket(candidate.year);
-      const eraCount = nextImages.filter((img) => eraBucket(img.year) === candidateEra).length;
-      if (eraCount >= MAX_CACHE_PER_ERA) {
-        continue;
-      }
+      for (const candidate of candidates) {
+        if (nextImages.length >= PUBLIC_CACHE_TARGET) break;
 
-      // Band caps: keep old/new from crowding out middle decades.
-      const candidateBand = ageBand(candidate.year);
-      const bandCounts = ageBandCounts(nextImages.map(candidateToRound));
-      if (candidateBand === 'older' && bandCounts.older >= MAX_CACHE_OLDER_BAND) {
-        continue;
-      }
-      if (candidateBand === 'newer' && bandCounts.newer >= MAX_CACHE_NEWER_BAND) {
-        continue;
-      }
+        const accepted = tryAcceptCandidate(candidate, nextImages, seen, existing, filters, stats);
+        if (!accepted) continue;
 
-      const validation = validatePublicCandidate(candidate, filters);
-      if (validation.hardFail) {
-        for (const reason of validation.reasons) {
-          rejectedByReason[reason] = (rejectedByReason[reason] ?? 0) + 1;
+        // Download the image
+        const localUri = await downloadToLocal(candidate.imageUri, accepted.cacheId);
+        if (!localUri) {
+          stats.rejectedByReason.download_fail = (stats.rejectedByReason.download_fail ?? 0) + 1;
+          continue;
         }
-        continue;
+
+        accepted.localUri = localUri;
+        stats.downloaded += 1;
+        stats.acceptedByConfidence[candidate.yearConfidence] += 1;
+        existing.add(seenKey(candidate.provider, candidate.providerImageId));
+        nextImages.push(accepted);
+        acceptedThisRound += 1;
       }
-      if (validation.pass) strictPass += 1;
-      if (filters.enforceGuessabilityThreshold && !validation.pass) continue;
 
-      const cid = cacheId(candidate.provider, candidate.providerImageId);
-      const localUri = await downloadToLocal(candidate.imageUri, cid);
-      if (!localUri) continue;
-
-      downloaded += 1;
-      acceptedByConfidence[candidate.yearConfidence] += 1;
-      existing.add(key);
-      const displayTitle = sanitizeDisplayTitle(candidate.title);
-      const displayLocation = inferLocationLabel(
-        displayTitle,
-        candidate.description,
-        candidate.categories ?? []
-      );
-      nextImages.push({
-        cacheId: cid,
-        provider: candidate.provider,
-        providerImageId: candidate.providerImageId,
-        remoteUri: candidate.imageUri,
-        localUri,
-        location: candidate.location,
-        year: candidate.year,
-        title: candidate.title,
-        displayTitle,
-        displayLocation,
-        description: candidate.description,
-        fetchedAt: Date.now(),
-      });
+      // Track consecutive failures — 2 strikes and the era is marked exhausted
+      if (acceptedThisRound === 0) {
+        eraFailCount[dispatches[i].era] = (eraFailCount[dispatches[i].era] ?? 0) + 1;
+      } else {
+        // Reset on success
+        eraFailCount[dispatches[i].era] = 0;
+      }
     }
   }
 
+  // ── Trim & diagnostics ──────────────────────────────────────────────────────
   const trimmed = nextImages
     .sort((a, b) => (a.lastUsedAt ?? 0) - (b.lastUsedAt ?? 0))
     .slice(0, PUBLIC_CACHE_MAX);
@@ -1431,34 +2525,38 @@ async function refillPublicCache(
   if (__DEV__ && diagnosticsEnabled) {
     const eraDistribution: Record<string, number> = {};
     const bandDistribution: Record<AgeBand, number> = { older: 0, middle: 0, newer: 0 };
+    const regionDistribution: Record<string, number> = {};
+    const providerDistribution: Record<string, number> = {};
     for (const img of trimmed) {
       const era = eraBucket(img.year);
       eraDistribution[era] = (eraDistribution[era] ?? 0) + 1;
       bandDistribution[ageBand(img.year)] += 1;
+      const r = img.region ?? classifyRegion(img.location.lat, img.location.lng);
+      regionDistribution[r] = (regionDistribution[r] ?? 0) + 1;
+      providerDistribution[img.provider] = (providerDistribution[img.provider] ?? 0) + 1;
     }
 
     console.info('[photos] cache refill diagnostics', {
       publicImageSource,
-      fetchedCandidates,
-      metadataPass,
-      strictPass,
-      skippedAsSeen,
-      downloaded,
-      acceptedByConfidence,
-      rejectedByReason,
+      round: 'complete',
+      ...stats,
       cacheSize: trimmed.length,
       eraDistribution,
       bandDistribution,
-      wikimediaCategoryIndex,
-      usedCategories,
+      regionDistribution,
+      providerDistribution,
     });
   }
 
   return {
     ...state,
     images: trimmed,
-    wikimediaCategoryIndex,
-    wikimediaCursors,
+    providerCursors: {
+      ...providerCursors,
+      failedCells: Object.entries(eraFailCount)
+        .filter(([, c]) => c >= 2)
+        .map(([era]) => era),
+    },
   };
 }
 
@@ -1484,15 +2582,13 @@ async function ensureCacheReady(
     }
 
     const beforeCount = state.images.length;
-    const beforeCursorSnapshot = JSON.stringify(state.wikimediaCursors);
-    const beforeCategoryIndex = state.wikimediaCategoryIndex;
+    const beforeCursorSnapshot = JSON.stringify(state.providerCursors);
     state = await refillPublicCache(state, publicImageSource, filters, diagnosticsEnabled);
     attempts += 1;
 
     const noProgress =
       state.images.length === beforeCount &&
-      JSON.stringify(state.wikimediaCursors) === beforeCursorSnapshot &&
-      state.wikimediaCategoryIndex === beforeCategoryIndex;
+      JSON.stringify(state.providerCursors) === beforeCursorSnapshot;
     if (noProgress) {
       break;
     }
@@ -1595,6 +2691,7 @@ export async function clearPublicImageCache(): Promise<ClearPublicCacheSummary> 
 
   await AsyncStorage.multiRemove([
     CACHE_STORAGE_KEY,
+    LEGACY_V3_KEY,
     'timeguesser.public.cache.v2',
     'timeguesser.public.cache.v1',
   ]);

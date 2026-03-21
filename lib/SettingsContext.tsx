@@ -242,7 +242,11 @@ function normalizeLoadedSettings(value: unknown): PersistedSettings {
     photoSource:
       raw.photoSource === 'personal' || raw.photoSource === 'mixed' ? raw.photoSource : 'public',
     publicImageSource:
-      raw.publicImageSource === 'test' && DEV_USE_TEST_PUBLIC_SOURCE ? 'test' : 'wikimedia',
+      raw.publicImageSource === 'test' && DEV_USE_TEST_PUBLIC_SOURCE
+        ? 'test'
+        : raw.publicImageSource === 'wikimedia+loc+europeana' && __DEV__
+          ? 'wikimedia+loc+europeana'
+          : 'wikimedia',
     personalRounds,
     hintProvider: ALLOW_AI_RUNTIME_SWITCHING ? hintProvider : ENV_PROVIDER,
     hintModel: ALLOW_AI_RUNTIME_SWITCHING ? hintModel : ENV_MODEL,

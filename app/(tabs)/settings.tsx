@@ -6,7 +6,12 @@ import { Text, View, useThemeColor } from '@/components/Themed';
 import { Spacing, Radius, TypeScale } from '@/constants/theme';
 import { useTheme, ThemePreference } from '@/lib/ThemeContext';
 import { useSettings, MapProvider, TimerOption } from '@/lib/SettingsContext';
-import { PhotoSourcePreference, PublicSelectionFilters, PUBLIC_CACHE_TARGET } from '@/lib/photos';
+import {
+  PhotoSourcePreference,
+  PublicSelectionFilters,
+  PublicImageSource,
+  PUBLIC_CACHE_TARGET,
+} from '@/lib/photos';
 import {
   EXPERIMENT_CATEGORY_LABELS,
   EXPERIMENT_DEFINITIONS,
@@ -49,6 +54,13 @@ const publicFilterOptions: { label: string; key: keyof PublicSelectionFilters }[
 ];
 
 const experimentCategoryOrder: ExperimentCategory[] = ['visual', 'interaction', 'data', 'qa'];
+
+const devPublicImageSourceOptions: { label: string; value: PublicImageSource }[] = [
+  { label: 'Wikimedia', value: 'wikimedia' },
+  { label: 'LOC', value: 'loc' },
+  { label: 'Europeana', value: 'europeana' },
+  { label: 'All Three', value: 'wikimedia+loc+europeana' },
+];
 
 function OptionRow<T extends string | number>({
   options,
@@ -105,6 +117,8 @@ export default function SettingsScreen() {
     setRoundTimer,
     photoSource,
     setPhotoSource,
+    publicImageSource,
+    setPublicImageSource,
     personalRounds,
     importPersonalPhotos,
     clearPersonalPhotos,
@@ -237,9 +251,17 @@ export default function SettingsScreen() {
         {(photoSource === 'public' || photoSource === 'mixed') && (
           <>
             <Text style={[styles.label, styles.subLabel]}>Public Image Source</Text>
-            <View style={[styles.sourceBadge, { borderColor }]}>
-              <Text style={styles.sourceBadgeText}>Wikimedia</Text>
-            </View>
+            {__DEV__ ? (
+              <OptionRow
+                options={devPublicImageSourceOptions}
+                selected={publicImageSource}
+                onSelect={setPublicImageSource}
+              />
+            ) : (
+              <View style={[styles.sourceBadge, { borderColor }]}>
+                <Text style={styles.sourceBadgeText}>Wikimedia</Text>
+              </View>
+            )}
             <Text style={[styles.helper, { color: secondaryText }]}>
               Public rounds use Wikimedia with local cache target of {PUBLIC_CACHE_TARGET} assets.
             </Text>
