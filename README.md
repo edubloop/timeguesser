@@ -14,6 +14,7 @@ TimeGuesser is an Expo React Native iOS game where players guess where and when 
 
 - Canonical flow folder: `.maestro/`
 - Run all flows in sequence: `npm run test:maestro`
+- Screenshots from `takeScreenshot` are auto-archived to `.maestro/artifacts/<timestamp>/`
 - Current canonical flows:
   - `.maestro/photo-viewer.yaml`
   - `.maestro/game-full-round.yaml`
