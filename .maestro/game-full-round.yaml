@@ -2,7 +2,8 @@ appId: com.timeguesser.app
 ---
 # Flow: Complete one full round — photo loads, pin placed, year submitted, score revealed
 
-- launchApp
+- launchApp:
+    clearState: true
 - waitForAnimationToEnd
 
 # Start a game
@@ -15,6 +16,11 @@ appId: com.timeguesser.app
 - assertVisible:
     id: 'game-photo'
     optional: true
+
+- extendedWaitUntil:
+    visible:
+      id: 'game-photo-loaded'
+    timeout: 15000
 
 # Place a pin somewhere on the map (center of screen as a proxy)
 - tapOn:

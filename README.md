@@ -8,12 +8,18 @@ TimeGuesser is an Expo React Native iOS game where players guess where and when 
 - Run app: `npm run ios` (or `npm run start`)
 - Run static checks + unit tests: `npm run check`
 - Run tests only: `npm run test`
-- Run mobile QA flows (Maestro): `npm run test:maestro`
+- Run mobile QA smoke flow (Maestro): `npm run test:maestro:smoke`
+- Run mobile QA full suite (Maestro): `npm run test:maestro`
+- Auto-start Metro + run smoke (keeps Metro running): `npm run test:maestro:smoke:auto`
+- Auto-start Metro + run full suite (keeps Metro running): `npm run test:maestro:auto`
 
 ## Maestro QA Flows
 
 - Canonical flow folder: `.maestro/`
+- Smoke flow (fast): `npm run test:maestro:smoke`
 - Run all flows in sequence: `npm run test:maestro`
+- One-shot with automatic Metro startup: append `:auto` script variants
+- Requires Metro/dev client running first (for dev builds): `npm run ios`
 - Screenshots from `takeScreenshot` are auto-archived to `.maestro/artifacts/<timestamp>/`
 - Current canonical flows:
   - `.maestro/photo-viewer.yaml`

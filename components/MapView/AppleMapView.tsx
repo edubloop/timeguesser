@@ -1,7 +1,7 @@
 import React, { useRef, useImperativeHandle, useCallback } from 'react';
 import { StyleSheet } from 'react-native';
 import RNMapView, { Marker, Polyline, MapPressEvent, Region } from 'react-native-maps';
-import { MapViewProps, MapProviderRef } from './MapProvider';
+import { MapViewProps } from './MapProvider';
 import { Coordinate } from '@/lib/scoring';
 import { searchLocations } from '@/lib/geocoding';
 import { useThemeColor } from '@/components/Themed';

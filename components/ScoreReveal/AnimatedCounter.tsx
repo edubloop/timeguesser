@@ -1,7 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextStyle, StyleProp } from 'react-native';
-
-import { formatWholeNumber } from '@/lib/numberFormat';
+import React, { useEffect } from 'react';
+import { StyleSheet, TextInput, TextStyle, StyleProp } from 'react-native';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedProps,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 interface AnimatedCounterProps {
   value: number;
@@ -12,6 +17,8 @@ interface AnimatedCounterProps {
   suffix?: string;
 }
 
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
 export default function AnimatedCounter({
   value,
   duration = 800,
@@ -20,45 +27,52 @@ export default function AnimatedCounter({
   prefix = '',
   suffix = '',
 }: AnimatedCounterProps) {
-  const [current, setCurrent] = useState(0);
-  const rafRef = useRef<number | null>(null);
+  const animatedValue = useSharedValue(0);
+
+  const animatedProps = useAnimatedProps(() => {
+    const rounded = Math.round(animatedValue.value);
+    const sign = rounded < 0 ? '-' : '';
+    const raw = `${Math.abs(rounded)}`;
+    let grouped = '';
+
+    for (let i = 0; i < raw.length; i += 1) {
+      const reverseIndex = raw.length - i;
+      grouped = raw[reverseIndex - 1] + grouped;
+      if (reverseIndex > 1 && i % 3 === 2) {
+        grouped = `.${grouped}`;
+      }
+    }
+
+    return {
+      text: `${prefix}${sign}${grouped}${suffix}`,
+    };
+  });
 
   useEffect(() => {
-    let cancelled = false;
-    const start = Date.now() + delay;
-    const from = 0;
-    const to = Math.round(value);
+    cancelAnimation(animatedValue);
+    animatedValue.value = 0;
 
-    const tick = () => {
-      if (cancelled) return;
-
-      const now = Date.now();
-      if (now < start) {
-        rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setCurrent(Math.round(from + (to - from) * eased));
-
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
+    const timer = setTimeout(() => {
+      animatedValue.value = withTiming(Math.round(value), {
+        duration,
+        easing: Easing.out(Easing.cubic),
+      });
+    }, delay);
 
     return () => {
-      cancelled = true;
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
+      clearTimeout(timer);
+      cancelAnimation(animatedValue);
     };
-  }, [value, duration, delay]);
+  }, [animatedValue, value, duration, delay]);
 
   return (
-    <Text style={[styles.text, style]}>{`${prefix}${formatWholeNumber(current)}${suffix}`}</Text>
+    <AnimatedTextInput
+      editable={false}
+      underlineColorAndroid="transparent"
+      style={[styles.text, style]}
+      defaultValue={`${prefix}0${suffix}`}
+      animatedProps={animatedProps as never}
+    />
   );
 }
 

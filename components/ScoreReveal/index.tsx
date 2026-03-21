@@ -48,10 +48,12 @@ export default function ScoreReveal({
   // Signal reveal complete immediately — no phased animation gate
   useEffect(() => {
     onRevealComplete();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: fires once on mount
   }, []);
 
   return (
     <View
+      testID="score-reveal"
       style={[
         styles.container,
         {

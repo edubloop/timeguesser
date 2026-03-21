@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
@@ -7,6 +7,12 @@ import { Spacing, Radius, TypeScale } from '@/constants/theme';
 import { useTheme, ThemePreference } from '@/lib/ThemeContext';
 import { useSettings, MapProvider, TimerOption } from '@/lib/SettingsContext';
 import { PhotoSourcePreference, PublicSelectionFilters, PUBLIC_CACHE_TARGET } from '@/lib/photos';
+import {
+  EXPERIMENT_CATEGORY_LABELS,
+  EXPERIMENT_DEFINITIONS,
+  ExperimentCategory,
+} from '@/lib/experiments';
+
 const themeOptions: { label: string; value: ThemePreference }[] = [
   { label: 'System', value: 'system' },
   { label: 'Light', value: 'light' },
@@ -41,6 +47,8 @@ const publicFilterOptions: { label: string; key: keyof PublicSelectionFilters }[
   { label: 'Reject low-signal objects', key: 'rejectLowSignalObjects' },
   { label: 'Enforce guessability >= 70', key: 'enforceGuessabilityThreshold' },
 ];
+
+const experimentCategoryOrder: ExperimentCategory[] = ['visual', 'interaction', 'data', 'qa'];
 
 function OptionRow<T extends string | number>({
   options,
@@ -103,8 +111,6 @@ export default function SettingsScreen() {
     clearPublicCache,
     getPublicCacheSummary,
     fillPublicCache,
-    hintProvider,
-    hintModel,
     hintsEnabled,
     setHintsEnabled,
     publicSelectionFilters,
@@ -112,6 +118,9 @@ export default function SettingsScreen() {
     resetPublicSelectionFilters,
     photoDiagnosticsEnabled,
     setPhotoDiagnosticsEnabled,
+    experimentFlags,
+    setExperimentFlag,
+    resetExperimentFlags,
   } = useSettings();
   const borderColor = useThemeColor({}, 'border');
   const cardColor = useThemeColor({}, 'card');
@@ -129,18 +138,25 @@ export default function SettingsScreen() {
   });
   const [cacheActionLoading, setCacheActionLoading] = useState(false);
 
-  const refreshCacheSummary = async () => {
+  const experimentsByCategory = experimentCategoryOrder
+    .map((category) => ({
+      category,
+      items: EXPERIMENT_DEFINITIONS.filter((definition) => definition.category === category),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  const refreshCacheSummary = useCallback(async () => {
     try {
       const summary = await getPublicCacheSummary();
       setCacheSummary(summary);
     } catch {
       // Ignore transient cache-read errors in settings UI.
     }
-  };
+  }, [getPublicCacheSummary]);
 
   useEffect(() => {
     refreshCacheSummary();
-  }, [getPublicCacheSummary]);
+  }, [refreshCacheSummary]);
 
   const lastUpdatedLabel = cacheSummary.lastUpdatedAt
     ? new Date(cacheSummary.lastUpdatedAt).toLocaleString('de-DE')
@@ -424,15 +440,62 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
-      <Text style={styles.sectionHeader}>Future Improvements (Out of Scope)</Text>
-      <View style={[styles.card, { backgroundColor: cardColor, borderColor, opacity: 0.55 }]}>
-        <Text style={[styles.label, styles.compactLabel]}>LLM Hints</Text>
+      <Text style={styles.sectionHeader}>Labs / Experiments</Text>
+      <View style={[styles.card, { backgroundColor: cardColor, borderColor }]}>
         <Text style={[styles.helper, { color: secondaryText, marginTop: 0 }]}>
-          AI-powered hint commentary is intentionally out of scope for the current release.
+          Experimental features are opt-in and can be reset at any time.
         </Text>
-        <Text style={[styles.helper, { color: secondaryText }]}>
-          Retained config (inactive): {hintProvider} / {hintModel}
-        </Text>
+
+        {experimentsByCategory.map((group) => (
+          <View
+            key={group.category}
+            style={[styles.experimentGroup, { backgroundColor: 'transparent' }]}
+          >
+            <Text style={styles.experimentGroupTitle}>
+              {EXPERIMENT_CATEGORY_LABELS[group.category]}
+            </Text>
+            {group.items.map((experiment) => {
+              const enabled = experimentFlags[experiment.id];
+              return (
+                <View
+                  key={experiment.id}
+                  style={[styles.experimentRow, { backgroundColor: 'transparent', borderColor }]}
+                >
+                  <View style={[styles.experimentMeta, { backgroundColor: 'transparent' }]}>
+                    <Text style={styles.experimentTitle}>{experiment.title}</Text>
+                    <Text style={[styles.experimentDescription, { color: secondaryText }]}>
+                      {experiment.description}
+                    </Text>
+                    <Text style={[styles.experimentTag, { color: secondaryText }]}>
+                      Risk: {experiment.risk.toUpperCase()} - Review by {experiment.reviewBy}
+                    </Text>
+                  </View>
+                  <Pressable
+                    style={[
+                      styles.toggle,
+                      {
+                        backgroundColor: enabled ? tint : 'transparent',
+                        borderColor,
+                      },
+                    ]}
+                    onPress={() => setExperimentFlag(experiment.id, !enabled)}
+                  >
+                    <Text style={[styles.toggleText, enabled && { color: inverseText }]}>
+                      {enabled ? 'ON' : 'OFF'}
+                    </Text>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+        ))}
+
+        <Pressable
+          style={[styles.resetFiltersButton, { borderColor }]}
+          onPress={resetExperimentFlags}
+        >
+          <Text style={styles.resetFiltersText}>Reset Experiments</Text>
+        </Pressable>
       </View>
     </ScrollView>
   );
@@ -464,9 +527,6 @@ const styles = StyleSheet.create({
     ...TypeScale.callout,
     fontWeight: '500',
     marginBottom: Spacing.sm,
-  },
-  compactLabel: {
-    marginBottom: Spacing.xs,
   },
   subLabel: {
     marginTop: Spacing.md,
@@ -631,5 +691,38 @@ const styles = StyleSheet.create({
   personalTitle: {
     ...TypeScale.subhead,
     fontWeight: '700',
+  },
+  experimentGroup: {
+    marginTop: Spacing.md,
+    gap: Spacing.xs,
+  },
+  experimentGroupTitle: {
+    ...TypeScale.footnote,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    opacity: 0.7,
+  },
+  experimentRow: {
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    padding: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  experimentMeta: {
+    flex: 1,
+    gap: 2,
+  },
+  experimentTitle: {
+    ...TypeScale.subhead,
+    fontWeight: '700',
+  },
+  experimentDescription: {
+    ...TypeScale.caption1,
+  },
+  experimentTag: {
+    ...TypeScale.caption2,
   },
 });

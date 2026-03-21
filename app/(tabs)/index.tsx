@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
 
 import { Text, View, useThemeColor } from '@/components/Themed';
@@ -20,9 +20,15 @@ export default function HomeScreen() {
   const handleStartGame = async () => {
     if (starting) return;
     setStarting(true);
+    router.push('/(tabs)/game');
     try {
       await startGame();
-      router.push('/(tabs)/game');
+    } catch {
+      Alert.alert(
+        'Unable to start game',
+        'We could not load rounds right now. Please try again in a moment.'
+      );
+      router.replace('/(tabs)');
     } finally {
       setStarting(false);
     }

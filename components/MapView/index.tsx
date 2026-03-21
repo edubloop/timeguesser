@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSettings } from '@/lib/SettingsContext';
+import { useMapProviderSetting } from '@/lib/SettingsContext';
 import AppleMapView from './AppleMapView';
 import GoogleMapView from './GoogleMapView';
 import { MapViewProps } from './MapProvider';
@@ -7,7 +7,7 @@ import { MapViewProps } from './MapProvider';
 export { MapProviderRef } from './MapProvider';
 
 export default function GameMapView(props: MapViewProps) {
-  const { mapProvider } = useSettings();
+  const mapProvider = useMapProviderSetting();
 
   if (mapProvider === 'google') {
     return <GoogleMapView {...props} />;

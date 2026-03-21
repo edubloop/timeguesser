@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
 import { type Coordinate } from './scoring';
 import { ROUNDS_PER_GAME } from '@/constants/scoring';
-import { useSettings } from './SettingsContext';
+import { useRoundBuildSettings } from './SettingsContext';
 import { buildRoundsForGame, initializePublicImageCache, markPublicRoundSeen } from './photos';
 import { gameReducer, initialGameState, type GameState, type RoundData } from './gameReducer';
 
@@ -29,7 +29,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     personalRounds,
     publicSelectionFilters,
     photoDiagnosticsEnabled,
-  } = useSettings();
+  } = useRoundBuildSettings();
 
   useEffect(() => {
     initializePublicImageCache({
@@ -42,15 +42,21 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [publicImageSource, publicSelectionFilters, photoDiagnosticsEnabled]);
 
   const startGame = useCallback(async () => {
-    const rounds = await buildRoundsForGame({
-      source: photoSource,
-      publicImageSource,
-      publicSelectionFilters,
-      diagnosticsEnabled: photoDiagnosticsEnabled,
-      personalRounds,
-      roundsPerGame: ROUNDS_PER_GAME,
-    });
-    dispatch({ type: 'START_GAME', rounds });
+    dispatch({ type: 'START_GAME_BEGIN' });
+    try {
+      const rounds = await buildRoundsForGame({
+        source: photoSource,
+        publicImageSource,
+        publicSelectionFilters,
+        diagnosticsEnabled: photoDiagnosticsEnabled,
+        personalRounds,
+        roundsPerGame: ROUNDS_PER_GAME,
+      });
+      dispatch({ type: 'START_GAME', rounds });
+    } catch (error) {
+      dispatch({ type: 'START_GAME_FAILED' });
+      throw error;
+    }
   }, [
     photoSource,
     publicImageSource,

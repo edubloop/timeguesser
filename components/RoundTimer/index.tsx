@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   Easing,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Spacing, Radius, TypeScale } from '@/constants/theme';
@@ -31,15 +32,25 @@ export default function RoundTimer({ duration, onTimeUp, paused = false }: Round
   useEffect(() => {
     setRemaining(duration);
     progress.value = 1;
-    progress.value = withTiming(0, {
-      duration: duration * 1000,
+  }, [duration, progress]);
+
+  useEffect(() => {
+    if (duration <= 0) {
+      progress.value = 0;
+      return;
+    }
+
+    const nextProgress = Math.max(0, Math.min(1, remaining / duration));
+    progress.value = withTiming(nextProgress, {
+      duration: 220,
       easing: Easing.linear,
     });
-  }, [duration]);
+  }, [duration, remaining, progress]);
 
   useEffect(() => {
     if (paused || duration <= 0) {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      cancelAnimation(progress);
       return;
     }
 
@@ -57,9 +68,10 @@ export default function RoundTimer({ duration, onTimeUp, paused = false }: Round
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [duration, paused, onTimeUp]);
+  }, [duration, paused, onTimeUp, progress]);
 
   const barStyle = useAnimatedStyle(() => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reanimated types don't accept % strings for width
     width: `${progress.value * 100}%` as any,
   }));
 

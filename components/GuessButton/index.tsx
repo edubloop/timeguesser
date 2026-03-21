@@ -8,6 +8,7 @@ interface GuessButtonProps {
   disabled: boolean;
   onPress: () => void;
   label?: string;
+  testID?: string;
   /** Bottom safe area inset — pass from useSafeAreaInsets().bottom */
   bottomInset?: number;
 }
@@ -16,6 +17,7 @@ export default function GuessButton({
   disabled,
   onPress,
   label = 'GUESS',
+  testID,
   bottomInset = 0,
 }: GuessButtonProps) {
   const tint = useThemeColor({}, 'tint');
@@ -26,6 +28,7 @@ export default function GuessButton({
 
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
       style={({ pressed }) => [

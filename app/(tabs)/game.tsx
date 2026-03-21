@@ -98,6 +98,12 @@ const PhotoPanel = memo(function PhotoPanel({
   cardBg,
   tint,
 }: PhotoPanelProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [imageUri]);
+
   return (
     <View style={[styles.photoArea, { borderBottomColor: borderColor }]}>
       <ScrollView
@@ -119,7 +125,9 @@ const PhotoPanel = memo(function PhotoPanel({
             contentFit="cover"
             transition={180}
             style={styles.photoImage}
+            onLoad={() => setImageLoaded(true)}
           />
+          {imageLoaded && <View testID="game-photo-loaded" style={styles.qaMarker} />}
         </Pressable>
       </ScrollView>
       <View style={[styles.photoFooter, { backgroundColor: 'transparent' }]}>
@@ -239,6 +247,7 @@ export default function GameScreen() {
   }, [state.status]);
 
   const isIdle = state.status === 'idle';
+  const isStarting = state.status === 'starting';
   const isFinished = state.status === 'finished';
 
   const goHome = useCallback(() => {
@@ -545,7 +554,27 @@ export default function GameScreen() {
     );
   }
 
-  if (isFinished || !currentRoundData) return null;
+  if (isStarting) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={tint} />
+          <Text style={[styles.emptyText, { marginTop: Spacing.md }]}>Loading a fresh game...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (isFinished || !currentRoundData) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="small" color={tint} />
+          <Text style={[styles.emptyText, { marginTop: Spacing.md }]}>Preparing the round...</Text>
+        </View>
+      </View>
+    );
+  }
 
   // ------------------------------------------------------------------
   // Render
@@ -901,6 +930,12 @@ const styles = StyleSheet.create({
   photoImage: {
     width: '100%',
     height: '100%',
+  },
+  qaMarker: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
   },
   photoHint: {
     ...TypeScale.caption1,

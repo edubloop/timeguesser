@@ -7,7 +7,7 @@ import RNMapView, {
   PROVIDER_GOOGLE,
   Region,
 } from 'react-native-maps';
-import { MapViewProps, MapProviderRef } from './MapProvider';
+import { MapViewProps } from './MapProvider';
 import { Coordinate } from '@/lib/scoring';
 import { searchLocations } from '@/lib/geocoding';
 import { useThemeColor } from '@/components/Themed';

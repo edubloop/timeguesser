@@ -1,4 +1,5 @@
 # AGENTS.md — TimeGuesser
+
 <!-- workspace-kit: v1.2.0 | synced: 2026-03-16 -->
 
 ## Architecture
@@ -113,3 +114,9 @@ These actions require explicit approval before proceeding:
 - **Product & Technical Spec**: [`TIMEGUESSER_SPEC.md`](./TIMEGUESSER_SPEC.md)
 - **Design System**: [`TIMEGUESSER_DESIGN_SYSTEM.md`](./TIMEGUESSER_DESIGN_SYSTEM.md)
 - **Future Roadmap**: [`future_roadmap.md`](./future_roadmap.md)
+
+## QA Execution Defaults
+
+- For UI validation during implementation, use smoke flow first: `npm run test:maestro:smoke:auto`
+- Before final handoff for UI/navigation changes, run full suite: `npm run test:maestro:auto`
+- These scripts auto-start Metro when needed and keep it running for iterative QA loops

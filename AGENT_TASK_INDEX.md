@@ -14,7 +14,7 @@ Use this index to route common requests quickly.
 - Results and end-of-game flow -> `app/(tabs)/results.tsx`
 - Settings UI and controls -> `app/(tabs)/settings.tsx`
 - Provider composition -> `app/_layout.tsx`
-- UI regression / e2e QA flows -> `.maestro/*.yaml` and `npm run test:maestro`
+- UI regression / e2e QA flows -> `.maestro/*.yaml`; smoke `npm run test:maestro:smoke:auto`, full `npm run test:maestro:auto`
 - Performance plan, decisions, and metrics -> `PERFORMANCE_PLAN.md`
 
 ## Recommended Read Order For Any Task

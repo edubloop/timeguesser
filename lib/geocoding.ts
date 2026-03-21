@@ -4,6 +4,15 @@ export interface GeocodingResult {
   name: string;
 }
 
+interface OpenMeteoGeoItem {
+  latitude: number;
+  longitude: number;
+  name: string;
+  admin1?: string;
+  country?: string;
+  feature_code?: string;
+}
+
 export async function searchLocations(query: string, limit = 5): Promise<GeocodingResult[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
@@ -19,7 +28,7 @@ export async function searchLocations(query: string, limit = 5): Promise<Geocodi
     if (!Array.isArray(data?.results)) return [];
 
     return data.results
-      .map((item: any) => {
+      .map((item: OpenMeteoGeoItem) => {
         const lat = Number(item?.latitude);
         const lng = Number(item?.longitude);
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;

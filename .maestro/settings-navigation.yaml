@@ -2,7 +2,8 @@ appId: com.timeguesser.app
 ---
 # Flow: Settings screen — navigate, toggle options, verify no crashes
 
-- launchApp
+- launchApp:
+    clearState: true
 - waitForAnimationToEnd
 
 # Navigate to settings

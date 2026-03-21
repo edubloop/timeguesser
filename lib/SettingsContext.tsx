@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { RoundData } from '@/lib/gameState';
@@ -18,6 +18,12 @@ import {
   PUBLIC_CACHE_TARGET,
 } from '@/lib/photos';
 import { LlmProvider, PROVIDER_MODELS } from '@/lib/hints';
+import {
+  DEFAULT_EXPERIMENT_FLAGS,
+  ExperimentFlagId,
+  ExperimentFlagsState,
+  normalizeExperimentFlags,
+} from '@/lib/experiments';
 
 export type MapProvider = 'apple' | 'google';
 export type TimerOption = 0 | 30 | 60 | 90 | 120;
@@ -38,6 +44,7 @@ interface PersistedSettings {
   hintsEnabled: boolean;
   publicSelectionFilters: PublicSelectionFilters;
   photoDiagnosticsEnabled: boolean;
+  experimentFlags: ExperimentFlagsState;
 }
 
 interface SettingsContextValue {
@@ -68,7 +75,32 @@ interface SettingsContextValue {
   resetPublicSelectionFilters: () => void;
   photoDiagnosticsEnabled: boolean;
   setPhotoDiagnosticsEnabled: (enabled: boolean) => void;
+  experimentFlags: ExperimentFlagsState;
+  setExperimentFlag: (flagId: ExperimentFlagId, enabled: boolean) => void;
+  resetExperimentFlags: () => void;
   allowAiRuntimeSwitching: boolean;
+}
+
+interface RoundBuildSettingsValue {
+  photoSource: PhotoSourcePreference;
+  publicImageSource: PublicImageSource;
+  personalRounds: RoundData[];
+  publicSelectionFilters: PublicSelectionFilters;
+  photoDiagnosticsEnabled: boolean;
+}
+
+interface ExperimentFlagsContextValue {
+  experimentFlags: ExperimentFlagsState;
+  setExperimentFlag: (flagId: ExperimentFlagId, enabled: boolean) => void;
+  resetExperimentFlags: () => void;
+}
+
+interface GameRuntimeSettingsValue {
+  roundTimer: TimerOption;
+  hintsEnabled: boolean;
+  publicImageSource: PublicImageSource;
+  publicSelectionFilters: PublicSelectionFilters;
+  photoDiagnosticsEnabled: boolean;
 }
 
 const DEFAULTS: PersistedSettings = {
@@ -83,6 +115,7 @@ const DEFAULTS: PersistedSettings = {
   hintsEnabled: true,
   publicSelectionFilters: { ...DEFAULT_PUBLIC_SELECTION_FILTERS },
   photoDiagnosticsEnabled: false,
+  experimentFlags: { ...DEFAULT_EXPERIMENT_FLAGS },
 };
 
 const envProvider = String(process.env.EXPO_PUBLIC_LLM_PROVIDER ?? 'google').toLowerCase();
@@ -138,7 +171,34 @@ const SettingsContext = createContext<SettingsContextValue>({
   resetPublicSelectionFilters: () => {},
   photoDiagnosticsEnabled: DEFAULTS.photoDiagnosticsEnabled,
   setPhotoDiagnosticsEnabled: () => {},
+  experimentFlags: DEFAULTS.experimentFlags,
+  setExperimentFlag: () => {},
+  resetExperimentFlags: () => {},
   allowAiRuntimeSwitching: ALLOW_AI_RUNTIME_SWITCHING,
+});
+
+const MapProviderContext = createContext<MapProvider>(DEFAULTS.mapProvider);
+
+const RoundBuildSettingsContext = createContext<RoundBuildSettingsValue>({
+  photoSource: DEFAULTS.photoSource,
+  publicImageSource: DEFAULTS.publicImageSource,
+  personalRounds: DEFAULTS.personalRounds,
+  publicSelectionFilters: DEFAULTS.publicSelectionFilters,
+  photoDiagnosticsEnabled: DEFAULTS.photoDiagnosticsEnabled,
+});
+
+const GameRuntimeSettingsContext = createContext<GameRuntimeSettingsValue>({
+  roundTimer: DEFAULTS.roundTimer,
+  hintsEnabled: DEFAULTS.hintsEnabled,
+  publicImageSource: DEFAULTS.publicImageSource,
+  publicSelectionFilters: DEFAULTS.publicSelectionFilters,
+  photoDiagnosticsEnabled: DEFAULTS.photoDiagnosticsEnabled,
+});
+
+const ExperimentFlagsContext = createContext<ExperimentFlagsContextValue>({
+  experimentFlags: DEFAULTS.experimentFlags,
+  setExperimentFlag: () => {},
+  resetExperimentFlags: () => {},
 });
 
 function normalizeLoadedSettings(value: unknown): PersistedSettings {
@@ -199,6 +259,7 @@ function normalizeLoadedSettings(value: unknown): PersistedSettings {
         raw.publicSelectionFilters?.enforceGuessabilityThreshold ?? false,
     },
     photoDiagnosticsEnabled: raw.photoDiagnosticsEnabled ?? false,
+    experimentFlags: normalizeExperimentFlags(raw.experimentFlags),
   };
 }
 
@@ -220,6 +281,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [photoDiagnosticsEnabled, setPhotoDiagnosticsEnabledState] = useState<boolean>(
     DEFAULTS.photoDiagnosticsEnabled
   );
+  const [experimentFlags, setExperimentFlagsState] = useState<ExperimentFlagsState>(
+    DEFAULTS.experimentFlags
+  );
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -239,6 +303,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setHintsEnabledState(normalized.hintsEnabled);
         setPublicSelectionFilters(normalized.publicSelectionFilters);
         setPhotoDiagnosticsEnabledState(normalized.photoDiagnosticsEnabled);
+        setExperimentFlagsState(normalized.experimentFlags);
       })
       .catch(() => {
         // Ignore storage read errors.
@@ -262,6 +327,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       hintsEnabled,
       publicSelectionFilters,
       photoDiagnosticsEnabled,
+      experimentFlags,
     };
     AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(payload)).catch(() => {
       // Ignore storage write errors.
@@ -279,6 +345,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     hintsEnabled,
     publicSelectionFilters,
     photoDiagnosticsEnabled,
+    experimentFlags,
   ]);
 
   const setMapProvider = useCallback((p: MapProvider) => setMapProviderState(p), []);
@@ -332,6 +399,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setPhotoDiagnosticsEnabledState(enabled);
   }, []);
 
+  const setExperimentFlag = useCallback((flagId: ExperimentFlagId, enabled: boolean) => {
+    setExperimentFlagsState((prev) => ({ ...prev, [flagId]: enabled }));
+  }, []);
+
+  const resetExperimentFlags = useCallback(() => {
+    setExperimentFlagsState({ ...DEFAULT_EXPERIMENT_FLAGS });
+  }, []);
+
   useEffect(() => {
     if (!ALLOW_AI_RUNTIME_SWITCHING) {
       setHintProviderState(ENV_PROVIDER);
@@ -376,44 +451,147 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     });
   }, [publicImageSource, publicSelectionFilters, photoDiagnosticsEnabled]);
 
+  const settingsValue = useMemo<SettingsContextValue>(
+    () => ({
+      mapProvider,
+      setMapProvider,
+      roundTimer,
+      setRoundTimer,
+      photoSource,
+      setPhotoSource,
+      publicImageSource,
+      setPublicImageSource,
+      personalRounds,
+      importPersonalPhotos,
+      clearPersonalPhotos,
+      clearPublicCache,
+      getPublicCacheSummary: fetchPublicCacheSummary,
+      fillPublicCache,
+      hintProvider,
+      setHintProvider,
+      hintModel,
+      setHintModel,
+      autoHintFallback,
+      setAutoHintFallback,
+      hintsEnabled,
+      setHintsEnabled,
+      publicSelectionFilters,
+      setPublicSelectionFilter,
+      resetPublicSelectionFilters,
+      photoDiagnosticsEnabled,
+      setPhotoDiagnosticsEnabled,
+      experimentFlags,
+      setExperimentFlag,
+      resetExperimentFlags,
+      allowAiRuntimeSwitching: ALLOW_AI_RUNTIME_SWITCHING,
+    }),
+    [
+      mapProvider,
+      setMapProvider,
+      roundTimer,
+      setRoundTimer,
+      photoSource,
+      setPhotoSource,
+      publicImageSource,
+      setPublicImageSource,
+      personalRounds,
+      importPersonalPhotos,
+      clearPersonalPhotos,
+      clearPublicCache,
+      fetchPublicCacheSummary,
+      fillPublicCache,
+      hintProvider,
+      setHintProvider,
+      hintModel,
+      setHintModel,
+      autoHintFallback,
+      setAutoHintFallback,
+      hintsEnabled,
+      setHintsEnabled,
+      publicSelectionFilters,
+      setPublicSelectionFilter,
+      resetPublicSelectionFilters,
+      photoDiagnosticsEnabled,
+      setPhotoDiagnosticsEnabled,
+      experimentFlags,
+      setExperimentFlag,
+      resetExperimentFlags,
+    ]
+  );
+
+  const experimentFlagsValue = useMemo<ExperimentFlagsContextValue>(
+    () => ({
+      experimentFlags,
+      setExperimentFlag,
+      resetExperimentFlags,
+    }),
+    [experimentFlags, setExperimentFlag, resetExperimentFlags]
+  );
+
+  const roundBuildSettingsValue = useMemo<RoundBuildSettingsValue>(
+    () => ({
+      photoSource,
+      publicImageSource,
+      personalRounds,
+      publicSelectionFilters,
+      photoDiagnosticsEnabled,
+    }),
+    [
+      photoSource,
+      publicImageSource,
+      personalRounds,
+      publicSelectionFilters,
+      photoDiagnosticsEnabled,
+    ]
+  );
+
+  const gameRuntimeSettingsValue = useMemo<GameRuntimeSettingsValue>(
+    () => ({
+      roundTimer,
+      hintsEnabled,
+      publicImageSource,
+      publicSelectionFilters,
+      photoDiagnosticsEnabled,
+    }),
+    [roundTimer, hintsEnabled, publicImageSource, publicSelectionFilters, photoDiagnosticsEnabled]
+  );
+
   return (
-    <SettingsContext.Provider
-      value={{
-        mapProvider,
-        setMapProvider,
-        roundTimer,
-        setRoundTimer,
-        photoSource,
-        setPhotoSource,
-        publicImageSource,
-        setPublicImageSource,
-        personalRounds,
-        importPersonalPhotos,
-        clearPersonalPhotos,
-        clearPublicCache,
-        getPublicCacheSummary: fetchPublicCacheSummary,
-        fillPublicCache,
-        hintProvider,
-        setHintProvider,
-        hintModel,
-        setHintModel,
-        autoHintFallback,
-        setAutoHintFallback,
-        hintsEnabled,
-        setHintsEnabled,
-        publicSelectionFilters,
-        setPublicSelectionFilter,
-        resetPublicSelectionFilters,
-        photoDiagnosticsEnabled,
-        setPhotoDiagnosticsEnabled,
-        allowAiRuntimeSwitching: ALLOW_AI_RUNTIME_SWITCHING,
-      }}
-    >
-      {children}
+    <SettingsContext.Provider value={settingsValue}>
+      <MapProviderContext.Provider value={mapProvider}>
+        <RoundBuildSettingsContext.Provider value={roundBuildSettingsValue}>
+          <ExperimentFlagsContext.Provider value={experimentFlagsValue}>
+            <GameRuntimeSettingsContext.Provider value={gameRuntimeSettingsValue}>
+              {children}
+            </GameRuntimeSettingsContext.Provider>
+          </ExperimentFlagsContext.Provider>
+        </RoundBuildSettingsContext.Provider>
+      </MapProviderContext.Provider>
     </SettingsContext.Provider>
   );
 }
 
 export function useSettings() {
   return useContext(SettingsContext);
+}
+
+export function useMapProviderSetting() {
+  return useContext(MapProviderContext);
+}
+
+export function useRoundBuildSettings() {
+  return useContext(RoundBuildSettingsContext);
+}
+
+export function useGameRuntimeSettings() {
+  return useContext(GameRuntimeSettingsContext);
+}
+
+export function useExperimentFlags() {
+  return useContext(ExperimentFlagsContext);
+}
+
+export function useExperimentFlag(flagId: ExperimentFlagId) {
+  const { experimentFlags } = useContext(ExperimentFlagsContext);
+  return experimentFlags[flagId];
 }
