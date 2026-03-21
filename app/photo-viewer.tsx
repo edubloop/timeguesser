@@ -1,5 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { StyleSheet, Pressable, Animated, PanResponder, ScrollView, Share } from 'react-native';
+import {
+  StyleSheet,
+  Pressable,
+  Animated,
+  PanResponder,
+  ScrollView,
+  Share,
+  useWindowDimensions,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -12,13 +20,15 @@ import { Spacing, Radius, TypeScale } from '@/constants/theme';
 export default function PhotoViewerScreen() {
   const { uri } = useLocalSearchParams<{ uri?: string }>();
   const translateY = useRef(new Animated.Value(0)).current;
+  const scrollRef = useRef<ScrollView>(null);
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const overlayColor = useThemeColor({}, 'overlay');
   const inverseText = useThemeColor({}, 'inverseText');
   const tertiaryText = useThemeColor({}, 'tertiaryText');
 
   useEffect(() => {
     ScreenOrientation.unlockAsync();
+    scrollRef.current?.scrollTo({ x: 0, y: 0, animated: false });
 
     return () => {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
@@ -67,18 +77,35 @@ export default function PhotoViewerScreen() {
       {...panResponder.panHandlers}
     >
       <ScrollView
+        ref={scrollRef}
         style={styles.photoScroll}
         contentContainerStyle={styles.photoContent}
         minimumZoomScale={1}
         maximumZoomScale={4}
         bouncesZoom
+        centerContent
       >
         {uri ? (
-          <Pressable style={styles.photoFrame} onLongPress={handleShare} delayLongPress={300}>
-            <Image source={{ uri }} contentFit="contain" style={styles.photo} transition={180} />
+          <Pressable
+            style={{ width, height, alignItems: 'center', justifyContent: 'center' }}
+            onLongPress={handleShare}
+            delayLongPress={300}
+            testID="photo-viewer-image"
+          >
+            <Image
+              source={{ uri }}
+              contentFit="contain"
+              style={{ width, height }}
+              transition={180}
+            />
           </Pressable>
         ) : (
-          <View style={[styles.photoFrame, { backgroundColor: 'transparent' }]}>
+          <View
+            style={[
+              { width, height, alignItems: 'center', justifyContent: 'center' },
+              { backgroundColor: 'transparent' },
+            ]}
+          >
             <Text style={[styles.fallback, { color: inverseText }]}>No photo available.</Text>
           </View>
         )}
@@ -92,6 +119,7 @@ export default function PhotoViewerScreen() {
           onPress={handleClose}
           accessibilityRole="button"
           accessibilityLabel="Close photo viewer"
+          testID="photo-viewer-close"
         >
           <FontAwesome name="close" size={20} color={inverseText} />
         </Pressable>
@@ -100,12 +128,16 @@ export default function PhotoViewerScreen() {
           onPress={handleShare}
           accessibilityRole="button"
           accessibilityLabel="Share photo"
+          testID="photo-viewer-share"
         >
           <FontAwesome name="share-alt" size={18} color={inverseText} />
         </Pressable>
       </View>
 
-      <Text style={[styles.hint, { color: tertiaryText, bottom: insets.bottom + Spacing.lg }]}>
+      <Text
+        testID="photo-viewer-hint"
+        style={[styles.hint, { color: tertiaryText, bottom: insets.bottom + Spacing.lg }]}
+      >
         Pinch to zoom · swipe down to close · long-press to share
       </Text>
     </Animated.View>
@@ -138,15 +170,6 @@ const styles = StyleSheet.create({
   },
   photoContent: {
     flexGrow: 1,
-  },
-  photoFrame: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photo: {
-    width: '100%',
-    height: '100%',
   },
   fallback: {
     ...TypeScale.callout,

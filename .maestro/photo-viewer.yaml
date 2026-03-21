@@ -1,0 +1,57 @@
+appId: com.timeguesser.app
+---
+# Flow: Photo Viewer — open image, zoom, share, close
+
+- launchApp
+- waitForAnimationToEnd
+
+- tapOn:
+    text: 'Start Game'
+
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- assertVisible:
+    id: 'game-photo'
+
+# Open fullscreen image from game screen
+- longPressOn:
+    id: 'game-photo'
+
+- waitForAnimationToEnd
+
+- assertVisible:
+    id: 'photo-viewer-image'
+
+# Zoom image
+- doubleTapOn:
+    id: 'photo-viewer-image'
+
+- waitForAnimationToEnd
+
+# Long hold to open share sheet
+- longPressOn:
+    id: 'photo-viewer-image'
+
+- waitForAnimationToEnd
+
+# Dismiss iOS share sheet if it appears (popover style can omit "Cancel")
+- tapOn:
+    id: 'PopoverDismissRegion'
+    optional: true
+
+- waitForAnimationToEnd
+
+# Close fullscreen image
+- assertVisible:
+    id: 'photo-viewer-close'
+
+- tapOn:
+    id: 'photo-viewer-close'
+
+- waitForAnimationToEnd
+
+- assertVisible:
+    id: 'game-photo'
+
+- takeScreenshot: photo-viewer-close-success

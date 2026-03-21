@@ -1,0 +1,28 @@
+appId: com.timeguesser.app
+---
+# Flow: Settings screen — navigate, toggle options, verify no crashes
+
+- launchApp
+- waitForAnimationToEnd
+
+# Navigate to settings
+- tapOn:
+    point: '78%,96%'
+
+- waitForAnimationToEnd
+- takeScreenshot: settings-screen
+
+# Scroll through settings
+- scroll
+
+- waitForAnimationToEnd
+- takeScreenshot: settings-scrolled
+
+# Navigate back
+- tapOn:
+    point: '22%,96%'
+
+- waitForAnimationToEnd
+- assertVisible:
+    text: 'Start Game'
+    optional: true

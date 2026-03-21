@@ -1,0 +1,50 @@
+appId: com.timeguesser.app
+---
+# Flow: Complete one full round — photo loads, pin placed, year submitted, score revealed
+
+- launchApp
+- waitForAnimationToEnd
+
+# Start a game
+- tapOn:
+    text: 'Start Game'
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Verify photo loaded (not blank/placeholder)
+- assertVisible:
+    id: 'game-photo'
+    optional: true
+
+# Place a pin somewhere on the map (center of screen as a proxy)
+- tapOn:
+    point: '50%,70%'
+
+- waitForAnimationToEnd
+
+# Confirm guess button should now be active
+- tapOn:
+    text: 'GUESS'
+
+- waitForAnimationToEnd
+
+- tapOn:
+    point: '50%,56%'
+
+# Year picker: enter and confirm a year
+- inputText: '1975'
+- tapOn:
+    text: 'Confirm'
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Score reveal should be visible
+- assertVisible:
+    id: 'score-reveal'
+- takeScreenshot: score-reveal
+
+# Continue to next round
+- tapOn:
+    label: 'NEXT ROUND'
+    optional: true

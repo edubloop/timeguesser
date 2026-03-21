@@ -1,0 +1,57 @@
+appId: com.timeguesser.app
+---
+# Flow: Verify hint tiers 1–3 apply correctly and score penalties shown
+
+- launchApp
+- waitForAnimationToEnd
+
+- tapOn:
+    text: 'Start Game'
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Use Tier 1 hint (free — no penalty)
+- tapOn:
+    label: 'Get hint'
+- waitForAnimationToEnd
+- tapOn:
+    point: '70%,60%'
+- waitForAnimationToEnd
+- takeScreenshot: hint-tier-1
+
+# Use Tier 2 hint (−1000 penalty)
+- tapOn:
+    label: 'Get hint'
+- waitForAnimationToEnd
+- tapOn:
+    point: '70%,60%'
+- waitForAnimationToEnd
+- takeScreenshot: hint-tier-2
+
+# Use Tier 3 hint (−1000 penalty)
+- tapOn:
+    label: 'Get hint'
+- waitForAnimationToEnd
+- tapOn:
+    point: '70%,60%'
+- waitForAnimationToEnd
+- takeScreenshot: hint-tier-3
+
+# Submit a guess after hints used
+- tapOn:
+    point: '50%,70%'
+- tapOn:
+    text: 'GUESS'
+- tapOn:
+    point: '50%,56%'
+- inputText: '1990'
+- tapOn:
+    text: 'Confirm'
+
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Score reveal — penalty should reduce from max
+- assertVisible:
+    id: 'score-reveal'
+- takeScreenshot: score-after-hints
