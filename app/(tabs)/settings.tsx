@@ -251,19 +251,13 @@ export default function SettingsScreen() {
         {(photoSource === 'public' || photoSource === 'mixed') && (
           <>
             <Text style={[styles.label, styles.subLabel]}>Public Image Source</Text>
-            {__DEV__ ? (
-              <OptionRow
-                options={devPublicImageSourceOptions}
-                selected={publicImageSource}
-                onSelect={setPublicImageSource}
-              />
-            ) : (
-              <View style={[styles.sourceBadge, { borderColor }]}>
-                <Text style={styles.sourceBadgeText}>Wikimedia</Text>
-              </View>
-            )}
+            <OptionRow
+              options={devPublicImageSourceOptions}
+              selected={publicImageSource}
+              onSelect={setPublicImageSource}
+            />
             <Text style={[styles.helper, { color: secondaryText }]}>
-              Public rounds use Wikimedia with local cache target of {PUBLIC_CACHE_TARGET} assets.
+              Public rounds cache up to {PUBLIC_CACHE_TARGET} images from the selected source(s).
             </Text>
 
             <View style={[styles.cacheStateCard, { borderColor, backgroundColor: tintSubtle }]}>
