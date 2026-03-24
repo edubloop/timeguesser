@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
 
 jobs:
   validate:
@@ -29,6 +31,7 @@ jobs:
         run: npm run check
 
   maestro-smoke:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
@@ -54,8 +57,8 @@ jobs:
           xcrun simctl boot "iPhone 16" || true
           open -a Simulator
 
-      - name: Build and run iOS app on simulator
-        run: npm run ios -- --device "iPhone 16"
+      - name: Build release app on simulator
+        run: npx expo run:ios --device "iPhone 16" --configuration Release
 
       - name: Run Maestro photo viewer smoke flow
         run: maestro test .maestro/photo-viewer.yaml
