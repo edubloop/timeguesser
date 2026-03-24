@@ -38,7 +38,7 @@
 - **Lint:** `npm run lint` must report zero errors and zero warnings.
 - **Types:** `npm run typecheck` must pass with no errors.
 - **Tests:** all existing tests must pass; new behaviour requires a new test.
-- **Maestro UI QA:** when a PR changes UI or navigation behavior, run smoke `npm run test:maestro:smoke:auto`; run full `npm run test:maestro:auto` before merge and include results in PR notes.
+- **Maestro UI QA:** when a PR changes UI or navigation behavior, run smoke `npm run test:maestro:smoke:auto`; run full `npm run test:maestro:auto` before merge and include results in PR notes. Note: Maestro does not run in CI on regular pushes/PRs — it only runs automatically on release tags (`v*`).
 
 Run `npm run check` to execute typecheck + lint + tests in one step.
 

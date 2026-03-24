@@ -493,7 +493,7 @@ timeguesser/
 ├── constants/
 │   └── scoring.ts              # Scoring constants (maxDistance, maxYears, hint penalties)
 ├── .github/workflows/
-│   └── build.yml               # GitHub Actions: EAS Build → TestFlight
+│   └── ci.yml                  # GitHub Actions: validate (every push) + maestro-smoke (release tags)
 ├── eas.json                    # EAS Build configuration
 ├── app.json                    # Expo configuration (portrait lock, permissions, etc.)
 └── package.json
@@ -518,14 +518,23 @@ timeguesser/
 
 ## CI/CD Pipeline
 
-- **Trigger**: Push to `main` branch or manual dispatch
-- **Build**: EAS Build for iOS
-- **Distribution**: TestFlight (internal testing)
-- **Workflow**:
-  1. Checkout repo
-  2. Install dependencies
-  3. Run `eas build --platform ios --profile preview`
-  4. Auto-submit to TestFlight via `eas submit`
+### CI (GitHub Actions)
+
+- **`validate`** — runs on every push to `main` and every PR
+  1. Install dependencies
+  2. `npm audit --audit-level=high`
+  3. `npm run check` (typecheck + lint + unit tests)
+
+- **`maestro-smoke`** — runs only on release tags (`v*`)
+  1. Boot iOS simulator
+  2. Build release app (`--configuration Release`)
+  3. Run Maestro photo-viewer smoke flow
+
+### Build & Distribution
+
+- **Build**: EAS Build for iOS (`eas build --platform ios`)
+- **Distribution**: TestFlight via `eas submit` (auto-submit)
+- **Release tag**: `git tag v1.x.x && git push origin v1.x.x`
 
 ---
 

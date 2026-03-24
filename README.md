@@ -21,6 +21,7 @@ TimeGuesser is an Expo React Native iOS game where players guess where and when 
 - One-shot with automatic Metro startup: append `:auto` script variants
 - Requires Metro/dev client running first (for dev builds): `npm run ios`
 - Screenshots from `takeScreenshot` are auto-archived to `.maestro/artifacts/<timestamp>/`
+- **CI:** Maestro runs automatically only on release tags (`v*`). Run locally for PR validation.
 - Current canonical flows:
   - `.maestro/photo-viewer.yaml`
   - `.maestro/game-full-round.yaml`
