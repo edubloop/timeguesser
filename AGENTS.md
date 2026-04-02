@@ -1,6 +1,6 @@
 # AGENTS.md — TimeGuesser
 
-<!-- workspace-kit: v1.2.0 | synced: 2026-03-16 -->
+<!-- workspace-kit-sync: v1.4.0 | synced: 2026-04-02 -->
 
 ## Architecture
 
@@ -19,9 +19,19 @@ ThemeProvider → SettingsProvider → GameProvider → NavThemeProvider → Sta
 
 **Settings** (`lib/SettingsContext.tsx`): Persisted to AsyncStorage under key `timeguesser.settings.v1`. Covers map provider, timer, photo source, filters, hint config, diagnostics.
 
-**Design system**: All spacing, radii, and type scales are tokens in `constants/theme.ts`. Colors in `constants/Colors.ts`. See `TIMEGUESSER_DESIGN_SYSTEM.md` for rationale.
+**Design system**: All spacing, radii, and type scales are tokens in `constants/theme.ts`. Colors in `constants/Colors.ts`. See `TIMEGUESSER_DESIGN_SYSTEM.md` for rationale, anti-patterns, composition rules, and visual references.
 
 **Orientation**: Portrait locked globally. Only `app/photo-viewer.tsx` unlocks landscape.
+
+## Workspace session-start check
+
+From `TimeGuesser/`, run:
+
+```sh
+bash ../.workspace-notes/cadence_due_check.sh
+```
+
+If output is `[DUE]`, run `bash ../.workspace-notes/harness_healthcheck.sh` and append a row in `../WORKSPACE_AUDIT.md` under `Cadence Log`.
 
 ---
 
@@ -100,14 +110,36 @@ These values are load-bearing for game balance, UX consistency, or spec complian
 These actions require explicit approval before proceeding:
 
 - **Adding dependencies** — no new packages in `package.json` without approval
-- **Creating top-level directories** — the current structure (`app/`, `components/`, `lib/`, `constants/`, `assets/`) is intentional; don't add new top-level dirs
+- **Creating top-level directories** — the current structure (`app/`, `components/`, `lib/`, `constants/`, `assets/`) is intentional; don't add new top-level dirs. The Fabro delivery runtime directory (`.fabro/`) is the approved exception for this repo.
 - **Changing the provider chain** — the order in `app/_layout.tsx` (Theme → Settings → Game → NavTheme → Stack) is load-bearing
 - **Modifying `eas.json` or `app.json`** — build config and app identity; changes affect CI/CD and App Store
-- **Adding external API calls** — the app is fully on-device by design; no network calls beyond Wikimedia Commons and Open-Meteo geocoding
+- **Adding external API calls** — the app is fully on-device by design; no new network calls beyond the approved allowlist (Wikimedia Commons, Library of Congress, Europeana, Open-Meteo, Nominatim) without explicit approval
 - **Changing AsyncStorage keys** — key changes break existing users' persisted data (`timeguesser.settings.v1`, `timeguesser.public.cache.v3`, `timeguesser.theme.preference`)
 - **Growing `game.tsx`** — this file is already 940 lines and is a refactoring candidate; extract new logic into components or lib modules instead
 
 ---
+
+## Delivery Artifacts
+
+For non-trivial feature work, use the Fabro-backed Delivery runtime.
+
+Canonical stages:
+
+1. `Spec` — `artifacts/tickets/{ID}/spec.md` (labeled requirements)
+2. `Plan` — `artifacts/tickets/{ID}/plan.md` (traceable implementation steps)
+3. `Approve` — plan approval and ask-first gate in the Fabro local web UI
+4. `Implement` — execute the approved plan
+5. `Verify` — run repo-defined checks and QA
+6. `Review` — `artifacts/tickets/{ID}/review.md` (intent-aligned review)
+7. `Handoff` — `PR + next steps`
+
+Preferred entrypoint:
+
+- `./scripts/run_fabro_delivery.sh <TICKET_ID> <GOAL_FILE> [fabro args...]`
+
+Legacy `/spec`, `/plan`, `/implement`, and `/pr-review` flows are migration fallbacks only.
+
+Artifacts live at workspace level (`../artifacts/`). See `.workspace-kit/docs/delivery-chain.md`.
 
 ## Reference Documents
 

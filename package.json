@@ -13,6 +13,7 @@
     "test:maestro:smoke:auto": "./scripts/run_maestro_flows.sh --smoke --auto-metro --keep-metro",
     "test:maestro": "./scripts/run_maestro_flows.sh",
     "test:maestro:auto": "./scripts/run_maestro_flows.sh --auto-metro --keep-metro",
+    "fabro:delivery": "./scripts/run_fabro_delivery.sh",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix --max-warnings 0",

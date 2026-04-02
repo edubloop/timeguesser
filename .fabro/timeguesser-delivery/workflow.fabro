@@ -1,0 +1,42 @@
+digraph TimeGuesserDelivery {
+    graph [
+        goal="Execute TimeGuesser Delivery mode in Fabro while preserving harness artifacts and repo guardrails",
+        default_max_retry=3
+    ]
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    load_intake [label="Load Intake", shape=parallelogram, script="mkdir -p \"$artifact_dir\" && test -f \"$goal_file\""]
+    spec        [label="Spec", prompt="Read .fabro/timeguesser-delivery/prompts/spec.md, then read the intake at $goal_file and the repo policy docs. Write or update $artifact_dir/spec.md."]
+    plan        [label="Plan", prompt="Read .fabro/timeguesser-delivery/prompts/plan.md, then read $artifact_dir/spec.md and write or update $artifact_dir/plan.md."]
+    approve     [shape=hexagon, label="Approve Plan"]
+    blocked     [label="Blocked / Escalated", shape=tab, prompt="Summarize why the run stopped, which ask-first boundary or open question blocked execution, and what the human operator must decide next. Do not make further changes."]
+    implement   [label="Implement", prompt="Read .fabro/timeguesser-delivery/prompts/implement.md, then read $artifact_dir/plan.md and implement the approved changes."]
+    choose_verify [shape=hexagon, label="Choose Verification"]
+    verify_standard [label="Verify Standard", shape=parallelogram, script="npm run check 2>&1", goal_gate=true, retry_target="fixup"]
+    verify_smoke    [label="Verify UI Smoke", shape=parallelogram, script="npm run check 2>&1 && npm run test:maestro:smoke:auto 2>&1", goal_gate=true, retry_target="fixup"]
+    verify_full     [label="Verify UI Full", shape=parallelogram, script="npm run check 2>&1 && npm run test:maestro:auto 2>&1", goal_gate=true, retry_target="fixup"]
+    fixup        [label="Fixup", prompt="A verification step failed. Read the command output from context, fix the issues without broadening scope, and preserve the approved plan intent.", max_visits=3]
+    review       [label="Review", prompt="Read .fabro/timeguesser-delivery/prompts/review.md, then write or update $artifact_dir/review.md."]
+    handoff      [label="Handoff", prompt="Read .fabro/timeguesser-delivery/prompts/handoff.md, then write or update $artifact_dir/handoff.md."]
+
+    start -> load_intake -> spec -> plan -> approve
+    approve -> implement [label="[A] Approve"]
+    approve -> plan      [label="[R] Revise"]
+    approve -> blocked   [label="[E] Escalate"]
+    blocked -> exit
+    implement -> choose_verify
+    choose_verify -> verify_standard [label="[S] Standard"]
+    choose_verify -> verify_smoke    [label="[U] UI Smoke"]
+    choose_verify -> verify_full     [label="[F] UI Full"]
+    verify_standard -> review [condition="outcome=success"]
+    verify_standard -> fixup
+    verify_smoke -> review [condition="outcome=success"]
+    verify_smoke -> fixup
+    verify_full -> review [condition="outcome=success"]
+    verify_full -> fixup
+    fixup -> choose_verify
+    review -> handoff -> exit
+}

@@ -1,0 +1,18 @@
+version = 1
+graph = ".fabro/timeguesser-delivery/workflow.fabro"
+goal = "Run TimeGuesser Delivery mode through Fabro"
+directory = "."
+
+[sandbox]
+provider = "local"
+
+[sandbox.local]
+worktree_mode = "always"
+
+[vars]
+ticket_id = "DEMO-001"
+artifact_dir = "../artifacts/tickets/DEMO-001"
+goal_file = "../artifacts/tickets/DEMO-001/ticket.md"
+
+[checkpoint]
+exclude_globs = ["node_modules/**", ".git/**", ".expo/**", "dist/**"]
