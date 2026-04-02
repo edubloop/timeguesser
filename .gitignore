@@ -2,10 +2,12 @@
 
 # dependencies
 node_modules/
+tools/**/node_modules/
 
 # Expo
 .expo/
 dist/
+tools/**/dist/
 web-build/
 expo-env.d.ts
 
