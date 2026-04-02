@@ -119,9 +119,26 @@ These actions require explicit approval before proceeding:
 
 ---
 
-## Delivery Artifacts
+## Fabro Workflows
 
-For non-trivial feature work, use the Fabro-backed Delivery runtime.
+For non-trivial feature work, use the Fabro-backed two-workflow model.
+
+### Design workflow
+
+Canonical stages:
+
+1. `Select / Load Backlog Item`
+2. `Intake` — writes `artifacts/tickets/{ID}/ticket.md`
+3. `Design Explore` — writes `artifacts/tickets/{ID}/design-brief.md`
+4. `Design Review` — writes `artifacts/tickets/{ID}/design-review.md`
+5. `Approve Direction` — human gate in the Fabro local web UI
+6. `Publish Ticket` — normalizes `ticket.md` for Delivery
+
+Preferred entrypoint:
+
+- `./scripts/run_fabro_design.sh <TICKET_ID> <SOURCE_FILE> [fabro args...]`
+
+### Delivery workflow
 
 Canonical stages:
 
@@ -131,11 +148,13 @@ Canonical stages:
 4. `Implement` — execute the approved plan
 5. `Verify` — run repo-defined checks and QA
 6. `Review` — `artifacts/tickets/{ID}/review.md` (intent-aligned review)
-7. `Handoff` — `PR + next steps`
+7. `Handoff` — `artifacts/tickets/{ID}/handoff.md`
 
 Preferred entrypoint:
 
 - `./scripts/run_fabro_delivery.sh <TICKET_ID> <GOAL_FILE> [fabro args...]`
+
+`ticket.md` is the canonical goal file for Delivery.
 
 Legacy `/spec`, `/plan`, `/implement`, and `/pr-review` flows are migration fallbacks only.
 

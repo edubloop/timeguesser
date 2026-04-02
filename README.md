@@ -12,6 +12,7 @@ TimeGuesser is an Expo React Native iOS game where players guess where and when 
 - Run mobile QA full suite (Maestro): `npm run test:maestro`
 - Auto-start Metro + run smoke (keeps Metro running): `npm run test:maestro:smoke:auto`
 - Auto-start Metro + run full suite (keeps Metro running): `npm run test:maestro:auto`
+- Launch the Fabro Design wrapper: `npm run fabro:design -- <TICKET_ID> <SOURCE_FILE>`
 - Launch the Fabro Delivery wrapper: `npm run fabro:delivery -- <TICKET_ID> <GOAL_FILE>`
 
 ## Maestro QA Flows
@@ -45,10 +46,13 @@ Provider chain (load-bearing):
 1. Read `AGENTS.md` first for hard constraints.
 2. Read `TIMEGUESSER_SPEC.md` and `TIMEGUESSER_DESIGN_SYSTEM.md`.
 3. Map request to files via `AGENT_TASK_INDEX.md`.
-4. For non-trivial work, launch the Fabro Delivery runtime from `./scripts/run_fabro_delivery.sh`.
-5. Use the local Fabro web UI to approve the plan and inspect the run.
-6. Make minimal scoped changes.
-7. Run `npm run check` before handing off.
+4. For non-trivial work, seed `../artifacts/tickets/<ID>/source.md` from the selected backlog item.
+5. Run the Fabro Design workflow from `./scripts/run_fabro_design.sh`.
+6. Review `ticket.md`, `design-brief.md`, and `design-review.md` in the Fabro UI.
+7. Run the Fabro Delivery workflow from `./scripts/run_fabro_delivery.sh` using `ticket.md`.
+8. Use the local Fabro web UI to approve the plan and inspect the run.
+9. Make minimal scoped changes.
+10. Run `npm run check` before handing off.
 
 ## Safe To Edit
 
@@ -71,6 +75,7 @@ Provider chain (load-bearing):
 - Product and technical spec: `TIMEGUESSER_SPEC.md`
 - Design tokens and rules: `TIMEGUESSER_DESIGN_SYSTEM.md`
 - Fabro runtime docs: `.fabro/README.md`
+- Repo backlog: `BACKLOG.md`
 - Active performance plan and rationale: `PERFORMANCE_PLAN.md`
 - Future non-scope items: `future_roadmap.md`
 - Task-to-file routing: `AGENT_TASK_INDEX.md`

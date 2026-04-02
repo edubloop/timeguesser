@@ -1,32 +1,50 @@
 # Backlog
 
-## Bugs (Fixed)
+This file is the queue, not the execution brief.
 
-- ~~"Unknown location" shown for almost every image~~ — added Nominatim reverse geocoding fallback
-- ~~Dot thousands separator in scores~~ — removed
-- ~~Map does not reset between rounds~~ — reset to default view on round advance
-- ~~Result distance line not framed on screen~~ — auto-fit map to both pins with padding
+When a backlog item is selected, promote it into `../artifacts/tickets/{ID}/source.md` and run the Fabro Design workflow. The Design workflow produces the approved `ticket.md` that the Fabro Delivery workflow consumes.
 
----
+## Item Format
 
-## Design
+Each active item should stay lightweight:
 
-### 5. Rethink screen real estate ratio (image vs map)
+- `Status`: `Queued`, `In Design`, `Ready for Delivery`, or `Done`
+- `Lane`: `Experience / UX`, `Design system / taste QA`, `Content pipeline quality`, or `Internal tooling`
+- `Path`: whether the item should go through Design first or can move directly to Delivery
 
-Currently ~40% image / 60% map. Should be closer to 70% image / 30% map since the photo is more important initially. Needs visual prototyping before implementation.
+## Active Queue
 
-### 6. Tab bar takes too much space / should auto-hide
+### TG-005 — Rethink screen real estate ratio
 
-Bottom navigation bar is too tall and wastes space during gameplay. Explore: smaller bar, auto-hide on scroll/swipe, or hide entirely during active game rounds.
+- Status: `Queued`
+- Lane: `Experience / UX`
+- Path: `Design -> Delivery`
+- Summary: Rebalance the game screen toward photo-first emphasis. Current ratio feels too map-heavy early in the round.
 
-### 7. Settings page visual redesign
+### TG-006 — Reduce tab bar footprint during gameplay
 
-Inconsistent text sizes, bolding, button styles, and spacing. Elements are too close together. Needs a design pass for visual hierarchy, consistent spacing, and coherent component styling.
+- Status: `Queued`
+- Lane: `Experience / UX`
+- Path: `Design -> Delivery`
+- Summary: The bottom tab bar takes too much vertical space. Explore smaller treatment, auto-hide behavior, or hiding it entirely during active rounds.
 
----
+### TG-007 — Settings page visual redesign
 
-## Features
+- Status: `Queued`
+- Lane: `Experience / UX`
+- Path: `Design -> Delivery`
+- Summary: Settings hierarchy and spacing feel inconsistent. Needs a clearer, calmer layout with stronger visual rhythm.
 
-### 8. Cache fill progress indicator + haptics
+### TG-008 — Cache fill progress indicator + haptics
 
-Add a manual "fill cache" button with haptic feedback and a visual progress indicator (percentage bar) so the user can see cache fill progress instead of waiting 30-60s with no feedback.
+- Status: `Queued`
+- Lane: `Experience / UX`
+- Path: `Design -> Delivery`
+- Summary: Add a manual cache-fill action with visible progress and meaningful haptic feedback so long waits do not feel stuck.
+
+## Recently Completed
+
+- Done: Reverse geocoding fallback for `"Unknown location"` images
+- Done: Removed score thousands separator
+- Done: Reset map between rounds
+- Done: Auto-fit result distance line on screen

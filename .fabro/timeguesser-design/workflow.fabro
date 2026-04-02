@@ -1,0 +1,23 @@
+digraph TimeGuesserDesign {
+    graph [
+        goal="Execute TimeGuesser Intake and Design mode in Fabro to produce a delivery-ready ticket package",
+        default_max_retry=3
+    ]
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    load_source    [label="Select / Load Backlog Item", shape=parallelogram, script="mkdir -p \"$artifact_dir\" && test -f \"$source_file\""]
+    intake         [label="Intake", prompt="Read .fabro/timeguesser-design/prompts/intake.md, then read $source_file and the repo policy docs. Write or update $artifact_dir/ticket.md."]
+    design_explore [label="Design Explore", prompt="Read .fabro/timeguesser-design/prompts/design-explore.md, then read $artifact_dir/ticket.md and write or update $artifact_dir/design-brief.md."]
+    design_review  [label="Design Review", prompt="Read .fabro/timeguesser-design/prompts/design-review.md, then read $artifact_dir/ticket.md and $artifact_dir/design-brief.md and write or update $artifact_dir/design-review.md."]
+    approve        [shape=hexagon, label="Approve Direction"]
+    publish_ticket [label="Publish Ticket", prompt="Read .fabro/timeguesser-design/prompts/publish-ticket.md, then read $artifact_dir/ticket.md, $artifact_dir/design-brief.md, and $artifact_dir/design-review.md. Update $artifact_dir/ticket.md so it is ready to serve as the delivery goal file."]
+
+    start -> load_source -> intake -> design_explore -> design_review -> approve
+    approve -> publish_ticket [label="[A] Approve for Delivery"]
+    approve -> design_explore [label="[R] Revise Direction"]
+    approve -> exit           [label="[G] Guidance Only / Stop"]
+    publish_ticket -> exit
+}
