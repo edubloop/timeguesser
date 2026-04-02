@@ -6,7 +6,7 @@
  * desirable and undesirable qualities for the TimeGuesser game.
  */
 
-import { pipeline, env, type ImageClassificationPipeline } from '@xenova/transformers';
+import { pipeline, env } from '@xenova/transformers';
 
 // Disable local model check — always fetch from hub on first run
 env.allowLocalModels = false;
@@ -56,9 +56,19 @@ export interface VisionScore {
   promptScores: Record<string, number>;
 }
 
+interface ZeroShotClassificationResult {
+  score: number;
+  label: string;
+}
+
+type ZeroShotImageClassifier = (
+  image: string,
+  candidateLabels: string[]
+) => Promise<ZeroShotClassificationResult[]>;
+
 // ─── Singleton classifier ────────────────────────────────────────────────────
 
-let classifierPromise: Promise<ImageClassificationPipeline> | null = null;
+let classifierPromise: Promise<ZeroShotImageClassifier> | null = null;
 let loadProgress = '';
 
 function getClassifier() {
@@ -72,7 +82,7 @@ function getClassifier() {
           loadProgress = 'Model ready';
         }
       },
-    });
+    }) as Promise<ZeroShotImageClassifier>;
   }
   return classifierPromise;
 }
@@ -95,10 +105,7 @@ export async function scoreImage(imageUrl: string): Promise<VisionScore> {
 
   // zero-shot-image-classification returns an array of { score, label }
   // sorted by score descending. We pass all prompts at once.
-  const results: Array<{ score: number; label: string }> = await classifier(
-    imageUrl,
-    ALL_PROMPTS as unknown as string[]
-  );
+  const results = await classifier(imageUrl, [...ALL_PROMPTS]);
 
   // Build a lookup: prompt → probability (softmax-normalized by transformers.js)
   const scoreMap: Record<string, number> = {};

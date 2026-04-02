@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
-import type { ScoredCandidate } from './types.ts';
-import type { Annotation, AnnotationTag, Verdict } from './annotations.ts';
-import { ANNOTATION_TAGS, TAG_LABELS } from './annotations.ts';
+import type { ScoredCandidate } from './types';
+import type { Annotation, AnnotationTag, Verdict } from './annotations';
+import { ANNOTATION_TAGS, TAG_LABELS } from './annotations';
 
 const PROVIDER_COLORS: Record<string, string> = {
   wikimedia: '#069',

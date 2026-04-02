@@ -26,6 +26,10 @@ import type {
   UnifiedScore,
 } from './src/types.js';
 
+function hasUnifiedScore(value: UnifiedScore | { error: string }): value is UnifiedScore {
+  return 'overall' in value;
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load env from the main project root
@@ -154,7 +158,9 @@ app.post('/api/score-batch', async (req, res) => {
         if (result.status === 'fulfilled') {
           results[result.value.key] = result.value.score;
           console.log(
-            `[score-batch] ${completed}/${candidates.length} — ${result.value.key}: ${result.value.score?.overall ?? 'error'}`
+            `[score-batch] ${completed}/${candidates.length} — ${result.value.key}: ${
+              hasUnifiedScore(result.value.score) ? result.value.score.overall : 'error'
+            }`
           );
         } else {
           console.error(

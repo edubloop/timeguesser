@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { FetchResponse, ScoredCandidate, UnifiedScore } from './types.ts';
-import type { Annotation, AnnotationMap, AnnotationTag } from './annotations.ts';
-import { TAG_LABELS } from './annotations.ts';
-import { CandidateCard } from './CandidateCard.tsx';
+import type { FetchResponse, ScoredCandidate, UnifiedScore } from './types';
+import type { Annotation, AnnotationMap, AnnotationTag } from './annotations';
+import { TAG_LABELS } from './annotations';
+import { CandidateCard } from './CandidateCard';
 
 type ShowFilter = 'all' | 'pass' | 'fail' | 'hard_fail' | 'not_scored';
 type Tab = 'inspect' | 'analysis';
