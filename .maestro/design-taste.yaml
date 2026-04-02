@@ -1,0 +1,196 @@
+appId: com.timeguesser.app
+---
+# Flow: Design Taste Audit
+#
+# Navigates key screens and validates visual output against
+# TIMEGUESSER_DESIGN_SYSTEM.md taste rules using assertWithAI.
+#
+# Run: maestro test .maestro/design-taste.yaml
+# Run with report: maestro test .maestro/design-taste.yaml --analyze
+
+# ──────────────────────────────────────────
+# 1. GAME SCREEN — immersive layout & controls
+# ──────────────────────────────────────────
+
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+
+- tapOn:
+    text: 'Start Game'
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      id: 'game-photo-loaded'
+    timeout: 15000
+
+- takeScreenshot: taste-game-screen
+
+# Composition: immersive-first layout
+- assertWithAI: >
+    The photo or map fills the majority of the screen. UI controls (buttons, icons)
+    float over the content — they are NOT in a separate toolbar or chrome area below
+    or above the media.
+
+# Anti-pattern: no persistent toolbars
+- assertWithAI: >
+    There is no thick persistent toolbar or navigation bar crowding the content area.
+    Any action buttons are small (roughly 40px), floating, and positioned at screen
+    edges with generous offset from the content center.
+
+# Typography: button text
+- assertWithAI: >
+    The main call-to-action button uses a single weight of text (semibold or bold).
+    There is no mixed-weight text within the same button.
+
+# Spacing: floating button offset
+- assertWithAI: >
+    Floating action buttons (search, hint) are offset from screen edges with visible
+    breathing room — they do not touch or nearly touch the edge of the screen.
+
+# Color: no gradients
+- assertWithAI: >
+    No UI element on screen uses a gradient fill. All card and button backgrounds
+    are flat, solid colors.
+
+# ──────────────────────────────────────────
+# 2. SCORE REVEAL — type hierarchy & card treatment
+# ──────────────────────────────────────────
+
+# Place a pin and submit a guess to reach score reveal
+- tapOn:
+    point: '50%,70%'
+- waitForAnimationToEnd
+
+- tapOn:
+    id: 'guess-button'
+- waitForAnimationToEnd
+
+- inputText: '1975'
+- tapOn:
+    text: 'Confirm'
+- waitForAnimationToEnd:
+    timeout: 3000
+
+- assertVisible:
+    id: 'score-reveal'
+
+- takeScreenshot: taste-score-reveal
+
+# Composition: 2-level type hierarchy for stats
+- assertWithAI: >
+    The score number is displayed in a large, bold font — significantly larger than
+    any surrounding text. Supporting labels (like "km away" or "years off") are
+    noticeably smaller. There is a clear size jump between the score number and its
+    labels — no medium-sized text bridging them.
+
+# Anti-pattern: no borders inside the score card
+- assertWithAI: >
+    The score reveal card does NOT use visible horizontal lines, dividers, or borders
+    to separate the score breakdown rows. Spacing and alignment create the structure.
+
+# Color: score tier feedback
+- assertWithAI: >
+    The score number uses a color that is clearly distinct from the default body text
+    color — it should be teal/green, amber, or red depending on performance, not
+    plain black or white.
+
+# Anti-pattern: no gradient card backgrounds
+- assertWithAI: >
+    The score reveal card has a clean, flat background — no gradient, no texture,
+    no patterned fill.
+
+# Spacing: generous card padding
+- assertWithAI: >
+    The score reveal card has generous internal padding. The score number and labels
+    do not feel cramped or close to the card edges.
+
+# ──────────────────────────────────────────
+# 3. SETTINGS SCREEN — spacing-only grouping
+# ──────────────────────────────────────────
+
+- tapOn:
+    id: 'next-round-button'
+    optional: true
+- waitForAnimationToEnd
+
+- tapOn:
+    id: 'tab-settings'
+- waitForAnimationToEnd
+
+- takeScreenshot: taste-settings-screen
+
+# Composition: spacing-only section grouping
+- assertWithAI: >
+    Settings items are grouped into logical clusters. The groups are separated by
+    visible vertical space — NOT by section header labels like "GENERAL" or
+    "ACCOUNT", and NOT by horizontal divider lines.
+
+# Anti-pattern: no unnecessary chevrons or descriptions
+- assertWithAI: >
+    Settings rows are clean and minimal. Most rows show an icon and a label only.
+    There are no verbose descriptions or explanatory subtexts under every row.
+
+# Color: dark mode surface differentiation (if dark mode)
+- assertWithAI: >
+    If the screen is in dark mode, different card groups or sections are subtly
+    distinguished by background tint — not by borders or outlines. If in light mode,
+    the same principle applies with light background tint differences or whitespace.
+
+- scroll
+- waitForAnimationToEnd
+
+- takeScreenshot: taste-settings-scrolled
+
+# ──────────────────────────────────────────
+# 4. PHOTO VIEWER — immersive media treatment
+# ──────────────────────────────────────────
+
+- tapOn:
+    id: 'tab-home'
+    optional: true
+- waitForAnimationToEnd
+
+- tapOn:
+    text: 'Start Game'
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- extendedWaitUntil:
+    visible:
+      id: 'game-photo-loaded'
+    timeout: 15000
+
+- longPressOn:
+    id: 'game-photo'
+- waitForAnimationToEnd
+
+- takeScreenshot: taste-photo-viewer
+
+# Composition: full-bleed immersive media
+- assertWithAI: >
+    The photo fills the entire screen or nearly the entire screen. The background
+    behind/around the photo is dark (black or near-black overlay). There is no
+    visible navigation bar, tab bar, or chrome around the photo.
+
+# Anti-pattern: controls overlay content, not beside it
+- assertWithAI: >
+    Any visible controls (close button, share button) are overlaid on top of the
+    photo or its dark backdrop. They are NOT in a separate bar or panel area.
+
+# Icons: small and non-competing
+- assertWithAI: >
+    The close button and any other controls are small and subtle — they do not
+    dominate the screen or compete visually with the photo itself.
+
+# Close and return
+- assertVisible:
+    id: 'photo-viewer-close'
+- tapOn:
+    id: 'photo-viewer-close'
+- waitForAnimationToEnd
+
+- takeScreenshot: taste-audit-complete
