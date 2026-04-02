@@ -107,6 +107,18 @@ export interface FillPublicCacheSummary extends PublicCacheSummary {
   targetReached: boolean;
 }
 
+export type FillPublicCachePhase =
+  | 'starting'
+  | 'cleaning'
+  | 'searching'
+  | 'downloading'
+  | 'finalizing';
+
+export interface FillPublicCacheProgress extends PublicCacheSummary {
+  phase: FillPublicCachePhase;
+  targetUnseen: number;
+}
+
 interface BuildRoundsArgs {
   source: PhotoSourcePreference;
   personalRounds: RoundData[];
@@ -557,6 +569,34 @@ function delay(ms: number): Promise<void> {
 
 function seenKey(provider: string, providerImageId: string): string {
   return `${provider}:${providerImageId}`;
+}
+
+function countUnseenImages(state: Pick<CacheState, 'images' | 'seenLedger'>): number {
+  const seen = new Set(state.seenLedger);
+  return state.images.filter((img) => !seen.has(seenKey(img.provider, img.providerImageId))).length;
+}
+
+function summarizePublicCacheState(state: CacheState): PublicCacheSummary {
+  return {
+    imagesInCache: state.images.length,
+    seenImagesRecorded: state.seenLedger.length,
+    unseenImagesAvailable: countUnseenImages(state),
+    lastUpdatedAt: state.updatedAt > 0 ? state.updatedAt : null,
+  };
+}
+
+function reportFillProgress(
+  onProgress: ((progress: FillPublicCacheProgress) => void) | undefined,
+  phase: FillPublicCachePhase,
+  state: CacheState,
+  targetUnseen: number
+) {
+  if (!onProgress) return;
+  onProgress({
+    ...summarizePublicCacheState(state),
+    phase,
+    targetUnseen,
+  });
 }
 
 function cacheId(provider: string, providerImageId: string): string {
@@ -2405,7 +2445,9 @@ async function refillPublicCache(
   state: CacheState,
   publicImageSource: PublicImageSource,
   filters: PublicSelectionFilters,
-  diagnosticsEnabled: boolean
+  diagnosticsEnabled: boolean,
+  targetUnseen: number,
+  onProgress?: (progress: FillPublicCacheProgress) => void
 ): Promise<CacheState> {
   if (publicImageSource === 'test') return state;
 
@@ -2511,6 +2553,12 @@ async function refillPublicCache(
         existing.add(seenKey(candidate.provider, candidate.providerImageId));
         nextImages.push(accepted);
         acceptedThisRound += 1;
+        reportFillProgress(
+          onProgress,
+          'downloading',
+          { ...state, images: nextImages, providerCursors },
+          targetUnseen
+        );
       }
 
       // Track consecutive failures — 2 strikes and the era is marked exhausted
@@ -2589,14 +2637,16 @@ async function ensureCacheReady(
   publicImageSource: PublicImageSource,
   filters: PublicSelectionFilters,
   diagnosticsEnabled: boolean,
-  minUnseen = 1
+  minUnseen = 1,
+  onProgress?: (progress: FillPublicCacheProgress) => void
 ): Promise<CacheState> {
   let state = await readCacheState();
   state = await cleanupSeenAssets(state);
   state = await pruneEvictedFiles(state);
+  reportFillProgress(onProgress, 'cleaning', state, minUnseen);
   let attempts = 0;
   while (attempts < 4) {
-    const unseenCount = state.images.length;
+    const unseenCount = countUnseenImages(state);
     if (
       unseenCount >= minUnseen &&
       state.images.length >= Math.min(PUBLIC_CACHE_TARGET, minUnseen)
@@ -2609,7 +2659,15 @@ async function ensureCacheReady(
 
     const beforeCount = state.images.length;
     const beforeCursorSnapshot = JSON.stringify(state.providerCursors);
-    state = await refillPublicCache(state, publicImageSource, filters, diagnosticsEnabled);
+    reportFillProgress(onProgress, 'searching', state, minUnseen);
+    state = await refillPublicCache(
+      state,
+      publicImageSource,
+      filters,
+      diagnosticsEnabled,
+      minUnseen,
+      onProgress
+    );
     attempts += 1;
 
     const noProgress =
@@ -2732,18 +2790,7 @@ export async function getPublicCacheSummary(): Promise<PublicCacheSummary> {
   let state = await readCacheState();
   state = await cleanupSeenAssets(state);
   await writeCacheState(state);
-
-  const seen = new Set(state.seenLedger);
-  const unseenImagesAvailable = state.images.filter(
-    (img) => !seen.has(seenKey(img.provider, img.providerImageId))
-  ).length;
-
-  return {
-    imagesInCache: state.images.length,
-    seenImagesRecorded: state.seenLedger.length,
-    unseenImagesAvailable,
-    lastUpdatedAt: state.updatedAt > 0 ? state.updatedAt : null,
-  };
+  return summarizePublicCacheState(state);
 }
 
 export async function fillPublicImageCacheToTarget(options: {
@@ -2751,32 +2798,32 @@ export async function fillPublicImageCacheToTarget(options: {
   publicSelectionFilters: PublicSelectionFilters;
   diagnosticsEnabled?: boolean;
   targetUnseen?: number;
+  onProgress?: (progress: FillPublicCacheProgress) => void;
 }): Promise<FillPublicCacheSummary> {
   const targetUnseen = options.targetUnseen ?? PUBLIC_CACHE_TARGET;
   const diagnosticsEnabled = options.diagnosticsEnabled ?? false;
+  const onProgress = options.onProgress;
+
+  const initialState = await readCacheState();
+  reportFillProgress(onProgress, 'starting', initialState, targetUnseen);
 
   let state = await ensureCacheReady(
     options.publicImageSource,
     options.publicSelectionFilters,
     diagnosticsEnabled,
-    targetUnseen
+    targetUnseen,
+    onProgress
   );
 
   state = await cleanupSeenAssets(state);
   await writeCacheState(state);
-
-  const seen = new Set(state.seenLedger);
-  const unseenImagesAvailable = state.images.filter(
-    (img) => !seen.has(seenKey(img.provider, img.providerImageId))
-  ).length;
+  reportFillProgress(onProgress, 'finalizing', state, targetUnseen);
+  const summary = summarizePublicCacheState(state);
 
   return {
-    imagesInCache: state.images.length,
-    seenImagesRecorded: state.seenLedger.length,
-    unseenImagesAvailable,
-    lastUpdatedAt: state.updatedAt > 0 ? state.updatedAt : null,
+    ...summary,
     targetUnseen,
-    targetReached: unseenImagesAvailable >= targetUnseen,
+    targetReached: summary.unseenImagesAvailable >= targetUnseen,
   };
 }
 

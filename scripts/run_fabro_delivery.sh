@@ -24,7 +24,7 @@ shift 2
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 workflow_dir="$repo_root/.fabro/timeguesser-delivery"
-artifact_dir="../artifacts/tickets/$ticket_id"
+artifact_dir="$repo_root/../artifacts/tickets/$ticket_id"
 fabro_bin="${FABRO_BIN:-}"
 
 if [[ -z "$fabro_bin" ]]; then
@@ -42,6 +42,10 @@ if [[ ! -f "$goal_file" ]]; then
   echo "goal file not found: $goal_file" >&2
   exit 1
 fi
+
+mkdir -p "$artifact_dir"
+goal_file="$(cd "$(dirname "$goal_file")" && pwd)/$(basename "$goal_file")"
+artifact_dir="$(cd "$artifact_dir" && pwd)"
 
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/timeguesser-fabro-${ticket_id}.XXXXXX")"
 tmp_toml="$tmp_dir/run.toml"

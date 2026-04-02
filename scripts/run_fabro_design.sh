@@ -23,8 +23,9 @@ source_file="$2"
 shift 2
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+workspace_root="$(cd "$repo_root/.." && pwd)"
 workflow_dir="$repo_root/.fabro/timeguesser-design"
-artifact_dir="../artifacts/tickets/$ticket_id"
+artifact_dir="$repo_root/../artifacts/tickets/$ticket_id"
 fabro_bin="${FABRO_BIN:-}"
 
 if [[ -z "$fabro_bin" ]]; then
@@ -42,6 +43,11 @@ if [[ ! -f "$source_file" ]]; then
   echo "source file not found: $source_file" >&2
   exit 1
 fi
+
+mkdir -p "$artifact_dir"
+source_file="$(cd "$(dirname "$source_file")" && pwd)/$(basename "$source_file")"
+artifact_dir="$(cd "$artifact_dir" && pwd)"
+goal_file="$artifact_dir/ticket.md"
 
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/timeguesser-fabro-design-${ticket_id}.XXXXXX")"
 tmp_toml="$tmp_dir/run.toml"
@@ -64,9 +70,10 @@ worktree_mode = "always"
 
 [vars]
 ticket_id = "$ticket_id"
+workspace_root = "$workspace_root"
 artifact_dir = "$artifact_dir"
 source_file = "$source_file"
-goal_file = "$artifact_dir/ticket.md"
+goal_file = "$goal_file"
 
 [checkpoint]
 exclude_globs = ["node_modules/**", ".git/**", ".expo/**", "dist/**"]

@@ -11,6 +11,7 @@ import {
   ClearPublicCacheSummary,
   PublicCacheSummary,
   FillPublicCacheSummary,
+  FillPublicCacheProgress,
   importPersonalPhotosFromLibrary,
   clearPublicImageCache,
   getPublicCacheSummary,
@@ -61,7 +62,9 @@ interface SettingsContextValue {
   clearPersonalPhotos: () => void;
   clearPublicCache: () => Promise<ClearPublicCacheSummary>;
   getPublicCacheSummary: () => Promise<PublicCacheSummary>;
-  fillPublicCache: () => Promise<FillPublicCacheSummary>;
+  fillPublicCache: (options?: {
+    onProgress?: (progress: FillPublicCacheProgress) => void;
+  }) => Promise<FillPublicCacheSummary>;
   hintProvider: LlmProvider;
   setHintProvider: (provider: LlmProvider) => void;
   hintModel: string;
@@ -446,14 +449,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     return getPublicCacheSummary();
   }, []);
 
-  const fillPublicCache = useCallback(async () => {
-    return fillPublicImageCacheToTarget({
-      publicImageSource,
-      publicSelectionFilters,
-      diagnosticsEnabled: photoDiagnosticsEnabled,
-      targetUnseen: PUBLIC_CACHE_TARGET,
-    });
-  }, [publicImageSource, publicSelectionFilters, photoDiagnosticsEnabled]);
+  const fillPublicCache = useCallback(
+    async (options?: { onProgress?: (progress: FillPublicCacheProgress) => void }) => {
+      return fillPublicImageCacheToTarget({
+        publicImageSource,
+        publicSelectionFilters,
+        diagnosticsEnabled: photoDiagnosticsEnabled,
+        targetUnseen: PUBLIC_CACHE_TARGET,
+        onProgress: options?.onProgress,
+      });
+    },
+    [publicImageSource, publicSelectionFilters, photoDiagnosticsEnabled]
+  );
 
   const settingsValue = useMemo<SettingsContextValue>(
     () => ({

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Pressable, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import { Text, View, useThemeColor } from '@/components/Themed';
@@ -11,6 +11,7 @@ import {
   PublicSelectionFilters,
   PublicImageSource,
   PUBLIC_CACHE_TARGET,
+  FillPublicCachePhase,
 } from '@/lib/photos';
 import {
   EXPERIMENT_CATEGORY_LABELS,
@@ -61,6 +62,57 @@ const devPublicImageSourceOptions: { label: string; value: PublicImageSource }[]
   { label: 'Europeana', value: 'europeana' },
   { label: 'All Three', value: 'wikimedia+loc+europeana' },
 ];
+
+type CacheFillStatus = 'idle' | 'starting' | 'in_progress' | 'success' | 'partial' | 'failure';
+
+interface CacheFillUiState {
+  status: CacheFillStatus;
+  phase: FillPublicCachePhase | null;
+  targetUnseen: number;
+  unseenImagesAvailable: number | null;
+}
+
+function titleForFillState(status: CacheFillStatus, phase: FillPublicCachePhase | null) {
+  if (status === 'success') return 'Cache ready';
+  if (status === 'partial') return 'Cache partially filled';
+  if (status === 'failure') return 'Fill failed';
+  if (status === 'starting') return 'Starting cache fill...';
+  switch (phase) {
+    case 'cleaning':
+      return 'Preparing cache';
+    case 'searching':
+      return 'Looking for eligible photos';
+    case 'downloading':
+      return 'Downloading approved photos';
+    case 'finalizing':
+      return 'Finalizing cache';
+    default:
+      return 'Preparing cache';
+  }
+}
+
+function detailForFillState(state: CacheFillUiState) {
+  if (state.status === 'success') {
+    return `${state.unseenImagesAvailable ?? state.targetUnseen} unseen photos available.`;
+  }
+  if (state.status === 'partial') {
+    const count = state.unseenImagesAvailable ?? 0;
+    return `Reached ${count} of ${state.targetUnseen} unseen. Source limits are currently restricting supply.`;
+  }
+  if (state.status === 'failure') {
+    return 'Could not refill the cache right now. Try again in a moment.';
+  }
+  if (state.unseenImagesAvailable != null) {
+    return `${state.unseenImagesAvailable} of ${state.targetUnseen} unseen available`;
+  }
+  if (state.phase === 'cleaning') {
+    return 'Removing stale entries before refill.';
+  }
+  if (state.phase === 'finalizing') {
+    return 'Saving the latest cache state.';
+  }
+  return 'Working through available public photos.';
+}
 
 function OptionRow<T extends string | number>({
   options,
@@ -142,6 +194,10 @@ export default function SettingsScreen() {
   const secondaryText = useThemeColor({}, 'secondaryText');
   const inverseText = useThemeColor({}, 'inverseText');
   const tintSubtle = useThemeColor({}, 'tintSubtle');
+  const backgroundColor = useThemeColor({}, 'background');
+  const scoreGood = useThemeColor({}, 'scoreGood');
+  const scoreFair = useThemeColor({}, 'scoreFair');
+  const scorePoor = useThemeColor({}, 'scorePoor');
 
   const [showImageCriteria, setShowImageCriteria] = useState(false);
   const [cacheSummary, setCacheSummary] = useState({
@@ -151,6 +207,12 @@ export default function SettingsScreen() {
     lastUpdatedAt: null as number | null,
   });
   const [cacheActionLoading, setCacheActionLoading] = useState(false);
+  const [cacheFillState, setCacheFillState] = useState<CacheFillUiState>({
+    status: 'idle',
+    phase: null,
+    targetUnseen: PUBLIC_CACHE_TARGET,
+    unseenImagesAvailable: null,
+  });
 
   const experimentsByCategory = experimentCategoryOrder
     .map((category) => ({
@@ -225,21 +287,53 @@ export default function SettingsScreen() {
 
   const handleFillPublicCache = async () => {
     setCacheActionLoading(true);
+    setCacheFillState({
+      status: 'starting',
+      phase: 'starting',
+      targetUnseen: PUBLIC_CACHE_TARGET,
+      unseenImagesAvailable: cacheSummary.unseenImagesAvailable,
+    });
     try {
-      const summary = await fillPublicCache();
+      const summary = await fillPublicCache({
+        onProgress: (progress) => {
+          setCacheFillState({
+            status: progress.phase === 'starting' ? 'starting' : 'in_progress',
+            phase: progress.phase,
+            targetUnseen: progress.targetUnseen,
+            unseenImagesAvailable: progress.unseenImagesAvailable,
+          });
+        },
+      });
       await refreshCacheSummary();
-      Alert.alert(
-        summary.targetReached ? 'Cache ready' : 'Cache partially filled',
-        summary.targetReached
-          ? `Cache now has ${summary.unseenImagesAvailable} unseen images available.`
-          : `Reached ${summary.unseenImagesAvailable}/${summary.targetUnseen} unseen images. This usually means source constraints are currently limiting supply.`
-      );
+      setCacheFillState({
+        status: summary.targetReached ? 'success' : 'partial',
+        phase: null,
+        targetUnseen: summary.targetUnseen,
+        unseenImagesAvailable: summary.unseenImagesAvailable,
+      });
     } catch {
-      Alert.alert('Fill failed', 'Could not refill the cache right now.');
+      setCacheFillState((current) => ({
+        ...current,
+        status: 'failure',
+        phase: null,
+      }));
     } finally {
       setCacheActionLoading(false);
     }
   };
+
+  const cacheFillTitle = titleForFillState(cacheFillState.status, cacheFillState.phase);
+  const cacheFillDetail = detailForFillState(cacheFillState);
+  const fillIsActive =
+    cacheFillState.status === 'starting' || cacheFillState.status === 'in_progress';
+  const statusAccentColor =
+    cacheFillState.status === 'success'
+      ? scoreGood
+      : cacheFillState.status === 'partial'
+        ? scoreFair
+        : cacheFillState.status === 'failure'
+          ? scorePoor
+          : tint;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -296,9 +390,48 @@ export default function SettingsScreen() {
                 disabled={cacheActionLoading}
               >
                 <Text style={styles.actionGhostText}>
-                  Fill Cache to {PUBLIC_CACHE_TARGET} Unseen
+                  {fillIsActive ? 'Filling...' : `Fill Cache to ${PUBLIC_CACHE_TARGET} Unseen`}
                 </Text>
               </Pressable>
+
+              {cacheFillState.status !== 'idle' && (
+                <View
+                  style={[
+                    styles.cacheFillStatus,
+                    {
+                      borderColor,
+                      backgroundColor:
+                        cacheFillState.status === 'failure' ? backgroundColor : tintSubtle,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[styles.cacheFillStatusIconWrap, { backgroundColor: 'transparent' }]}
+                  >
+                    {fillIsActive ? (
+                      <ActivityIndicator size="small" color={statusAccentColor} />
+                    ) : (
+                      <FontAwesome
+                        name={
+                          cacheFillState.status === 'success'
+                            ? 'check-circle'
+                            : cacheFillState.status === 'partial'
+                              ? 'exclamation-circle'
+                              : 'times-circle'
+                        }
+                        size={16}
+                        color={statusAccentColor}
+                      />
+                    )}
+                  </View>
+                  <View style={[styles.cacheFillStatusBody, { backgroundColor: 'transparent' }]}>
+                    <Text style={styles.cacheFillStatusTitle}>{cacheFillTitle}</Text>
+                    <Text style={[styles.cacheFillStatusDetail, { color: secondaryText }]}>
+                      {cacheFillDetail}
+                    </Text>
+                  </View>
+                </View>
+              )}
 
               <Pressable
                 style={[
@@ -610,6 +743,35 @@ const styles = StyleSheet.create({
   },
   cacheActions: {
     marginTop: Spacing.sm,
+  },
+  cacheFillStatus: {
+    marginTop: Spacing.sm,
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+  },
+  cacheFillStatusIconWrap: {
+    minHeight: 18,
+    width: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 2,
+  },
+  cacheFillStatusBody: {
+    flex: 1,
+    gap: 2,
+  },
+  cacheFillStatusTitle: {
+    ...TypeScale.subhead,
+    fontWeight: '700',
+  },
+  cacheFillStatusDetail: {
+    ...TypeScale.caption1,
+    lineHeight: 17,
   },
   criteriaToggle: {
     marginTop: Spacing.sm,
