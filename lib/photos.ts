@@ -2566,6 +2566,25 @@ async function refillPublicCache(
   };
 }
 
+async function pruneEvictedFiles(state: CacheState): Promise<CacheState> {
+  const kept: CachedPublicImage[] = [];
+  for (const img of state.images) {
+    if (!img.localUri) continue;
+    try {
+      const info = await FileSystem.getInfoAsync(img.localUri);
+      if (info.exists) {
+        kept.push(img);
+      }
+    } catch {
+      // File inaccessible — drop entry.
+    }
+  }
+  if (kept.length < state.images.length) {
+    return { ...state, images: kept };
+  }
+  return state;
+}
+
 async function ensureCacheReady(
   publicImageSource: PublicImageSource,
   filters: PublicSelectionFilters,
@@ -2574,6 +2593,7 @@ async function ensureCacheReady(
 ): Promise<CacheState> {
   let state = await readCacheState();
   state = await cleanupSeenAssets(state);
+  state = await pruneEvictedFiles(state);
   let attempts = 0;
   while (attempts < 4) {
     const unseenCount = state.images.length;

@@ -1,23 +1,11 @@
 # Backlog
 
-## Bugs
+## Bugs (Fixed)
 
-### 1. "Unknown location" shown for almost every image
-
-Every score reveal card shows "Unknown location" even when the image has valid coordinates. `inferLocationLabel()` in `lib/photos.ts` relies on strict text pattern matching in titles/tags. No reverse geocoding exists to convert the lat/lng we already have into a place name.
-**Fix:** Add reverse geocoding (e.g., Nominatim/OpenStreetMap) as a fallback when text inference fails.
-
-### 2. Remove dot thousands separator from scores
-
-Score displays as "7.065" with a dot separator. Remove it — just show "7065".
-
-### 3. Map does not reset between rounds
-
-After guessing and moving to the next round, the map retains the previous zoom level and position. It should reset to a default world/region view when a new round starts.
-
-### 4. Result distance line not framed on screen
-
-When the score reveal shows the line between guessed and actual location, the line often extends off-screen. The map should auto-fit to show both pins and the full connecting line.
+- ~~"Unknown location" shown for almost every image~~ — added Nominatim reverse geocoding fallback
+- ~~Dot thousands separator in scores~~ — removed
+- ~~Map does not reset between rounds~~ — reset to default view on round advance
+- ~~Result distance line not framed on screen~~ — auto-fit map to both pins with padding
 
 ---
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   Pressable,
@@ -19,6 +19,7 @@ import { Spacing, Radius, TypeScale } from '@/constants/theme';
 
 export default function PhotoViewerScreen() {
   const { uri } = useLocalSearchParams<{ uri?: string }>();
+  const [viewerError, setViewerError] = useState(false);
   const translateY = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
   const { width, height } = useWindowDimensions();
@@ -85,7 +86,7 @@ export default function PhotoViewerScreen() {
         bouncesZoom
         centerContent
       >
-        {uri ? (
+        {uri && !viewerError ? (
           <Pressable
             style={{ width, height, alignItems: 'center', justifyContent: 'center' }}
             onLongPress={handleShare}
@@ -97,6 +98,7 @@ export default function PhotoViewerScreen() {
               contentFit="contain"
               style={{ width, height }}
               transition={180}
+              onError={() => setViewerError(true)}
             />
           </Pressable>
         ) : (
@@ -106,7 +108,8 @@ export default function PhotoViewerScreen() {
               { backgroundColor: 'transparent' },
             ]}
           >
-            <Text style={[styles.fallback, { color: inverseText }]}>No photo available.</Text>
+            <FontAwesome name="picture-o" size={36} color="#888" />
+            <Text style={[styles.fallback, { color: inverseText }]}>Image unavailable</Text>
           </View>
         )}
       </ScrollView>

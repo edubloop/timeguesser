@@ -99,9 +99,11 @@ const PhotoPanel = memo(function PhotoPanel({
   tint,
 }: PhotoPanelProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
     setImageLoaded(false);
+    setImageFailed(false);
   }, [imageUri]);
 
   return (
@@ -126,7 +128,15 @@ const PhotoPanel = memo(function PhotoPanel({
             transition={180}
             style={styles.photoImage}
             onLoad={() => setImageLoaded(true)}
+            onError={() => setImageFailed(true)}
           />
+          {imageFailed && (
+            <View style={styles.imageErrorOverlay}>
+              <FontAwesome name="picture-o" size={36} color="#888" />
+              <Text style={styles.imageErrorText}>Image unavailable</Text>
+              {canRefreshPhoto && <Text style={styles.imageErrorHint}>Tap refresh below</Text>}
+            </View>
+          )}
           {imageLoaded && <View testID="game-photo-loaded" style={styles.qaMarker} />}
         </Pressable>
       </ScrollView>
@@ -946,6 +956,22 @@ const styles = StyleSheet.create({
     width: 1,
     height: 1,
     opacity: 0,
+  },
+  imageErrorOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    gap: 8,
+  },
+  imageErrorText: {
+    color: '#aaa',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  imageErrorHint: {
+    color: '#777',
+    fontSize: 12,
   },
   photoHint: {
     ...TypeScale.caption1,
