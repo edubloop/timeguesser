@@ -55,13 +55,13 @@ AGENTS.md          ← already existed, comprehensive, 98 lines
 WORKSPACE_AUDIT.md ← existing ways-of-working audit
 iAPS/              ← Swift/Xcode safety-critical app
 TimeGuesser/       ← the repo being adopted
-iaps records/      ← local PHI data directory (MUST NOT have git remote)
+local-data-dir/      ← local PHI data directory (MUST NOT have git remote)
 workspace-kit/     ← the kit itself
 ```
 
 **Confusion #3 — The workspace already had a workspace-level AGENTS.md.**
 The existing file was already more detailed than the workspace-kit template would produce:
-it documented iAPS, iaps records (PHI), the cross-repo interface, and toolchain isolation.
+it documented iAPS, local data directory (PHI), the cross-repo interface, and toolchain isolation.
 The workspace-kit template version is generic; the existing version is specific.
 
 **Decision made:** Did NOT overwrite the existing `AGENTS.md`. The workspace-kit template
@@ -79,7 +79,7 @@ The workspace-kit WORKSPACE.md template is 115 lines. Placeholders filled:
 | `<DATE>`                         | `2026-03-16`                                                                       | Current date                             |
 | `<repo-a>`                       | `TimeGuesser/`                                                                     | Known                                    |
 | `<repo-b>`                       | `iAPS/`                                                                            | Found from workspace listing             |
-| `<local-data-dir>`               | `iaps records/`                                                                    | Found from workspace listing             |
+| `<local-data-dir>`               | `local-data-dir/`                                                                  | Found from workspace listing             |
 | `<stack>`                        | `React Native / Expo (TypeScript)` for TimeGuesser; `Swift / Xcode / SPM` for iAPS | Known                                    |
 | `<org>/<repo>`                   | `edubloop/timeguesser`                                                             | From `git remote -v` in TimeGuesser      |
 | `<safety-critical-path>`         | Removed (iAPS, not TimeGuesser)                                                    | TimeGuesser is non-safety-critical       |
@@ -115,7 +115,7 @@ Compared the workspace-kit AGENTS.md template against the existing workspace AGE
 The existing file already covered:
 
 - Workspace map with all repos ✓
-- iaps records prohibition with detail ✓
+- local data directory prohibition with detail ✓
 - Cross-repo interface contract ✓
 - Toolchain isolation ✓
 - Repo-level AGENTS.md precedence ✓
@@ -215,7 +215,7 @@ README). This is a minor bug in the template. The line was deleted as instructed
 Copied verbatim to `TimeGuesser/scripts/check_no_sensitive_paths.sh`.
 
 **Confusion #16 — Default `FORBIDDEN_PATTERNS` are wrong for this repo.**
-The script defaults to `FORBIDDEN_PATTERNS="iaps_records local_data_dir"`. These are
+The script defaults to `FORBIDDEN_PATTERNS="local_data_dir local_data_dir"`. These are
 iAPS-workspace-specific patterns. For TimeGuesser, which has no sensitive local data
 directory, both patterns are wrong. A committer would need to override `FORBIDDEN_PATTERNS`
 or update the script default.
@@ -333,22 +333,46 @@ Replace every <PLACEHOLDER>. Delete this block when adopting.` Helpful.
 
 ## Files Created / Modified
 
-| File                                              | Action                    | Template source                                           |
-| ------------------------------------------------- | ------------------------- | --------------------------------------------------------- |
-| `/Users/ec/Documents/Workspace/WORKSPACE.md`      | Created                   | `workspace-kit/WORKSPACE.md`                              |
-| `TimeGuesser/.github/PULL_REQUEST_TEMPLATE.md`    | Modified (merged)         | `workspace-kit/templates/PULL_REQUEST_TEMPLATE.md`        |
-| `TimeGuesser/CONTRIBUTING.md`                     | Modified (sections added) | `workspace-kit/templates/CONTRIBUTING.md`                 |
-| `TimeGuesser/CHECKLIST_definition-of-done.md`     | Created                   | `workspace-kit/templates/CHECKLIST_definition-of-done.md` |
-| `TimeGuesser/scripts/check_no_sensitive_paths.sh` | Created (verbatim copy)   | `workspace-kit/scripts/check_no_sensitive_paths.sh`       |
-| `TimeGuesser/WORKSPACE_KIT_ADOPTION_LOG.md`       | Created                   | (this file)                                               |
+| File                                           | Action                    | Template source                                           |
+| ---------------------------------------------- | ------------------------- | --------------------------------------------------------- |
+| `/Users/ec/Documents/Workspace/WORKSPACE.md`   | Created                   | `workspace-kit/WORKSPACE.md`                              |
+| `TimeGuesser/.github/PULL_REQUEST_TEMPLATE.md` | Modified (merged)         | `workspace-kit/templates/PULL_REQUEST_TEMPLATE.md`        |
+| `TimeGuesser/CONTRIBUTING.md`                  | Modified (sections added) | `workspace-kit/templates/CONTRIBUTING.md`                 |
+| `TimeGuesser/CHECKLIST_definition-of-done.md`  | Created                   | `workspace-kit/templates/CHECKLIST_definition-of-done.md` |
+| `TimeGuesser/WORKSPACE_KIT_ADOPTION_LOG.md`    | Created                   | (this file)                                               |
 
 ## Files Skipped
 
-| File                                                             | Reason                                                                        |
-| ---------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `workspace-kit/AGENTS.md` (workspace-level)                      | Workspace AGENTS.md already exists and is more complete than the template     |
-| `workspace-kit/scripts/check_no_git_remote_in_local_data_dir.sh` | Not applicable — not run against TimeGuesser (applies to `iaps records/`)     |
-| `workspace-kit/docs/cross-repo-interface-template.md`            | Not applicable — TimeGuesser has no cross-repo dependencies                   |
-| `workspace-kit/docs/safety-critical-changes.md`                  | Not applicable — TimeGuesser is non-safety-critical                           |
-| `workspace-kit/templates/SPEC_TEMPLATE.md`                       | Not listed in minimal adoption; TimeGuesser already has `TIMEGUESSER_SPEC.md` |
-| `workspace-kit/templates/ADR_TEMPLATE.md`                        | Not listed in minimal adoption; no ADR needed yet                             |
+| File                                                             | Reason                                                                                            |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `workspace-kit/AGENTS.md` (workspace-level)                      | Workspace AGENTS.md already exists and is more complete than the template                         |
+| `workspace-kit/scripts/check_no_sensitive_paths.sh`              | Not applicable — removed after review because TimeGuesser has no sensitive local data dir in-repo |
+| `workspace-kit/scripts/check_no_git_remote_in_local_data_dir.sh` | Not applicable — not run against TimeGuesser (applies to `local-data-dir/`)                       |
+| `workspace-kit/docs/cross-repo-interface-template.md`            | Not applicable — TimeGuesser has no cross-repo dependencies                                       |
+| `workspace-kit/docs/safety-critical-changes.md`                  | Not applicable — TimeGuesser is non-safety-critical                                               |
+| `workspace-kit/templates/SPEC_TEMPLATE.md`                       | Not listed in minimal adoption; TimeGuesser already has `TIMEGUESSER_SPEC.md`                     |
+| `workspace-kit/templates/ADR_TEMPLATE.md`                        | Not listed in minimal adoption; no ADR needed yet                                                 |
+
+---
+
+## 2026-03-27 artifact-by-artifact review
+
+This follow-up review re-checked TimeGuesser against the current workspace-kit adoption
+model (`workspace-kit` v1.3.1) and confirmed which kit artifacts are applicable versus
+intentionally out of scope for a standard adopted repo.
+
+| Artifact                                           | Status         | Notes                                                                                                                                                            |
+| -------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AGENTS.md`                                        | Adopted        | Repo-specific constraints, architecture, and QA workflow remain intentionally richer than the kit baseline; sync marker updated to `workspace-kit-sync: v1.3.1`. |
+| `CONTRIBUTING.md`                                  | Adopted        | Existing repo-specific setup and performance guidance remain, with kit-derived quality, changelog, and dependency sections in place.                             |
+| `CHECKLIST_definition-of-done.md`                  | Adopted        | Includes the expected kit sections plus TimeGuesser-specific scoring/design checks.                                                                              |
+| `.github/PULL_REQUEST_TEMPLATE.md`                 | Adopted        | Preserves the lightweight kit structure while adding repo-specific verification items.                                                                           |
+| `CHANGELOG.md`                                     | Adopted        | Present and actively maintained; aligns with the standard repo expectation.                                                                                      |
+| `scripts/check_no_sensitive_paths.sh`              | Not applicable | Removed during review because TimeGuesser has no sensitive local data directory inside the repo; the relevant protections live at workspace level.               |
+| `scripts/check_no_git_remote_in_local_data_dir.sh` | Not applicable | TimeGuesser has no local-only data directory inside the repo.                                                                                                    |
+
+### Review outcome
+
+- TimeGuesser now satisfies the current repo-adoption definition for a `standard_adopted` repo.
+- Remaining differences from the kit are product-specific enrichments, not drift.
+- The workspace adoption metadata now records TimeGuesser as `adopted`.

@@ -42,7 +42,7 @@ Delete inapplicable items; do not leave unchecked items that don't apply.
 
 - [ ] No new dependencies introduced without reviewing their CVE status (`npm audit`)
 - [ ] If new network requests: endpoint, data sent, and auth method are intentional
-      (only Wikimedia Commons and Open-Meteo are approved external APIs)
+      (approved external APIs: Wikimedia Commons, Library of Congress, Europeana, Open-Meteo, Nominatim)
 - [ ] If new local storage: what is stored and why is documented
       (AsyncStorage key `timeguesser.settings.v1` — must not change; breaks user data)
 
