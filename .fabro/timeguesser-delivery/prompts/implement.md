@@ -2,7 +2,6 @@ Implement the approved plan.
 
 Hard constraints to respect:
 
-- If `AGENTS.md` requires the workspace session-start check, run `bash $workspace_root/.workspace-notes/cadence_due_check.sh`. If that reports `[DUE]`, then run `bash $workspace_root/.workspace-notes/harness_healthcheck.sh` and follow the logging instruction in `AGENTS.md`.
 - Do not change scoring constants, formulas, or hint costs without explicit approval.
 - Do not add dependencies without explicit approval.
 - Do not change `app.json` or `eas.json` without explicit approval.

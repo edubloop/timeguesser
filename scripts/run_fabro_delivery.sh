@@ -27,6 +27,32 @@ workspace_root="$(cd "$repo_root/.." && pwd)"
 workflow_dir="$repo_root/.fabro/timeguesser-delivery"
 artifact_dir="$repo_root/../artifacts/tickets/$ticket_id"
 fabro_bin="${FABRO_BIN:-}"
+cadence_script="$workspace_root/.workspace-notes/cadence_due_check.sh"
+healthcheck_script="$workspace_root/.workspace-notes/harness_healthcheck.sh"
+
+run_operator_preflight() {
+  if [[ ! -x "$cadence_script" ]]; then
+    echo "warning: cadence preflight script not found or not executable: $cadence_script" >&2
+    return
+  fi
+
+  local preflight_output
+  local preflight_status
+  set +e
+  preflight_output="$(cd "$workspace_root" && bash "$cadence_script" 2>&1)"
+  preflight_status=$?
+  set -e
+
+  printf '%s\n' "$preflight_output"
+
+  if [[ $preflight_status -eq 2 ]]; then
+    echo "preflight notice: cadence review is due." >&2
+    echo "recommended next step: (cd \"$workspace_root\" && bash \"$healthcheck_script\")" >&2
+    echo "continuing with Fabro run; cadence is enforced at operator preflight, not inside workflow stages." >&2
+  elif [[ $preflight_status -ne 0 ]]; then
+    echo "warning: cadence preflight returned status $preflight_status; continuing with Fabro run." >&2
+  fi
+}
 
 if [[ -z "$fabro_bin" ]]; then
   if command -v fabro >/dev/null 2>&1; then
@@ -43,6 +69,8 @@ if [[ ! -f "$goal_file" ]]; then
   echo "goal file not found: $goal_file" >&2
   exit 1
 fi
+
+run_operator_preflight
 
 mkdir -p "$artifact_dir"
 goal_file="$(cd "$(dirname "$goal_file")" && pwd)/$(basename "$goal_file")"

@@ -2,7 +2,6 @@ Create or update the ticket spec for this run.
 
 Requirements:
 
-- If `AGENTS.md` requires the workspace session-start check, run `bash $workspace_root/.workspace-notes/cadence_due_check.sh`. If that reports `[DUE]`, then run `bash $workspace_root/.workspace-notes/harness_healthcheck.sh` and follow the logging instruction in `AGENTS.md`.
 - Read `AGENTS.md`, `TIMEGUESSER_SPEC.md`, and `TIMEGUESSER_DESIGN_SYSTEM.md` before writing.
 - Treat the provided `ticket.md` goal file as the approved design/intake source for Delivery.
 - Treat `AGENTS.md` as the policy source of truth.
