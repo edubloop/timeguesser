@@ -2,6 +2,7 @@ Create or update the ticket intake brief for this run.
 
 Requirements:
 
+- If `AGENTS.md` requires the workspace session-start check, run `bash $workspace_root/.workspace-notes/cadence_due_check.sh`. If that reports `[DUE]`, then run `bash $workspace_root/.workspace-notes/harness_healthcheck.sh` and follow the logging instruction in `AGENTS.md`.
 - Read `AGENTS.md`, `TIMEGUESSER_SPEC.md`, `TIMEGUESSER_DESIGN_SYSTEM.md`, and `BACKLOG.md` before writing.
 - Read `$workspace_root/.workspace-notes/mode-handoff-schema.md` before writing handoff fields.
 - Treat `AGENTS.md` as the policy source of truth.

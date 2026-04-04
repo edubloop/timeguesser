@@ -23,6 +23,7 @@ goal_file="$2"
 shift 2
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+workspace_root="$(cd "$repo_root/.." && pwd)"
 workflow_dir="$repo_root/.fabro/timeguesser-delivery"
 artifact_dir="$repo_root/../artifacts/tickets/$ticket_id"
 fabro_bin="${FABRO_BIN:-}"
@@ -68,6 +69,7 @@ worktree_mode = "always"
 
 [vars]
 ticket_id = "$ticket_id"
+workspace_root = "$workspace_root"
 artifact_dir = "$artifact_dir"
 goal_file = "$goal_file"
 

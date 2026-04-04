@@ -11,6 +11,7 @@ worktree_mode = "always"
 
 [vars]
 ticket_id = "DEMO-001"
+workspace_root = ".."
 artifact_dir = "../artifacts/tickets/DEMO-001"
 goal_file = "../artifacts/tickets/DEMO-001/ticket.md"
 
