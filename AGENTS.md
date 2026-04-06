@@ -131,8 +131,12 @@ Canonical stages:
 2. `Intake` — writes `artifacts/tickets/{ID}/ticket.md`
 3. `Design Explore` — writes `artifacts/tickets/{ID}/design-brief.md`
 4. `Design Review` — writes `artifacts/tickets/{ID}/design-review.md`
-5. `Approve Direction` — human gate in the Fabro local web UI
-6. `Publish Ticket` — normalizes `ticket.md` for Delivery
+5. `Stage Review Form` — writes or updates `artifacts/tickets/{ID}/design-approval.md`
+6. `Human Approval Decision` — human gate in the Fabro local web UI
+7. `Revise Per Reviewer Decision` — applies required reviewer changes when the gate selects revision
+8. `Publish Ticket` — normalizes `ticket.md` for Delivery only after approval as-is
+
+`artifacts/tickets/{ID}/design-approval.md` is the authoritative reviewer decision log for the design chain. If the reviewer chooses revision, that artifact must contain required changes before the workflow can continue, and later design stages must treat its latest review cycle as binding input.
 
 Preferred entrypoint:
 

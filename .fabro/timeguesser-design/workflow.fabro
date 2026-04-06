@@ -8,16 +8,27 @@ digraph TimeGuesserDesign {
     start [shape=Mdiamond, label="Start"]
     exit  [shape=Msquare, label="Exit"]
 
-    load_source    [label="Select / Load Backlog Item", shape=parallelogram, script="mkdir -p \"$artifact_dir\" && test -f \"$source_file\""]
-    intake         [label="Intake", prompt="Read .fabro/timeguesser-design/prompts/intake.md, then read $source_file and the repo policy docs. Write or update $artifact_dir/ticket.md."]
-    design_explore [label="Design Explore", prompt="Read .fabro/timeguesser-design/prompts/design-explore.md, then read $artifact_dir/ticket.md and write or update $artifact_dir/design-brief.md."]
-    design_review  [label="Design Review", prompt="Read .fabro/timeguesser-design/prompts/design-review.md, then read $artifact_dir/ticket.md and $artifact_dir/design-brief.md and write or update $artifact_dir/design-review.md."]
-    approve        [shape=hexagon, label="Approve Direction"]
-    publish_ticket [label="Publish Ticket", prompt="Read .fabro/timeguesser-design/prompts/publish-ticket.md, then read $artifact_dir/ticket.md, $artifact_dir/design-brief.md, and $artifact_dir/design-review.md. Update $artifact_dir/ticket.md so it is ready to serve as the delivery goal file."]
+    load_source       [label="Select / Load Backlog Item", shape=parallelogram, script="mkdir -p \"$artifact_dir\" && test -f \"$source_file\""]
+    intake            [label="Intake", class="route_draft", prompt="Read .fabro/timeguesser-design/prompts/intake.md, then read $source_file and the minimum authoritative docs it cites before writing or updating $artifact_dir/ticket.md."]
+    design_explore    [label="Design Explore", class="route_design", prompt="Read .fabro/timeguesser-design/prompts/design-explore.md, then read $artifact_dir/ticket.md and the minimum authoritative docs it cites before writing or updating $artifact_dir/design-brief.md."]
+    design_review     [label="Design Review", class="route_review", prompt="Read .fabro/timeguesser-design/prompts/design-review.md, then read $artifact_dir/ticket.md, $artifact_dir/design-brief.md, and the minimum authoritative docs they cite before writing or updating $artifact_dir/design-review.md."]
+    stage_review_form [label="Stage Review Form", class="route_gate", prompt="Read .fabro/timeguesser-design/prompts/prepare-review-decision.md, then read $artifact_dir/ticket.md, $artifact_dir/design-brief.md, and $artifact_dir/design-review.md. Read repo or workspace policy docs only when those artifacts explicitly anchor to them. Create or update $artifact_dir/design-approval.md as the authoritative human review decision log."]
+    approve           [shape=hexagon, label="Human Approval Decision"]
+    validate_approve  [label="Validate Approve Decision", shape=parallelogram, script=".fabro/timeguesser-design/scripts/validate_design_approval.sh \"$artifact_dir/design-approval.md\" approve"]
+    validate_revise   [label="Validate Revise Decision", shape=parallelogram, script=".fabro/timeguesser-design/scripts/validate_design_approval.sh \"$artifact_dir/design-approval.md\" revise"]
+    validate_stop     [label="Validate Stop Decision", shape=parallelogram, script=".fabro/timeguesser-design/scripts/validate_design_approval.sh \"$artifact_dir/design-approval.md\" stop"]
+    apply_revisions   [label="Revise Per Reviewer Decision", class="route_design", prompt="Read .fabro/timeguesser-design/prompts/apply-reviewer-revisions.md, then read $artifact_dir/design-approval.md, $artifact_dir/ticket.md, $artifact_dir/design-brief.md, $artifact_dir/design-review.md, and the minimum authoritative docs they cite before updating the design package."]
+    publish_ticket    [label="Publish Ticket", class="route_draft", prompt="Read .fabro/timeguesser-design/prompts/publish-ticket.md, then read $artifact_dir/ticket.md, $artifact_dir/design-brief.md, $artifact_dir/design-review.md, $artifact_dir/design-approval.md, and the minimum authoritative docs they cite before updating $artifact_dir/ticket.md for Delivery."]
+    stop_guidance     [label="Stop / Guidance Summary", class="route_gate", prompt="Read .fabro/timeguesser-design/prompts/stop-guidance.md, then read $artifact_dir/design-approval.md, $artifact_dir/ticket.md, $artifact_dir/design-brief.md, and $artifact_dir/design-review.md. Read repo or workspace policy docs only when those artifacts explicitly anchor to them. Update the ticket package to preserve the stop decision and guidance without publishing a delivery-ready ticket."]
 
-    start -> load_source -> intake -> design_explore -> design_review -> approve
-    approve -> publish_ticket [label="[A] Approve for Delivery"]
-    approve -> design_explore [label="[R] Revise Direction"]
-    approve -> exit           [label="[G] Guidance Only / Stop"]
+    start -> load_source -> intake -> design_explore -> design_review -> stage_review_form -> approve
+    approve -> validate_approve [label="[A] Approve As-Is (incl. design-review issues)"]
+    approve -> validate_revise  [label="[R] Revise With Required Changes"]
+    approve -> validate_stop    [label="[G] Stop With Guidance Only"]
+    validate_approve -> publish_ticket
+    validate_revise -> apply_revisions
+    validate_stop -> stop_guidance
+    apply_revisions -> design_review
+    stop_guidance -> exit
     publish_ticket -> exit
 }

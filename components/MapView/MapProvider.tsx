@@ -24,6 +24,8 @@ export interface MapViewProps {
   pinCoordinate: Coordinate | null;
   /** Whether pin can be moved (false after guess locked) */
   interactive: boolean;
+  /** Whether the player can pan/zoom the map */
+  gestureEnabled?: boolean;
   /** Answer pin to show during reveal */
   answerCoordinate?: Coordinate | null;
   /** Whether to show distance line between guess and answer */

@@ -1,4 +1,4 @@
-appId: com.timeguesser.app
+appId: host.exp.Exponent
 ---
 # Flow: Complete one full round — photo loads, pin placed, year submitted, score revealed
 
@@ -22,9 +22,16 @@ appId: com.timeguesser.app
       id: 'game-photo-loaded'
     timeout: 15000
 
+# Enter map mode explicitly
+- tapOn:
+    id: 'guess-button'
+- waitForAnimationToEnd
+- assertVisible:
+    id: 'photo-mode-chip'
+
 # Place a pin somewhere on the map (center of screen as a proxy)
 - tapOn:
-    point: '50%,70%'
+    point: '50%,55%'
 
 - waitForAnimationToEnd
 

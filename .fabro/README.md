@@ -30,10 +30,12 @@ Examples:
    - `ticket.md`
    - `design-brief.md`
    - `design-review.md`
-3. Use the local Fabro web UI to review the design outputs and approve or stop.
-4. Run the Delivery workflow using `ticket.md` as the goal file.
-5. Use the UI to approve the implementation plan, inspect logs, and follow verification.
-6. Review all outputs under `../artifacts/tickets/<TICKET_ID>/`.
+   - `design-approval.md`
+3. Use the local Fabro web UI to review the design outputs.
+4. Complete the latest review cycle in `design-approval.md`, then choose a branch in the design approval gate.
+5. Run the Delivery workflow using `ticket.md` as the goal file only after `Approve As-Is (including issues raised in design review)` and `Publish Ticket`.
+6. Use the UI to approve the implementation plan, inspect logs, and follow verification.
+7. Review all outputs under `../artifacts/tickets/<TICKET_ID>/`.
 
 ## Artifact contract
 
@@ -43,15 +45,49 @@ Each selected ticket directory should converge on:
 - `ticket.md`
 - `design-brief.md`
 - `design-review.md`
+- `design-approval.md`
 - `spec.md`
 - `plan.md`
+- `delivery-approval.md`
 - `review.md`
 - `handoff.md`
+
+## Authoritative doc loading
+
+TimeGuesser Fabro prompts follow a minimum authoritative-doc contract:
+
+- Always read the current stage's required ticket artifacts.
+- Read repo `AGENTS.md` when the stage may shape scope, constraints, implementation, or
+  review judgment.
+- Read workspace `AGENTS.md` only when `ticket.md` explicitly includes a
+  `Workspace policy anchor`.
+- Read ADRs only when `ticket.md` or `spec.md` explicitly lists them under
+  `Related ADRs`.
+
+The ticket package carries those routing hints:
+
+- `Policy anchor: AGENTS.md`
+- optional `Workspace policy anchor: <path>`
+- optional `Related ADRs:` section with explicit paths or `None`
+
+## Routing Contract Adoption
+
+TimeGuesser adopts the workspace routing contract in
+`.workspace-kit/docs/fabro-model-routing-contract.md` by tagging workflow stages with
+shared stage classes (for native Fabro routing) and by using the same classes as the
+advisory mapping for manual Codex/Claude runs.
+
+If native routing is unavailable in a future environment, use repo-local run-config
+fallbacks that preserve the same stage-class vocabulary rather than inventing new
+per-repo class names.
 
 ## Scope boundaries
 
 - `AGENTS.md` remains the policy source of truth.
 - Design stages prefer repo-native artifacts as durable outputs; OpenPencil is optional.
+- `design-approval.md` is the authoritative human decision record for design approval loops.
+- `Approve As-Is` at design gates means approve with the latest design-review issues included.
+- Supplementary Fabro UI gate notes are optional, but they do not replace the artifact.
 - Delivery stages should not reopen design exploration except for minimal clarification.
 - TimeGuesser verification rules stay explicit:
   - default: `npm run check`

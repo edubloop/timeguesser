@@ -76,6 +76,7 @@ export default function SearchBar({ onLocationSelected, onSearch }: SearchBarPro
   if (!expanded) {
     return (
       <Pressable
+        testID="map-search-button"
         style={[styles.iconButton, { backgroundColor: cardBg, borderColor }]}
         accessibilityRole="button"
         accessibilityLabel="Open map search"
@@ -87,7 +88,10 @@ export default function SearchBar({ onLocationSelected, onSearch }: SearchBarPro
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: cardBg, borderColor }]}>
+    <View
+      testID="map-search-panel"
+      style={[styles.container, { backgroundColor: cardBg, borderColor }]}
+    >
       <View style={[styles.inputRow, { backgroundColor: 'transparent' }]}>
         <FontAwesome name="search" size={16} color={tertiaryText} style={styles.inputIcon} />
         <TextInput
