@@ -48,11 +48,12 @@ Provider chain (load-bearing):
 3. Map request to files via `AGENT_TASK_INDEX.md`.
 4. For non-trivial work, seed `../artifacts/tickets/<ID>/source.md` from the selected backlog item.
 5. Run the Fabro Design workflow from `./scripts/run_fabro_design.sh`.
-6. Review `ticket.md`, `design-brief.md`, and `design-review.md` in the Fabro UI.
-7. Run the Fabro Delivery workflow from `./scripts/run_fabro_delivery.sh` using `ticket.md`.
-8. Use the local Fabro web UI to approve the plan and inspect the run.
-9. Make minimal scoped changes.
-10. Run `npm run check` before handing off.
+6. Review `ticket.md`, `design-brief.md`, `design-review.md`, and `design-approval.md` in the Fabro UI.
+7. Complete the latest review cycle in `design-approval.md` before selecting the design approval branch.
+8. Run the Fabro Delivery workflow from `./scripts/run_fabro_delivery.sh` using `ticket.md` after the design package is approved as-is and published.
+9. Use the local Fabro web UI to approve the plan and inspect the run.
+10. Make minimal scoped changes.
+11. Run `npm run check` before handing off.
 
 ## Safe To Edit
 

@@ -16,7 +16,7 @@ Each active item should stay lightweight:
 
 ### TG-005 — Rethink screen real estate ratio
 
-- Status: `Queued`
+- Status: `Done`
 - Lane: `Experience / UX`
 - Path: `Design -> Delivery`
 - Summary: Rebalance the game screen toward photo-first emphasis. Current ratio feels too map-heavy early in the round.
@@ -37,7 +37,7 @@ Each active item should stay lightweight:
 
 ### TG-008 — Cache fill progress indicator + haptics
 
-- Status: `Queued`
+- Status: `Done`
 - Lane: `Experience / UX`
 - Path: `Design -> Delivery`
 - Summary: Add a manual cache-fill action with visible progress and meaningful haptic feedback so long waits do not feel stuck.

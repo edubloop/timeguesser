@@ -1,6 +1,6 @@
-digraph TimeGuesserDelivery {
+digraph TimeGuesserDeliveryApproved {
     graph [
-        goal="Execute TimeGuesser Delivery mode in Fabro while preserving harness artifacts and repo guardrails",
+        goal="Execute TimeGuesser Delivery mode from an approved implementation plan while preserving harness artifacts and repo guardrails",
         default_max_retry=3
     ]
     rankdir=LR
@@ -8,11 +8,7 @@ digraph TimeGuesserDelivery {
     start [shape=Mdiamond, label="Start"]
     exit  [shape=Msquare, label="Exit"]
 
-    load_intake [label="Load Intake", shape=parallelogram, script="mkdir -p \"$artifact_dir\" && test -f \"$goal_file\""]
-    spec        [label="Spec", class="route_design", prompt="Read .fabro/timeguesser-delivery/prompts/spec.md, then read the intake at $goal_file and the minimum authoritative docs it cites. Write or update $artifact_dir/spec.md."]
-    plan        [label="Plan", class="route_design", prompt="Read .fabro/timeguesser-delivery/prompts/plan.md, then read $artifact_dir/spec.md and the minimum authoritative docs it cites before writing or updating $artifact_dir/plan.md."]
-    approve     [shape=hexagon, label="Approve Plan"]
-    blocked     [label="Blocked / Escalated", class="route_gate", shape=tab, prompt="Summarize why the run stopped, which ask-first boundary or open question blocked execution, and what the human operator must decide next. Do not make further changes."]
+    validate_delivery_start [label="Validate Approved Delivery Start", shape=parallelogram, script="$workspace_root/TimeGuesser/.fabro/timeguesser-delivery/scripts/validate_delivery_approval.sh \"$goal_file\" \"$artifact_dir/plan.md\" \"$artifact_dir/delivery-approval.md\""]
     implement   [label="Implement", class="route_implement", prompt="Read .fabro/timeguesser-delivery/prompts/implement.md, then read $artifact_dir/plan.md and the minimum authoritative docs cited by the ticket/spec/plan before implementing the approved changes."]
     choose_verify [shape=hexagon, label="Choose Verification"]
     verify_standard [label="Verify Standard", shape=parallelogram, script="npm run check 2>&1", goal_gate=true, retry_target="fixup"]
@@ -22,11 +18,9 @@ digraph TimeGuesserDelivery {
     review       [label="Review", class="route_review", prompt="Read .fabro/timeguesser-delivery/prompts/review.md, then read $artifact_dir/spec.md, $artifact_dir/plan.md, verification context, and any ADRs explicitly cited there before writing or updating $artifact_dir/review.md."]
     handoff      [label="Handoff", class="route_draft", prompt="Read .fabro/timeguesser-delivery/prompts/handoff.md, then read the current ticket artifact chain, verification context, and any ADRs explicitly cited by spec.md or plan.md before writing or updating $artifact_dir/handoff.md."]
 
-    start -> load_intake -> spec -> plan -> approve
-    approve -> implement [label="[A] Approve"]
-    approve -> plan      [label="[R] Revise"]
-    approve -> blocked   [label="[E] Escalate"]
-    blocked -> exit
+    start -> validate_delivery_start
+    validate_delivery_start -> implement [condition="outcome=success"]
+    validate_delivery_start -> exit
     implement -> choose_verify
     choose_verify -> verify_standard [label="[S] Standard"]
     choose_verify -> verify_smoke    [label="[U] UI Smoke"]

@@ -1,169 +1,30 @@
-import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { StyleSheet, Pressable, ScrollView, ActivityIndicator, Modal } from 'react-native';
-import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Text, View, useThemeColor } from '@/components/Themed';
-import { useGame } from '@/lib/gameState';
-import { Coordinate } from '@/lib/scoring';
-import { ROUNDS_PER_GAME, MAX_HINTS } from '@/constants/scoring';
-import GameMapView, { MapProviderRef } from '@/components/MapView';
-import SearchBar from '@/components/SearchBar';
+import ModeChip from '@/components/GameScreen/ModeChip';
+import PhotoSurface from '@/components/GameScreen/PhotoSurface';
+import RoundMediaStage from '@/components/GameScreen/RoundMediaStage';
 import GuessButton from '@/components/GuessButton';
-import YearPicker from '@/components/YearPicker';
-import RoundTimer from '@/components/RoundTimer';
+import GameMapView, { MapProviderRef } from '@/components/MapView';
 import ScoreReveal from '@/components/ScoreReveal';
+import SearchBar from '@/components/SearchBar';
+import { Text, View, useThemeColor } from '@/components/Themed';
+import YearPicker from '@/components/YearPicker';
+import { MAX_HINTS, ROUNDS_PER_GAME } from '@/constants/scoring';
+import { Layout, Radius, Spacing, TypeScale } from '@/constants/theme';
 import { useGameRuntimeSettings } from '@/lib/SettingsContext';
-import { generateHint, getHintPreview, HintResult, HintTier } from '@/lib/hints';
+import {
+  deriveGameScreenPresentation,
+  reducePresentationMode,
+  type PresentationMode,
+} from '@/lib/gameScreenPresentation';
+import { useGame } from '@/lib/gameState';
+import { generateHint, getHintPreview, type HintResult, type HintTier } from '@/lib/hints';
 import { getReplacementPublicRound } from '@/lib/photos';
-import { formatWholeNumber } from '@/lib/numberFormat';
-import { Layout, Spacing, Radius, TypeScale } from '@/constants/theme';
-
-interface HeaderPanelProps {
-  currentRound: number;
-  totalScore: number;
-  roundTimer: number;
-  timerPaused: boolean;
-  showYearPicker: boolean;
-  showResult: boolean;
-  showHintModal: boolean;
-  onTimeUp: () => void;
-  cardBg: string;
-  borderColor: string;
-  secondaryText: string;
-}
-
-const HeaderPanel = memo(function HeaderPanel({
-  currentRound,
-  totalScore,
-  roundTimer,
-  timerPaused,
-  showYearPicker,
-  showResult,
-  showHintModal,
-  onTimeUp,
-  cardBg,
-  borderColor,
-  secondaryText,
-}: HeaderPanelProps) {
-  return (
-    <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: borderColor }]}>
-      <View style={[styles.headerLeft, { backgroundColor: 'transparent' }]}>
-        <Text style={styles.roundLabel}>
-          Round {currentRound + 1}/{ROUNDS_PER_GAME}
-        </Text>
-        <Text style={[styles.scoreLabel, { color: secondaryText }]}>
-          {formatWholeNumber(totalScore)} pts
-        </Text>
-      </View>
-
-      {roundTimer > 0 && (
-        <View style={{ backgroundColor: 'transparent' }}>
-          <RoundTimer
-            key={`${currentRound}-${roundTimer}`}
-            duration={roundTimer}
-            paused={timerPaused || showYearPicker || showResult || showHintModal}
-            onTimeUp={onTimeUp}
-          />
-        </View>
-      )}
-    </View>
-  );
-});
-
-interface PhotoPanelProps {
-  imageUri: string;
-  borderColor: string;
-  secondaryText: string;
-  canRefreshPhoto: boolean;
-  refreshLoading: boolean;
-  onPhotoTap: () => void;
-  onPhotoLongPress: () => void;
-  onRefreshPhoto: () => void;
-  cardBg: string;
-  tint: string;
-}
-
-const PhotoPanel = memo(function PhotoPanel({
-  imageUri,
-  borderColor,
-  secondaryText,
-  canRefreshPhoto,
-  refreshLoading,
-  onPhotoTap,
-  onPhotoLongPress,
-  onRefreshPhoto,
-  cardBg,
-  tint,
-}: PhotoPanelProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setImageLoaded(false);
-    setImageFailed(false);
-  }, [imageUri]);
-
-  return (
-    <View style={[styles.photoArea, { borderBottomColor: borderColor }]}>
-      <ScrollView
-        style={styles.photoScroll}
-        contentContainerStyle={styles.photoContent}
-        minimumZoomScale={1}
-        maximumZoomScale={3}
-        bouncesZoom
-      >
-        <Pressable
-          onPress={onPhotoTap}
-          onLongPress={onPhotoLongPress}
-          delayLongPress={300}
-          style={styles.photoPressable}
-          testID="game-photo"
-        >
-          <Image
-            source={{ uri: imageUri }}
-            contentFit="cover"
-            transition={180}
-            style={styles.photoImage}
-            onLoad={() => setImageLoaded(true)}
-            onError={() => setImageFailed(true)}
-          />
-          {imageFailed && (
-            <View style={styles.imageErrorOverlay}>
-              <FontAwesome name="picture-o" size={36} color="#888" />
-              <Text style={styles.imageErrorText}>Image unavailable</Text>
-              {canRefreshPhoto && <Text style={styles.imageErrorHint}>Tap refresh below</Text>}
-            </View>
-          )}
-          {imageLoaded && <View testID="game-photo-loaded" style={styles.qaMarker} />}
-        </Pressable>
-      </ScrollView>
-      <View style={[styles.photoFooter, { backgroundColor: 'transparent' }]}>
-        <Text style={[styles.photoHint, { color: secondaryText }]}>
-          Double tap or hold to open fullscreen
-        </Text>
-        {canRefreshPhoto && (
-          <Pressable
-            style={[styles.refreshButton, { borderColor, backgroundColor: cardBg }]}
-            disabled={refreshLoading}
-            onPress={onRefreshPhoto}
-          >
-            {refreshLoading ? (
-              <ActivityIndicator size="small" color={tint} />
-            ) : (
-              <FontAwesome name="refresh" size={12} color={tint} />
-            )}
-            <Text style={[styles.refreshText, { color: tint }]}>
-              {refreshLoading ? 'Refreshing...' : 'Refresh (1 left)'}
-            </Text>
-          </Pressable>
-        )}
-      </View>
-    </View>
-  );
-});
+import type { Coordinate } from '@/lib/scoring';
 
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
@@ -184,6 +45,7 @@ export default function GameScreen() {
     photoDiagnosticsEnabled,
   } = useGameRuntimeSettings();
 
+  const [presentationMode, setPresentationMode] = useState<PresentationMode>('photo');
   const [pinCoordinate, setPinCoordinate] = useState<Coordinate | null>(null);
   const [guessLocked, setGuessLocked] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
@@ -198,8 +60,6 @@ export default function GameScreen() {
   const [refreshUsed, setRefreshUsed] = useState(0);
   const [refreshLoading, setRefreshLoading] = useState(false);
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
-
-  // Hint UI state
   const [showHintModal, setShowHintModal] = useState(false);
   const [showHintHistory, setShowHintHistory] = useState(false);
 
@@ -218,11 +78,16 @@ export default function GameScreen() {
   const tintSubtle = useThemeColor({}, 'tintSubtle');
   const inverseText = useThemeColor({}, 'inverseText');
 
-  useEffect(() => {
+  const clearRevealOverlayTimer = useCallback(() => {
     if (revealOverlayTimerRef.current) {
       clearTimeout(revealOverlayTimerRef.current);
       revealOverlayTimerRef.current = null;
     }
+  }, []);
+
+  useEffect(() => {
+    clearRevealOverlayTimer();
+    setPresentationMode((currentMode) => reducePresentationMode(currentMode, 'round-changed'));
     setPinCoordinate(null);
     setGuessLocked(false);
     setShowResult(false);
@@ -241,15 +106,9 @@ export default function GameScreen() {
     setShowHintHistory(false);
     pendingGuessPinRef.current = null;
     mapRef.current?.resetView();
-  }, [state.currentRound]);
+  }, [clearRevealOverlayTimer, state.currentRound]);
 
-  useEffect(() => {
-    return () => {
-      if (revealOverlayTimerRef.current) {
-        clearTimeout(revealOverlayTimerRef.current);
-      }
-    };
-  }, []);
+  useEffect(() => clearRevealOverlayTimer, [clearRevealOverlayTimer]);
 
   useEffect(() => {
     if (state.status === 'finished') {
@@ -260,6 +119,32 @@ export default function GameScreen() {
   const isIdle = state.status === 'idle';
   const isStarting = state.status === 'starting';
   const isFinished = state.status === 'finished';
+  const isLastRound = state.currentRound + 1 >= ROUNDS_PER_GAME;
+
+  const presentation = useMemo(
+    () =>
+      deriveGameScreenPresentation({
+        mode: presentationMode,
+        hasPin: Boolean(pinCoordinate ?? lockedGuessPin),
+        guessLocked,
+        showYearPicker,
+        showResult,
+        showHintModal,
+        revealComplete,
+        isLastRound,
+      }),
+    [
+      guessLocked,
+      isLastRound,
+      lockedGuessPin,
+      pinCoordinate,
+      presentationMode,
+      revealComplete,
+      showHintModal,
+      showResult,
+      showYearPicker,
+    ]
+  );
 
   const goHome = useCallback(() => {
     router.replace('/(tabs)');
@@ -270,6 +155,14 @@ export default function GameScreen() {
     router.push({ pathname: '/photo-viewer', params: { uri: currentRoundData.imageUri } });
   }, [currentRoundData]);
 
+  const enterMapMode = useCallback(() => {
+    setPresentationMode((currentMode) => reducePresentationMode(currentMode, 'enter-map'));
+  }, []);
+
+  const returnPhotoMode = useCallback(() => {
+    setPresentationMode((currentMode) => reducePresentationMode(currentMode, 'return-photo'));
+  }, []);
+
   const handlePinPlaced = useCallback((coord: Coordinate) => {
     setPinCoordinate(coord);
   }, []);
@@ -278,13 +171,12 @@ export default function GameScreen() {
     (pin: Coordinate, year: number) => {
       if (!currentRoundData) return;
 
+      pendingGuessPinRef.current = null;
       submitGuess(pin, year, hintsUsed);
       setShowResult(true);
       setRevealComplete(false);
       setLockedGuessPin(null);
 
-      // Delay fit so the polyline renders first; use large bottom padding
-      // to keep both pins visible above the score overlay card.
       setTimeout(() => {
         mapRef.current?.fitToCoordinates([pin, currentRoundData.location], {
           top: 80,
@@ -294,19 +186,18 @@ export default function GameScreen() {
         });
       }, 150);
 
-      if (revealOverlayTimerRef.current) {
-        clearTimeout(revealOverlayTimerRef.current);
-      }
+      clearRevealOverlayTimer();
       revealOverlayTimerRef.current = setTimeout(() => {
         setShowScoreOverlay(true);
         revealOverlayTimerRef.current = null;
       }, 100);
     },
-    [currentRoundData, hintsUsed, submitGuess]
+    [clearRevealOverlayTimer, currentRoundData, hintsUsed, submitGuess]
   );
 
   const handleGuessPress = useCallback(() => {
     if (!pinCoordinate) return;
+
     pendingGuessPinRef.current = pinCoordinate;
     setLockedGuessPin(pinCoordinate);
     setGuessLocked(true);
@@ -327,8 +218,10 @@ export default function GameScreen() {
         setShowYearPicker(false);
         setGuessLocked(false);
         setTimerPaused(false);
+        pendingGuessPinRef.current = null;
         return;
       }
+
       setShowYearPicker(false);
       submitRound(finalPin, year);
     },
@@ -337,6 +230,7 @@ export default function GameScreen() {
 
   const handleYearCancel = useCallback(() => {
     if (showResult || revealOverlayTimerRef.current) return;
+    pendingGuessPinRef.current = null;
     setShowYearPicker(false);
     setGuessLocked(false);
     setTimerPaused(false);
@@ -347,6 +241,21 @@ export default function GameScreen() {
     setTimerPaused(false);
     nextRound();
   }, [nextRound]);
+
+  const handlePrimaryCtaPress = useCallback(() => {
+    switch (presentation.primaryCta.actionKind) {
+      case 'enter-map':
+        enterMapMode();
+        return;
+      case 'guess':
+        handleGuessPress();
+        return;
+      case 'next-round':
+      case 'results':
+        handleNextRound();
+        return;
+    }
+  }, [enterMapMode, handleGuessPress, handleNextRound, presentation.primaryCta.actionKind]);
 
   const handleSearchLocation = useCallback((lat: number, lng: number, _name: string) => {
     mapRef.current?.flyTo(lat, lng, 6);
@@ -374,7 +283,7 @@ export default function GameScreen() {
 
     const replacement = await getReplacementPublicRound({
       currentRound: currentRoundData,
-      usedRoundIds: state.rounds.map((r) => r.id),
+      usedRoundIds: state.rounds.map((round) => round.id),
       publicImageSource,
       publicSelectionFilters,
       diagnosticsEnabled: photoDiagnosticsEnabled,
@@ -384,34 +293,53 @@ export default function GameScreen() {
 
     if (!replacement) return;
 
+    clearRevealOverlayTimer();
     replaceCurrentRound(replacement);
+    setPresentationMode((currentMode) => reducePresentationMode(currentMode, 'public-refresh'));
     setRefreshUsed(1);
     setPinCoordinate(null);
     setGuessLocked(false);
+    setShowYearPicker(false);
+    setShowResult(false);
+    setRevealComplete(false);
     setHintsUsed(0);
     setHintHistory([]);
     setRevealLocationHint(false);
     setRevealedYear(null);
     setLockedGuessPin(null);
+    setTimerPaused(false);
+    setShowScoreOverlay(false);
+    setShowHintModal(false);
     setShowHintHistory(false);
+    pendingGuessPinRef.current = null;
+    mapRef.current?.resetView();
   }, [
+    clearRevealOverlayTimer,
     currentRoundData,
-    showResult,
     guessLocked,
-    showYearPicker,
-    refreshUsed,
-    refreshLoading,
-    state.rounds,
+    photoDiagnosticsEnabled,
     publicImageSource,
     publicSelectionFilters,
-    photoDiagnosticsEnabled,
+    refreshLoading,
+    refreshUsed,
     replaceCurrentRound,
+    showResult,
+    showYearPicker,
+    state.rounds,
   ]);
 
   const handleHintButtonPress = useCallback(() => {
-    if (!hintsEnabled || showResult || guessLocked || hintsUsed >= MAX_HINTS) return;
+    if (
+      presentationMode !== 'map' ||
+      !hintsEnabled ||
+      showResult ||
+      guessLocked ||
+      hintsUsed >= MAX_HINTS
+    ) {
+      return;
+    }
     setShowHintModal(true);
-  }, [hintsEnabled, showResult, guessLocked, hintsUsed]);
+  }, [guessLocked, hintsEnabled, hintsUsed, presentationMode, showResult]);
 
   const handleGetHint = useCallback(() => {
     if (!currentRoundData) return;
@@ -475,23 +403,22 @@ export default function GameScreen() {
     setShowScoreOverlay(false);
     mapRef.current?.fitToCoordinates([currentRoundData.location]);
 
-    if (revealOverlayTimerRef.current) {
-      clearTimeout(revealOverlayTimerRef.current);
-    }
+    clearRevealOverlayTimer();
     revealOverlayTimerRef.current = setTimeout(() => {
       setShowScoreOverlay(true);
       revealOverlayTimerRef.current = null;
     }, 100);
   }, [
+    clearRevealOverlayTimer,
     currentRoundData,
+    hintsUsed,
+    pinCoordinate,
+    revealedYear,
     showResult,
     showYearPicker,
     state.status,
-    pinCoordinate,
-    revealedYear,
     submitRound,
     submitTimeoutRound,
-    hintsUsed,
   ]);
 
   const handlePhotoTap = useCallback(() => {
@@ -546,13 +473,13 @@ export default function GameScreen() {
         refreshUsed < 1 &&
         !refreshLoading
       ),
-    [currentRoundData, showResult, guessLocked, showYearPicker, refreshUsed, refreshLoading]
+    [currentRoundData, guessLocked, refreshLoading, refreshUsed, showResult, showYearPicker]
   );
 
   const answerCoordinate = useMemo(
     () =>
       currentRoundData && (showResult || revealLocationHint) ? currentRoundData.location : null,
-    [currentRoundData, showResult, revealLocationHint]
+    [currentRoundData, revealLocationHint, showResult]
   );
 
   const nextTier = useMemo(() => Math.min(hintsUsed + 1, MAX_HINTS) as HintTier, [hintsUsed]);
@@ -560,6 +487,157 @@ export default function GameScreen() {
     () => (hintsUsed < MAX_HINTS ? getHintPreview(nextTier) : null),
     [hintsUsed, nextTier]
   );
+
+  const modeChip =
+    presentation.showModeChip && presentation.modeChipLabel && presentation.modeChipAction ? (
+      <ModeChip
+        label={presentation.modeChipLabel}
+        onPress={presentation.modeChipAction === 'enter-map' ? enterMapMode : returnPhotoMode}
+        testID={presentation.modeChipLabel === 'Map' ? 'map-mode-chip' : 'photo-mode-chip'}
+      />
+    ) : null;
+
+  const yearRevealBanner =
+    !showResult && revealedYear !== null ? (
+      <View style={[styles.yearRevealBanner, { backgroundColor: cardBg, borderColor }]}>
+        <Text style={styles.yearRevealTitle}>Year Revealed (Hint Tier 5)</Text>
+        <Text style={[styles.yearRevealValue, { color: tint }]}>{revealedYear}</Text>
+        <Text style={[styles.yearRevealWarning, { color: scorePoor }]}>Round score will be 0</Text>
+      </View>
+    ) : null;
+
+  const mapOverlayTop = insets.top + Spacing.xxxl + Spacing.md;
+
+  const mapOverlays = (
+    <>
+      {presentation.map.searchVisible && (
+        <View
+          style={[
+            styles.searchOverlay,
+            {
+              backgroundColor: 'transparent',
+              top: mapOverlayTop,
+              left: Layout.safeAreaPadding,
+            },
+          ]}
+        >
+          <SearchBar onLocationSelected={handleSearchLocation} onSearch={handleSearchQuery} />
+        </View>
+      )}
+
+      {presentation.map.zoomVisible && (
+        <View
+          style={[
+            styles.zoomOverlay,
+            {
+              backgroundColor: 'transparent',
+              right: Layout.safeAreaPadding,
+              bottom: Spacing.xl,
+            },
+          ]}
+        >
+          <Pressable
+            testID="map-zoom-in"
+            style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
+            accessibilityRole="button"
+            accessibilityLabel="Zoom in"
+            onPress={handleMapZoomIn}
+          >
+            <Text style={styles.zoomSymbol}>+</Text>
+          </Pressable>
+          <Pressable
+            testID="map-zoom-out"
+            style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
+            accessibilityRole="button"
+            accessibilityLabel="Zoom out"
+            onPress={handleMapZoomOut}
+          >
+            <Text style={styles.zoomSymbol}>-</Text>
+          </Pressable>
+          <Pressable
+            testID="map-reset-view"
+            style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
+            accessibilityRole="button"
+            accessibilityLabel="Reset map view"
+            onPress={handleMapResetView}
+          >
+            <FontAwesome name="globe" size={16} color={tint} />
+          </Pressable>
+        </View>
+      )}
+
+      {presentation.map.hintsVisible && hintsEnabled && !showResult && (
+        <View
+          style={[
+            styles.hintOverlay,
+            {
+              backgroundColor: 'transparent',
+              top: mapOverlayTop,
+              right: Layout.safeAreaPadding,
+            },
+          ]}
+        >
+          <View style={[styles.hintButtonRow, { backgroundColor: 'transparent' }]}>
+            <Pressable
+              style={[styles.hintButton, { backgroundColor: cardBg, borderColor }]}
+              onPress={handleHintButtonPress}
+              accessibilityRole="button"
+              accessibilityLabel="Get hint"
+              testID="hint-open"
+              disabled={hintsUsed >= MAX_HINTS || guessLocked}
+            >
+              <FontAwesome name="lightbulb-o" size={20} color={tint} />
+              <View style={[styles.hintBadge, { backgroundColor: tint }]}>
+                <Text style={[styles.hintBadgeText, { color: inverseText }]}>{hintsUsed}</Text>
+              </View>
+            </Pressable>
+
+            {hintHistory.length > 0 && (
+              <Pressable
+                style={[styles.hintToggle, { backgroundColor: cardBg, borderColor }]}
+                onPress={toggleHintHistory}
+                testID="hint-history-toggle"
+              >
+                <FontAwesome
+                  name={showHintHistory ? 'chevron-up' : 'chevron-down'}
+                  size={10}
+                  color={secondaryText}
+                />
+              </Pressable>
+            )}
+          </View>
+
+          {showHintHistory && hintHistory.length > 0 && (
+            <View style={[styles.hintCard, { backgroundColor: tintSubtle, borderColor }]}>
+              <ScrollView
+                style={styles.hintHistoryScroll}
+                contentContainerStyle={styles.hintHistoryContent}
+              >
+                {hintHistory.map((hint) => (
+                  <View
+                    key={`${hint.tier}-${hint.type}`}
+                    style={[styles.hintItem, { borderTopColor: borderColor }]}
+                  >
+                    <Text style={styles.hintTierLabel}>Tier {hint.tier}</Text>
+                    <Text style={[styles.hintText, { color: secondaryText }]}>{hint.text}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </View>
+      )}
+    </>
+  );
+
+  const resultOverlay =
+    lastResult && showScoreOverlay ? (
+      <ScoreReveal
+        result={lastResult}
+        onRevealComplete={handleRevealComplete}
+        bottomInset={insets.bottom}
+      />
+    ) : null;
 
   if (isIdle) {
     return (
@@ -596,201 +674,52 @@ export default function GameScreen() {
     );
   }
 
-  // ------------------------------------------------------------------
-  // Render
-  // ------------------------------------------------------------------
-
   return (
     <View style={styles.container}>
-      <HeaderPanel
+      <RoundMediaStage
+        mode={presentationMode}
+        topInset={insets.top}
         currentRound={state.currentRound}
+        totalRounds={ROUNDS_PER_GAME}
         totalScore={totalScore}
         roundTimer={roundTimer}
-        timerPaused={timerPaused}
-        showYearPicker={showYearPicker}
-        showResult={showResult}
-        showHintModal={showHintModal}
+        timerPaused={timerPaused || showYearPicker || showResult || showHintModal}
         onTimeUp={handleTimerUp}
-        cardBg={cardBg}
-        borderColor={borderColor}
-        secondaryText={secondaryText}
-      />
-
-      {!showResult && revealedYear !== null && (
-        <View style={[styles.yearRevealBanner, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={styles.yearRevealTitle}>Year Revealed (Hint Tier 5)</Text>
-          <Text style={[styles.yearRevealValue, { color: tint }]}>{revealedYear}</Text>
-          <Text style={[styles.yearRevealWarning, { color: scorePoor }]}>
-            Round score will be 0
-          </Text>
-        </View>
-      )}
-
-      <PhotoPanel
-        imageUri={currentRoundData.imageUri}
-        borderColor={borderColor}
-        secondaryText={secondaryText}
-        canRefreshPhoto={canRefreshPhoto}
-        refreshLoading={refreshLoading}
-        onPhotoTap={handlePhotoTap}
-        onPhotoLongPress={openPhotoViewer}
-        onRefreshPhoto={handleRefreshPhoto}
-        cardBg={cardBg}
-        tint={tint}
-      />
-
-      <View style={styles.mapArea}>
-        <GameMapView
-          onPinPlaced={handlePinPlaced}
-          pinCoordinate={pinCoordinate}
-          interactive={!guessLocked}
-          answerCoordinate={answerCoordinate}
-          showLine={showResult}
-          mapRef={mapRef}
-        />
-
-        {!guessLocked && (
-          <View
-            style={[
-              styles.searchOverlay,
-              {
-                backgroundColor: 'transparent',
-                top: insets.top + Spacing.md,
-                left: Layout.safeAreaPadding,
-              },
-            ]}
-          >
-            <SearchBar onLocationSelected={handleSearchLocation} onSearch={handleSearchQuery} />
-          </View>
-        )}
-
-        <View
-          style={[
-            styles.zoomOverlay,
-            {
-              backgroundColor: 'transparent',
-              right: Layout.safeAreaPadding,
-              bottom: insets.bottom + Spacing.lg,
-            },
-          ]}
-        >
-          <Pressable
-            style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
-            accessibilityRole="button"
-            accessibilityLabel="Zoom in"
-            onPress={handleMapZoomIn}
-          >
-            <Text style={styles.zoomSymbol}>+</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
-            accessibilityRole="button"
-            accessibilityLabel="Zoom out"
-            onPress={handleMapZoomOut}
-          >
-            <Text style={styles.zoomSymbol}>-</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
-            accessibilityRole="button"
-            accessibilityLabel="Reset map view"
-            onPress={handleMapResetView}
-          >
-            <FontAwesome name="globe" size={16} color={tint} />
-          </Pressable>
-        </View>
-
-        {/* Hint button + optional collapsible history */}
-        {!showResult && hintsEnabled && (
-          <View
-            style={[
-              styles.hintOverlay,
-              {
-                backgroundColor: 'transparent',
-                top: insets.top + Spacing.md,
-                right: Layout.safeAreaPadding,
-              },
-            ]}
-          >
-            <View style={[styles.hintButtonRow, { backgroundColor: 'transparent' }]}>
-              {/* Main hint action button */}
-              <Pressable
-                style={[styles.hintButton, { backgroundColor: cardBg, borderColor }]}
-                onPress={handleHintButtonPress}
-                accessibilityRole="button"
-                accessibilityLabel="Get hint"
-                testID="hint-open"
-                disabled={hintsUsed >= MAX_HINTS || guessLocked}
-              >
-                <FontAwesome name="lightbulb-o" size={20} color={tint} />
-                <View style={[styles.hintBadge, { backgroundColor: tint }]}>
-                  <Text style={[styles.hintBadgeText, { color: inverseText }]}>{hintsUsed}</Text>
-                </View>
-              </Pressable>
-
-              {/* Toggle history visibility */}
-              {hintHistory.length > 0 && (
-                <Pressable
-                  style={[styles.hintToggle, { backgroundColor: cardBg, borderColor }]}
-                  onPress={toggleHintHistory}
-                >
-                  <FontAwesome
-                    name={showHintHistory ? 'chevron-up' : 'chevron-down'}
-                    size={10}
-                    color={secondaryText}
-                  />
-                </Pressable>
-              )}
-            </View>
-
-            {/* Collapsible hint history */}
-            {showHintHistory && hintHistory.length > 0 && (
-              <View style={[styles.hintCard, { backgroundColor: tintSubtle, borderColor }]}>
-                <ScrollView
-                  style={styles.hintHistoryScroll}
-                  contentContainerStyle={styles.hintHistoryContent}
-                >
-                  {hintHistory.map((hint) => (
-                    <View
-                      key={`${hint.tier}-${hint.type}`}
-                      style={[styles.hintItem, { borderTopColor: borderColor }]}
-                    >
-                      <Text style={styles.hintTierLabel}>Tier {hint.tier}</Text>
-                      <Text style={[styles.hintText, { color: secondaryText }]}>{hint.text}</Text>
-                    </View>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-          </View>
-        )}
-
-        {lastResult && showScoreOverlay && (
-          <ScoreReveal
-            result={lastResult}
-            onRevealComplete={handleRevealComplete}
-            bottomInset={insets.bottom}
+        photoSurface={
+          <PhotoSurface
+            imageUri={currentRoundData.imageUri}
+            canRefreshPhoto={canRefreshPhoto}
+            refreshLoading={refreshLoading}
+            onPhotoTap={handlePhotoTap}
+            onPhotoLongPress={openPhotoViewer}
+            onRefreshPhoto={handleRefreshPhoto}
           />
-        )}
-      </View>
+        }
+        mapSurface={
+          <GameMapView
+            onPinPlaced={handlePinPlaced}
+            pinCoordinate={pinCoordinate}
+            interactive={presentation.map.mapInteractive}
+            gestureEnabled={presentation.map.mapInteractive}
+            answerCoordinate={answerCoordinate}
+            showLine={showResult}
+            mapRef={mapRef}
+          />
+        }
+        yearRevealBanner={yearRevealBanner}
+        modeChip={modeChip}
+        mapOverlays={mapOverlays}
+        resultOverlay={resultOverlay}
+        prioritizeMapSurface={showResult}
+      />
 
-      {!showResult ? (
-        <GuessButton
-          disabled={!pinCoordinate || guessLocked}
-          onPress={handleGuessPress}
-          label={revealedYear !== null ? 'GUESS (year locked)' : undefined}
-          testID="guess-button"
-          bottomInset={insets.bottom}
-        />
-      ) : (
-        <GuessButton
-          disabled={!revealComplete}
-          onPress={handleNextRound}
-          label={state.currentRound + 1 < ROUNDS_PER_GAME ? 'NEXT ROUND' : 'SEE RESULTS'}
-          testID="next-round-button"
-          bottomInset={insets.bottom}
-        />
-      )}
+      <GuessButton
+        disabled={presentation.primaryCta.disabled}
+        onPress={handlePrimaryCtaPress}
+        label={presentation.primaryCta.label}
+        testID={showResult ? 'next-round-button' : 'guess-button'}
+        bottomInset={insets.bottom}
+      />
 
       <YearPicker
         visible={showYearPicker}
@@ -798,7 +727,6 @@ export default function GameScreen() {
         onCancel={handleYearCancel}
       />
 
-      {/* ---- Hint confirmation modal ---- */}
       <Modal
         visible={showHintModal}
         transparent
@@ -892,41 +820,24 @@ const styles = StyleSheet.create({
     ...TypeScale.callout,
     fontWeight: '600',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  headerLeft: {
-    flexDirection: 'column',
-  },
-  roundLabel: {
-    ...TypeScale.subhead,
-    fontWeight: '600',
-  },
-  scoreLabel: {
-    ...TypeScale.footnote,
-    marginTop: 2,
-  },
-  photoArea: {
-    flex: 4,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
   yearRevealBanner: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
+    borderRadius: Radius.sheet,
     paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 6,
   },
   yearRevealTitle: {
     ...TypeScale.caption2,
     fontWeight: '700',
     textTransform: 'uppercase',
-    opacity: 0.6,
+    opacity: 0.7,
   },
   yearRevealValue: {
     ...TypeScale.headline,
@@ -938,79 +849,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
-  photoScroll: {
-    flex: 1,
-  },
-  photoContent: {
-    flexGrow: 1,
-  },
-  photoPressable: {
-    flex: 1,
-  },
-  photoImage: {
-    width: '100%',
-    height: '100%',
-  },
-  qaMarker: {
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    opacity: 0,
-  },
-  imageErrorOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    gap: 8,
-  },
-  imageErrorText: {
-    color: '#aaa',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  imageErrorHint: {
-    color: '#777',
-    fontSize: 12,
-  },
-  photoHint: {
-    ...TypeScale.caption1,
-    textAlign: 'center',
-    paddingVertical: Spacing.sm,
-  },
-  photoFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.sm,
-    paddingBottom: Spacing.sm,
-  },
-  refreshButton: {
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  refreshText: {
-    ...TypeScale.caption2,
-    fontWeight: '700',
-  },
-  mapArea: {
-    flex: 6,
-    position: 'relative',
-  },
   searchOverlay: {
     position: 'absolute',
-    zIndex: 10,
+    zIndex: 12,
   },
   hintOverlay: {
     position: 'absolute',
-    zIndex: 10,
+    zIndex: 12,
     alignItems: 'flex-end',
-    maxWidth: 200,
+    maxWidth: 220,
   },
   hintButtonRow: {
     flexDirection: 'row',
@@ -1085,7 +932,7 @@ const styles = StyleSheet.create({
   },
   zoomOverlay: {
     position: 'absolute',
-    zIndex: 10,
+    zIndex: 12,
     gap: Spacing.sm,
     alignItems: 'center',
   },
@@ -1106,8 +953,6 @@ const styles = StyleSheet.create({
     ...TypeScale.headline,
     fontWeight: '700',
   },
-
-  // ---- Hint Modal ----
   modalBackdrop: {
     flex: 1,
     justifyContent: 'center',

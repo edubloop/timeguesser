@@ -1,4 +1,4 @@
-appId: com.timeguesser.app
+appId: host.exp.Exponent
 ---
 # Flow: Design Taste Audit
 #
@@ -26,13 +26,20 @@ appId: com.timeguesser.app
       id: 'game-photo-loaded'
     timeout: 15000
 
-- takeScreenshot: taste-game-screen
+- assertVisible:
+    id: 'map-mode-chip'
+- assertNotVisible:
+    id: 'map-search-button'
+- assertNotVisible:
+    id: 'hint-open'
+
+- takeScreenshot: taste-game-screen-photo-mode
 
 # Composition: immersive-first layout
 - assertWithAI: >
-    The photo or map fills the majority of the screen. UI controls (buttons, icons)
-    float over the content — they are NOT in a separate toolbar or chrome area below
-    or above the media.
+    The opening game screen is clearly photo-first. The photo fills the majority of the
+    visible space and reads as the dominant clue surface. UI controls (buttons, chips,
+    timer) float over the content — they are NOT in a separate toolbar or chrome area.
 
 # Anti-pattern: no persistent toolbars
 - assertWithAI: >
@@ -47,13 +54,30 @@ appId: com.timeguesser.app
 
 # Spacing: floating button offset
 - assertWithAI: >
-    Floating action buttons (search, hint) are offset from screen edges with visible
-    breathing room — they do not touch or nearly touch the edge of the screen.
+    Floating chips and buttons are offset from screen edges with visible breathing room.
+    They do not touch or nearly touch the edge of the screen.
 
 # Color: no gradients
 - assertWithAI: >
     No UI element on screen uses a gradient fill. All card and button backgrounds
     are flat, solid colors.
+
+- tapOn:
+    id: 'guess-button'
+- waitForAnimationToEnd
+- assertVisible:
+    id: 'photo-mode-chip'
+- assertVisible:
+    id: 'map-search-button'
+- assertVisible:
+    id: 'hint-open'
+
+- takeScreenshot: taste-game-screen-map-mode
+
+- assertWithAI: >
+    In active map mode, the map is the primary task surface. Search and hint controls
+    appear as compact floating overlays, and the return affordance is a small floating
+    Photo chip rather than a toolbar or strip.
 
 # ──────────────────────────────────────────
 # 2. SCORE REVEAL — type hierarchy & card treatment
@@ -61,7 +85,7 @@ appId: com.timeguesser.app
 
 # Place a pin and submit a guess to reach score reveal
 - tapOn:
-    point: '50%,70%'
+    point: '50%,55%'
 - waitForAnimationToEnd
 
 - tapOn:

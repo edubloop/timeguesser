@@ -45,6 +45,7 @@ export default function GoogleMapView({
   onPinPlaced,
   pinCoordinate,
   interactive,
+  gestureEnabled = interactive,
   answerCoordinate,
   showLine,
   mapRef,
@@ -124,6 +125,8 @@ export default function GoogleMapView({
       }}
       showsUserLocation={false}
       showsCompass={false}
+      scrollEnabled={gestureEnabled}
+      zoomEnabled={gestureEnabled}
       rotateEnabled={false}
       pitchEnabled={false}
     >
