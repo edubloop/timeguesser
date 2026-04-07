@@ -17,6 +17,7 @@ interface PhotoSurfaceProps {
   imageUri: string;
   canRefreshPhoto: boolean;
   refreshLoading: boolean;
+  isPersonalPhoto?: boolean;
   onPhotoTap: () => void;
   onPhotoLongPress: () => void;
   onRefreshPhoto: () => void;
@@ -28,6 +29,7 @@ export default function PhotoSurface({
   imageUri,
   canRefreshPhoto,
   refreshLoading,
+  isPersonalPhoto = false,
   onPhotoTap,
   onPhotoLongPress,
   onRefreshPhoto,
@@ -97,7 +99,11 @@ export default function PhotoSurface({
             <View style={styles.imageErrorOverlay}>
               <FontAwesome name="picture-o" size={36} color="#888" />
               <Text style={styles.imageErrorText}>Image unavailable</Text>
-              {showRefreshAction && <Text style={styles.imageErrorHint}>Tap refresh below</Text>}
+              {isPersonalPhoto ? (
+                <Text style={styles.imageErrorHint}>Re-import photos in Settings</Text>
+              ) : (
+                showRefreshAction && <Text style={styles.imageErrorHint}>Tap refresh below</Text>
+              )}
             </View>
           )}
           {imageLoaded && <View testID="game-photo-loaded" style={styles.qaMarker} />}

@@ -690,6 +690,7 @@ export default function GameScreen() {
             imageUri={currentRoundData.imageUri}
             canRefreshPhoto={canRefreshPhoto}
             refreshLoading={refreshLoading}
+            isPersonalPhoto={currentRoundData.source === 'personal'}
             onPhotoTap={handlePhotoTap}
             onPhotoLongPress={openPhotoViewer}
             onRefreshPhoto={handleRefreshPhoto}

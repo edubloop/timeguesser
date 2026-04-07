@@ -2849,11 +2849,24 @@ export async function importPersonalPhotosFromLibrary(): Promise<PersonalImportS
   const warnings: string[] = [];
   const rounds: RoundData[] = [];
 
-  result.assets.forEach((asset, index) => {
+  const personalDir = `${FileSystem.documentDirectory ?? ''}personal-images/`;
+  await FileSystem.makeDirectoryAsync(personalDir, { intermediates: true }).catch(() => {});
+
+  for (let index = 0; index < result.assets.length; index++) {
+    const asset = result.assets[index];
     const normalized = normalizeAsset(asset, index);
-    if (normalized.round) rounds.push(normalized.round);
     if (normalized.warning) warnings.push(normalized.warning);
-  });
+    if (!normalized.round) continue;
+
+    const ext = asset.uri.split('.').pop()?.split('?')[0]?.toLowerCase() ?? 'jpg';
+    const stableUri = `${personalDir}${normalized.round.id}.${ext}`;
+    try {
+      await FileSystem.copyAsync({ from: asset.uri, to: stableUri });
+      rounds.push({ ...normalized.round, imageUri: stableUri });
+    } catch {
+      rounds.push(normalized.round);
+    }
+  }
 
   return { rounds, warnings };
 }

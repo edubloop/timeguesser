@@ -31,10 +31,10 @@ Examples:
    - `design-brief.md`
    - `design-review.md`
    - `design-approval.md`
-3. Use the local Fabro web UI to review the design outputs.
+3. Use the control plane operator shell (with Fabro UI as needed) to review the design outputs.
 4. Complete the latest review cycle in `design-approval.md`, then choose a branch in the design approval gate.
 5. Run the Delivery workflow using `ticket.md` as the goal file only after `Approve As-Is (including issues raised in design review)` and `Publish Ticket`.
-6. Use the UI to approve the implementation plan, inspect logs, and follow verification.
+6. Use the control plane operator shell to approve the implementation plan, inspect logs, and follow verification.
 7. Review all outputs under `../artifacts/tickets/<TICKET_ID>/`.
 
 ## Artifact contract

@@ -44,14 +44,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const startGame = useCallback(async () => {
     dispatch({ type: 'START_GAME_BEGIN' });
     try {
-      const rounds = await buildRoundsForGame({
-        source: photoSource,
-        publicImageSource,
-        publicSelectionFilters,
-        diagnosticsEnabled: photoDiagnosticsEnabled,
-        personalRounds,
-        roundsPerGame: ROUNDS_PER_GAME,
-      });
+      const timeoutMs = 20_000;
+      const rounds = await Promise.race([
+        buildRoundsForGame({
+          source: photoSource,
+          publicImageSource,
+          publicSelectionFilters,
+          diagnosticsEnabled: photoDiagnosticsEnabled,
+          personalRounds,
+          roundsPerGame: ROUNDS_PER_GAME,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Game load timed out')), timeoutMs)
+        ),
+      ]);
       dispatch({ type: 'START_GAME', rounds });
     } catch (error) {
       dispatch({ type: 'START_GAME_FAILED' });
