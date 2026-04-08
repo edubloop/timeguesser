@@ -10,7 +10,7 @@ Requirements:
 - Read `$workspace_root/.workspace-notes/mode-handoff-schema.md` before writing handoff fields.
 - Read `tools/pipeline-inspector/` only when the ticket touches content quality or internal tooling.
 - Read `design-approval.md` when it exists.
-- Write to `$artifact_dir/design-brief.md`.
+- Write to `$artifact_dir/shape.md`.
 - Prefer repo-native outputs as the durable artifact. OpenPencil may be referenced or recommended, but the workflow must remain valid without it.
 - Produce 2-3 plausible directions or one refined direction when the scope is already narrow.
 - If `design-approval.md` exists and its latest review cycle chose `Revise with required changes`, treat that cycle as binding reviewer input:
@@ -18,7 +18,7 @@ Requirements:
   - preserve locked decisions as fixed
   - keep rejected options closed
   - only use `Allowed flexibility for next pass` as the permitted space for reinterpretation
-- Add a concise section in `design-brief.md` explaining how the current brief responds to the latest reviewer decision when applicable.
+- Add a concise section in `shape.md` explaining how the current brief responds to the latest reviewer decision when applicable.
 - Record:
   - design intent and target user moment
   - relevant references/evidence paths

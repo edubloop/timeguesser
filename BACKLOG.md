@@ -2,7 +2,7 @@
 
 This file is the queue, not the execution brief.
 
-When a backlog item is selected, promote it into `../artifacts/tickets/{ID}/source.md` and run the Fabro Design workflow. The Design workflow produces the approved `ticket.md` that the Fabro Delivery workflow consumes.
+When a backlog item is selected, promote it into `../artifacts/tickets/{ID}/intake.md` and run the Fabro Design workflow. The Design workflow produces the approved `ticket.md` that the Fabro Delivery workflow consumes.
 
 ## Item Format
 

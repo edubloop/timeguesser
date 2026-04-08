@@ -2,7 +2,7 @@ Record a durable stop decision for this design workflow run.
 
 Requirements:
 
-- Read `ticket.md`, `design-brief.md`, `design-review.md`, and `design-approval.md` before writing.
+- Read `ticket.md`, `shape.md`, `design-review.md`, and `design-approval.md` before writing.
 - Read the repo policy anchor from `ticket.md` only when policy constraints affect the stop guidance.
 - Read `Workspace policy anchor` only when `ticket.md` explicitly includes one.
 - The latest review cycle in `design-approval.md` is the authoritative stop decision.

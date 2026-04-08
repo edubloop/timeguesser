@@ -129,7 +129,7 @@ Canonical stages:
 
 1. `Select / Load Backlog Item`
 2. `Intake` — writes `artifacts/tickets/{ID}/ticket.md`
-3. `Design Explore` — writes `artifacts/tickets/{ID}/design-brief.md`
+3. `Design Explore` — writes `artifacts/tickets/{ID}/shape.md`
 4. `Design Review` — writes `artifacts/tickets/{ID}/design-review.md`
 5. `Stage Review Form` — writes or updates `artifacts/tickets/{ID}/design-approval.md`
 6. `Human Approval Decision` — human gate in the Fabro local web UI

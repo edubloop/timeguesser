@@ -4,12 +4,12 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/run_fabro_design.sh <TICKET_ID> <SOURCE_FILE> [fabro args...]
+  ./scripts/run_fabro_design.sh <TICKET_ID> <INTAKE_FILE> [fabro args...]
 
 Examples:
-  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/source.md --preflight
-  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/source.md --dry-run
-  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/source.md
+  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/intake.md --preflight
+  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/intake.md --dry-run
+  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/intake.md
 EOF
 }
 
@@ -19,7 +19,7 @@ if [[ $# -lt 2 ]]; then
 fi
 
 ticket_id="$1"
-source_file="$2"
+intake_file="$2"
 shift 2
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -65,15 +65,15 @@ if [[ -z "$fabro_bin" ]]; then
   fi
 fi
 
-if [[ ! -f "$source_file" ]]; then
-  echo "source file not found: $source_file" >&2
+if [[ ! -f "$intake_file" ]]; then
+  echo "intake file not found: $intake_file" >&2
   exit 1
 fi
 
 run_operator_preflight
 
 mkdir -p "$artifact_dir"
-source_file="$(cd "$(dirname "$source_file")" && pwd)/$(basename "$source_file")"
+intake_file="$(cd "$(dirname "$intake_file")" && pwd)/$(basename "$intake_file")"
 artifact_dir="$(cd "$artifact_dir" && pwd)"
 goal_file="$artifact_dir/ticket.md"
 
@@ -100,7 +100,7 @@ worktree_mode = "always"
 ticket_id = "$ticket_id"
 workspace_root = "$workspace_root"
 artifact_dir = "$artifact_dir"
-source_file = "$source_file"
+source_file = "$intake_file"
 goal_file = "$goal_file"
 
 [checkpoint]

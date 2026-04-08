@@ -2,7 +2,7 @@ Write or update the design review artifact for this ticket.
 
 Requirements:
 
-- Read `ticket.md` and `design-brief.md` first.
+- Read `ticket.md` and `shape.md` first.
 - Read the repo policy anchor from `ticket.md` when policy or bounded-scope constraints materially affect the review.
 - Read `Workspace policy anchor` only when `ticket.md` explicitly includes one.
 - Read `Related ADRs` only when `ticket.md` explicitly lists them; if it says `None`, do not read architecture docs.

@@ -17,18 +17,18 @@ Use the wrapper scripts from the repo root:
 Examples:
 
 ```sh
-./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/source.md --preflight
-./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/source.md
+./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/intake.md --preflight
+./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/intake.md
 ./scripts/run_fabro_delivery.sh TG-101 ../artifacts/tickets/TG-101/ticket.md --preflight
 ./scripts/run_fabro_delivery.sh TG-101 ../artifacts/tickets/TG-101/ticket.md
 ```
 
 ## Operator flow
 
-1. Seed `../artifacts/tickets/<TICKET_ID>/source.md` from a selected backlog item.
+1. Seed `../artifacts/tickets/<TICKET_ID>/intake.md` from a selected backlog item.
 2. Run the Design workflow to produce:
    - `ticket.md`
-   - `design-brief.md`
+   - `shape.md`
    - `design-review.md`
    - `design-approval.md`
 3. Use the control plane operator shell (with Fabro UI as needed) to review the design outputs.
@@ -41,9 +41,9 @@ Examples:
 
 Each selected ticket directory should converge on:
 
-- `source.md`
+- `intake.md`
 - `ticket.md`
-- `design-brief.md`
+- `shape.md`
 - `design-review.md`
 - `design-approval.md`
 - `spec.md`

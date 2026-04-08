@@ -189,10 +189,10 @@ interface PublicPhotoCandidate {
   providerImageId: string;
   imageUri: string; // Wikimedia remote URL
   location: { lat: number; lng: number };
-  locationSource: 'gps_exif' | 'content_inferred';
+  locationIntake: 'gps_exif' | 'content_inferred';
   locationConfidence: 'high' | 'medium' | 'low';
   year: number;
-  yearSource: 'capture_exif' | 'structured_metadata' | 'content_inferred' | 'upload_timestamp';
+  yearIntake: 'capture_exif' | 'structured_metadata' | 'content_inferred' | 'upload_timestamp';
   yearConfidence: 'high' | 'medium' | 'low';
   title: string;
   description?: string;

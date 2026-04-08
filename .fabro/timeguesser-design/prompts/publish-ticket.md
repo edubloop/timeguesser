@@ -2,7 +2,7 @@ Publish the approved design outcome into a delivery-ready goal file.
 
 Requirements:
 
-- Read `ticket.md`, `design-brief.md`, `design-review.md`, and `design-approval.md` before writing.
+- Read `ticket.md`, `shape.md`, `design-review.md`, and `design-approval.md` before writing.
 - Read the repo policy anchor from `ticket.md` when policy constraints affect the delivery-ready contract.
 - Read `Workspace policy anchor` only when `ticket.md` explicitly includes one.
 - Read `Related ADRs` only when `ticket.md` explicitly lists them; if it says `None`, do not read architecture docs.

@@ -2,7 +2,7 @@ Create or update the durable human review decision log for this ticket.
 
 Requirements:
 
-- Read `ticket.md`, `design-brief.md`, and `design-review.md` before writing.
+- Read `ticket.md`, `shape.md`, and `design-review.md` before writing.
 - Read the repo policy anchor from `ticket.md` only when policy context is needed to explain a decision boundary or conflict.
 - Read `Workspace policy anchor` only when `ticket.md` explicitly includes one.
 - Read `$workspace_root/.workspace-notes/mode-handoff-schema.md` before writing.

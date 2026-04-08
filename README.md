@@ -46,9 +46,9 @@ Provider chain (load-bearing):
 1. Read `AGENTS.md` first for hard constraints.
 2. Read `TIMEGUESSER_SPEC.md` and `TIMEGUESSER_DESIGN_SYSTEM.md`.
 3. Map request to files via `AGENT_TASK_INDEX.md`.
-4. For non-trivial work, seed `../artifacts/tickets/<ID>/source.md` from the selected backlog item.
+4. For non-trivial work, seed `../artifacts/tickets/<ID>/intake.md` from the selected backlog item.
 5. Run the Fabro Design workflow from `./scripts/run_fabro_design.sh`.
-6. Review `ticket.md`, `design-brief.md`, `design-review.md`, and `design-approval.md` in the Fabro UI.
+6. Review `ticket.md`, `shape.md`, `design-review.md`, and `design-approval.md` in the Fabro UI.
 7. Complete the latest review cycle in `design-approval.md` before selecting the design approval branch.
 8. Run the Fabro Delivery workflow from `./scripts/run_fabro_delivery.sh` using `ticket.md` after the design package is approved as-is and published.
 9. Use the control plane operator shell to approve the plan and inspect the run.

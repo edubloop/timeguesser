@@ -63,10 +63,10 @@ interface NormalizedPhotoCandidate {
   imageUri: string;
   thumbnailUri?: string;
   location: { lat: number; lng: number };
-  locationSource: 'gps_exif' | 'structured_metadata' | 'content_inferred';
+  locationIntake: 'gps_exif' | 'structured_metadata' | 'content_inferred';
   locationConfidence: 'high' | 'medium' | 'low';
   year: number;
-  yearSource: 'capture_exif' | 'structured_metadata' | 'content_inferred' | 'upload_timestamp';
+  yearIntake: 'capture_exif' | 'structured_metadata' | 'content_inferred' | 'upload_timestamp';
   yearConfidence: 'high' | 'medium' | 'low';
   title: string;
   description?: string;
@@ -324,7 +324,7 @@ function mapLOCRights(rights: string | undefined): PhotoLicense | null {
 
 **Location fallback**: When `parseLOCLatLng` returns null, call the existing
 `geocodeLocation(locationText)` in `lib/geocoding.ts` to resolve text → lat/lng. Set
-`locationSource: 'structured_metadata'`, `locationConfidence: 'medium'`.
+`locationIntake: 'structured_metadata'`, `locationConfidence: 'medium'`.
 
 **Missing year**: If `parseLOCDate` returns null, call `extractContentYearHint(title + description)`
 (line 650–664). If still null, reject the candidate (year is required).
@@ -530,7 +530,7 @@ Add `refillIteration: number` to `ProviderCursorState`.
 Add to `SettingsContext` (under `timeguesser.settings.v1`, backwards-compatible new field):
 
 ```typescript
-publicImageSource: PublicImageSource; // default: 'wikimedia'
+publicImageIntake: PublicImageSource; // default: 'wikimedia'
 ```
 
 Expose in the Settings screen (after Phase D validation) with options:
