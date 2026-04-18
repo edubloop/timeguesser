@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# workspace-kit-source: .workspace-kit/templates/fabro/scripts/validate_design_approval.sh.tpl (extended with cycle-specific checks)
+# workspace-kit-sync: v1.5.0 | synced: 2026-04-18
 set -euo pipefail
 
 artifact_path="${1:-}"

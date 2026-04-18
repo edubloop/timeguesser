@@ -1,58 +1,38 @@
+<!-- workspace-kit-source: .workspace-kit/templates/fabro/prompts/spec.md -->
+<!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
+
 # Spec Stage
 
 ## Session Context Override
 
-The workspace CLAUDE.md contains session-start hooks (cadence checks, health checks).
-For this Fabro workflow stage, DO NOT run any session-start hooks, cadence checks,
-healthchecks, or exploratory validation. These have already been completed before
-this stage began. Proceed directly to the task below using only the specific files
-and tools listed.
-
----
-
-## Goal
-
-Create or update the ticket spec for this run.
+Skip session-start hooks and broad scans. Author the ticket spec from approved ticket context.
 
 ## Required Reading
 
-Read exactly these files in order:
-
-1. `$goal_file` (the ticket.md bridge artifact)
-2. `$workspace_root/TimeGuesser/AGENTS.md` (repo policy anchor)
-3. `$workspace_root/TimeGuesser/TIMEGUESSER_SPEC.md`
-4. `$workspace_root/TimeGuesser/TIMEGUESSER_DESIGN_SYSTEM.md`
-5. Each file explicitly listed under "Required Reading" or "References" in the goal file
-6. ADRs only when goal file explicitly lists them under "Related ADRs"
-7. No other files unless explicitly listed above
+1. `$goal_file`
+2. `$artifact_dir/ticket.md`
+3. `$artifact_dir/inputs/approach-alignment.md` when present
+4. Repo policy files explicitly cited by ticket
 
 ## Allowed Tools
 
-For this stage, you may use ONLY:
-
-- `read_file` — to read the specific files listed in Required Reading
-- `write_file` — to create or update `$artifact_dir/spec.md`
-- `grep` — only within files already read
+- `read_file`
+- `write_file`
+- `grep` (scoped)
 
 ## Forbidden
 
-DO NOT use:
-
-- `web_fetch` or `web_search` — no external documentation needed
-- `glob` with broad patterns like `**/*.md` — files are enumerated above
-- `shell` commands
-- `edit_file` or `apply_patch`
+- Web browsing/search
+- Implementing code in this stage
 
 ## Output
 
-Write the delivery spec to: `$artifact_dir/spec.md`
+- Write/update `$artifact_dir/spec.md` using workspace spec template
+- Include labeled requirements and explicit `Pass Line / Stop Rule`
 
-## Requirements
+## TimeGuesser Repo Overrides
 
-- Label all functional requirements with IDs (F001, F002, etc.)
-- Treat ticket.md as the approved design/intake source for Delivery
-- Keep scope minimal and experiment-oriented
-- Make risks and open questions explicit
-- Write `### Related ADRs` explicitly as concrete paths or `None`
-- Do not reopen design exploration except to note blocking ambiguities
-- Do not implement changes in this stage
+- Keep scoring constants and hint costs unchanged unless explicitly approved (`constants/scoring.ts`, `lib/scoring.ts`).
+- Do not modify `app.json` or `eas.json` without explicit approval.
+- Do not grow `app/(tabs)/game.tsx`; extract additional logic into other files.
+- Use `TYPESCRIPT_CODING_STANDARDS.md` (`TGS-###`) as the coding-rule citation source.

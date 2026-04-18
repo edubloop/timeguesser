@@ -1,10 +1,15 @@
 # TimeGuesser Fabro Runtime
 
+<!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
+
 This directory holds the repo-local Fabro assets for TimeGuesser's approach-first intake and split workflow model:
 
 1. **Intake workflow** — proposes an approach from a backlog item, refines it through manual chat, then classifies and normalizes `ticket.md` when the next phase can proceed
 2. **Design workflow** — turns the classified ticket into an approved shaping package when `execution_path=design_then_delivery`
 3. **Delivery workflow** — turns the approved or explicitly delivery-only ticket package into spec, plan, code, review, and handoff artifacts
+
+Prompt and workflow baseline source: `.workspace-kit/templates/fabro/`.
+TimeGuesser files are thin adopters with repo-specific override sections only.
 
 ## Canonical entrypoints
 

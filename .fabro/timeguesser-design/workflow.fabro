@@ -1,15 +1,18 @@
+// workspace-kit-source: .workspace-kit/templates/fabro/workflow.fabro
+// workspace-kit-sync: v1.5.0 | synced: 2026-04-18
+// timeguesser-overrides: model_stylesheet values, prompt roots, and repo-specific verification nodes
 digraph TimeGuesserDesign {
     graph [
         goal="Execute TimeGuesser Design mode in Fabro after intake classification",
         default_max_retry=3,
         model_stylesheet="
           * { model: gpt-5-mini; reasoning_effort: low; }
-          .route_design { model: gpt-5.4; reasoning_effort: medium; }
-          .route_gate { model: gpt-5-mini; reasoning_effort: low; }
-          .route_implement { model: gpt-5.3-codex; reasoning_effort: high; }
-          .route_verify_fixup { model: gpt-5.2-codex; reasoning_effort: medium; }
-          .route_review { model: gpt-5.4; reasoning_effort: medium; }
-          .route_draft { model: gpt-5-mini; reasoning_effort: low; }
+          .route-design { model: gpt-5.4; reasoning_effort: medium; }
+          .route-gate { model: gpt-5-mini; reasoning_effort: low; }
+          .route-implement { model: gpt-5.3-codex; reasoning_effort: high; }
+          .route-verify-fixup { model: gpt-5.2-codex; reasoning_effort: medium; }
+          .route-review { model: gpt-5.4; reasoning_effort: medium; }
+          .route-draft { model: gpt-5-mini; reasoning_effort: low; }
         "
     ]
     rankdir=LR
@@ -18,20 +21,20 @@ digraph TimeGuesserDesign {
     exit  [shape=Msquare, label="Exit"]
 
     load_ticket       [label="Load Classified Ticket", shape=parallelogram, script="mkdir -p \"$artifact_dir\" && test -f \"$goal_file\""]
-    design_explore    [label="Design Explore", class="route_design", prompt="Read .fabro/timeguesser-design/prompts/design-explore.md, then read $artifact_dir/ticket.md and only any additional files explicitly required by that prompt before writing or updating $artifact_dir/shape.md."]
-    stage_artifact_scope [label="Stage Artifact Scope", class="route_gate", prompt="Read .fabro/timeguesser-design/prompts/scope-artifacts.md, then read $artifact_dir/ticket.md and $artifact_dir/shape.md before writing or updating $artifact_dir/artifact-scope.md."]
+    design_explore    [label="Design Explore", class="route-design", prompt="Read .fabro/timeguesser-design/prompts/design-explore.md, then read $artifact_dir/ticket.md and only any additional files explicitly required by that prompt before writing or updating $artifact_dir/shape.md."]
+    stage_artifact_scope [label="Stage Artifact Scope", class="route-gate", prompt="Read .fabro/timeguesser-design/prompts/scope-artifacts.md, then read $artifact_dir/ticket.md and $artifact_dir/shape.md before writing or updating $artifact_dir/artifact-scope.md."]
     scope_artifacts   [shape=hexagon, label="Human Artifact Scope Decision"]
     validate_scope    [label="Validate Artifact Scope", shape=parallelogram, script=".fabro/timeguesser-design/scripts/validate_artifact_scope.sh \"$artifact_dir/artifact-scope.md\""]
-    artifact_generation [label="Generate Design Artifacts", class="route_design", prompt="Read .fabro/timeguesser-design/prompts/generate-artifacts.md, then read $artifact_dir/ticket.md, $artifact_dir/shape.md, and $artifact_dir/artifact-scope.md before generating selected files under $artifact_dir/drafts/."]
-    design_review     [label="Design Review", class="route_review", prompt="Read .fabro/timeguesser-design/prompts/design-review.md, then read $artifact_dir/ticket.md, $artifact_dir/shape.md, $artifact_dir/artifact-scope.md, all files under $artifact_dir/drafts/ when present, and only any additional files explicitly required by that prompt before writing or updating $artifact_dir/design-review.md."]
-    stage_review_form [label="Stage Review Form", class="route_gate", prompt="Read .fabro/timeguesser-design/prompts/prepare-review-decision.md, then read $artifact_dir/ticket.md, $artifact_dir/shape.md, $artifact_dir/artifact-scope.md, all files under $artifact_dir/drafts/ when present, and $artifact_dir/design-review.md. Read repo or workspace policy docs only when those artifacts explicitly anchor to them. Create or update $artifact_dir/design-approval.md as the authoritative human review decision log."]
+    artifact_generation [label="Generate Design Artifacts", class="route-design", prompt="Read .fabro/timeguesser-design/prompts/generate-artifacts.md, then read $artifact_dir/ticket.md, $artifact_dir/shape.md, and $artifact_dir/artifact-scope.md before generating selected files under $artifact_dir/drafts/."]
+    design_review     [label="Design Review", class="route-review", prompt="Read .fabro/timeguesser-design/prompts/design-review.md, then read $artifact_dir/ticket.md, $artifact_dir/shape.md, $artifact_dir/artifact-scope.md, all files under $artifact_dir/drafts/ when present, and only any additional files explicitly required by that prompt before writing or updating $artifact_dir/design-review.md."]
+    stage_review_form [label="Stage Review Form", class="route-gate", prompt="Read .fabro/timeguesser-design/prompts/prepare-review-decision.md, then read $artifact_dir/ticket.md, $artifact_dir/shape.md, $artifact_dir/artifact-scope.md, all files under $artifact_dir/drafts/ when present, and $artifact_dir/design-review.md. Read repo or workspace policy docs only when those artifacts explicitly anchor to them. Create or update $artifact_dir/design-approval.md as the authoritative human review decision log."]
     approve           [shape=hexagon, label="Human Approval Decision"]
     validate_approve  [label="Validate Approve Decision", shape=parallelogram, script=".fabro/timeguesser-design/scripts/validate_design_approval.sh \"$artifact_dir/design-approval.md\" approve"]
     validate_revise   [label="Validate Revise Decision", shape=parallelogram, script=".fabro/timeguesser-design/scripts/validate_design_approval.sh \"$artifact_dir/design-approval.md\" revise"]
     validate_stop     [label="Validate Stop Decision", shape=parallelogram, script=".fabro/timeguesser-design/scripts/validate_design_approval.sh \"$artifact_dir/design-approval.md\" stop"]
-    apply_revisions   [label="Revise Per Reviewer Decision", class="route_design", prompt="Read .fabro/timeguesser-design/prompts/apply-reviewer-revisions.md, then read $artifact_dir/design-approval.md, $artifact_dir/ticket.md, $artifact_dir/shape.md, $artifact_dir/artifact-scope.md, all files under $artifact_dir/drafts/ when present, $artifact_dir/design-review.md, and only any additional files explicitly required by that prompt before updating the design package."]
-    publish_ticket    [label="Publish Ticket", class="route_draft", prompt="Read .fabro/timeguesser-design/prompts/publish-ticket.md, then read $artifact_dir/ticket.md, $artifact_dir/shape.md, $artifact_dir/design-review.md, $artifact_dir/design-approval.md, and only any additional files explicitly required by that prompt before updating $artifact_dir/ticket.md for Delivery."]
-    stop_guidance     [label="Stop / Guidance Summary", class="route_gate", prompt="Read .fabro/timeguesser-design/prompts/stop-guidance.md, then read $artifact_dir/design-approval.md, $artifact_dir/ticket.md, $artifact_dir/shape.md, and $artifact_dir/design-review.md. Read repo or workspace policy docs only when those artifacts explicitly anchor to them. Update the ticket package to preserve the stop decision and guidance without publishing a delivery-ready ticket."]
+    apply_revisions   [label="Revise Per Reviewer Decision", class="route-design", prompt="Read .fabro/timeguesser-design/prompts/apply-reviewer-revisions.md, then read $artifact_dir/design-approval.md, $artifact_dir/ticket.md, $artifact_dir/shape.md, $artifact_dir/artifact-scope.md, all files under $artifact_dir/drafts/ when present, $artifact_dir/design-review.md, and only any additional files explicitly required by that prompt before updating the design package."]
+    publish_ticket    [label="Publish Ticket", class="route-draft", prompt="Read .fabro/timeguesser-design/prompts/publish-ticket.md, then read $artifact_dir/ticket.md, $artifact_dir/shape.md, $artifact_dir/design-review.md, $artifact_dir/design-approval.md, and only any additional files explicitly required by that prompt before updating $artifact_dir/ticket.md for Delivery."]
+    stop_guidance     [label="Stop / Guidance Summary", class="route-gate", prompt="Read .fabro/timeguesser-design/prompts/stop-guidance.md, then read $artifact_dir/design-approval.md, $artifact_dir/ticket.md, $artifact_dir/shape.md, and $artifact_dir/design-review.md. Read repo or workspace policy docs only when those artifacts explicitly anchor to them. Update the ticket package to preserve the stop decision and guidance without publishing a delivery-ready ticket."]
 
     start -> load_ticket -> design_explore -> stage_artifact_scope -> scope_artifacts -> validate_scope -> artifact_generation -> design_review -> stage_review_form -> approve
     approve -> validate_approve [label="[A] Approve As-Is (incl. design-review issues)"]

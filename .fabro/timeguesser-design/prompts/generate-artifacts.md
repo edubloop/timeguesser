@@ -1,61 +1,39 @@
+<!-- workspace-kit-source: .workspace-kit/templates/fabro/prompts/generate-artifacts.md -->
+<!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
+
 # Generate Artifacts Stage
 
 ## Session Context Override
 
-The workspace CLAUDE.md contains session-start hooks (cadence checks, health checks).
-For this Fabro workflow stage, DO NOT run any session-start hooks, cadence checks,
-healthchecks, or exploratory validation. These have already been completed before
-this stage began. Proceed directly to the task below using only the specific files
-and tools listed.
-
----
-
-## Goal
-
-Generate selected design draft artifacts for this ticket.
+Skip session-start hooks. Generate only artifacts explicitly selected by artifact scoping.
 
 ## Required Reading
 
-Read exactly these files in order:
-
-1. `$goal_file` (the ticket.md bridge artifact)
+1. `$artifact_dir/ticket.md`
 2. `$artifact_dir/shape.md`
 3. `$artifact_dir/artifact-scope.md`
-4. `$workspace_root/TimeGuesser/TIMEGUESSER_DESIGN_SYSTEM.md` (for visual artifacts)
-5. No other files unless explicitly listed above
+4. Existing files in `$artifact_dir/drafts/` when present
 
 ## Allowed Tools
 
-For this stage, you may use ONLY:
-
-- `read_file` — to read the specific files listed in Required Reading
-- `write_file` — to create artifacts in `$artifact_dir/drafts/`
-- `glob` — only to list specific directories when needed
-- `grep` — only within files already read
+- `read_file`
+- `write_file`
+- `grep` (scoped)
 
 ## Forbidden
 
-DO NOT use:
-
-- `web_fetch` or `web_search`
-- `glob` with broad patterns
-- `shell` commands
-- `edit_file` or `apply_patch`
+- Web browsing/search
+- Generating unselected artifact types
+- Editing unrelated ticket artifacts
 
 ## Output
 
-Generate only artifact types marked with `[x]` in `artifact-scope.md`.
-Write to `$artifact_dir/drafts/` using the naming convention in artifact-scope.md.
+- Write selected files under `$artifact_dir/drafts/`
+- Keep generated artifacts traceable to selections in `artifact-scope.md`
 
-After generating, append a `## Generated artifacts manifest` section to `artifact-scope.md` listing each created file path.
+## TimeGuesser Repo Overrides
 
-## Per-Type Guidance
-
-- `html-prototype`: Self-contained HTML with representative states
-- `interaction-flow`: Step-by-step markdown with triggers and error paths
-- `architecture-proposal`: Boundaries, interfaces, event flow, tradeoffs
-- `component-mockup`: Focused HTML mockups for key components
-- `data-flow-diagram`: Text diagram and data movement narrative
-- `none-needed`: Explain why artifacts are intentionally skipped
-
-Do not implement production code changes in this stage.
+- Keep scoring constants and hint costs unchanged unless explicitly approved (`constants/scoring.ts`, `lib/scoring.ts`).
+- Do not modify `app.json` or `eas.json` without explicit approval.
+- Do not grow `app/(tabs)/game.tsx`; extract additional logic into other files.
+- Use `TYPESCRIPT_CODING_STANDARDS.md` (`TGS-###`) as the coding-rule citation source.

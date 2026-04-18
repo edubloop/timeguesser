@@ -1,68 +1,39 @@
+<!-- workspace-kit-source: .workspace-kit/templates/fabro/prompts/refine-approach.md -->
+<!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
+
 # Refine Approach Stage
 
 ## Session Context Override
 
-The workspace CLAUDE.md contains session-start hooks (cadence checks, health checks).
-For this Fabro workflow stage, DO NOT run any session-start hooks, cadence checks,
-healthchecks, or exploratory validation. These have already been completed before
-this stage began. Proceed directly to the task below using only the specific files
-and tools listed.
-
----
-
-## Goal
-
-Create or update the aligned intake approach after manual chat refinement.
+Do not run session-start hooks or unrelated checks. This stage records operator-aligned approach
+changes only.
 
 ## Required Reading
 
-Read exactly these files in order:
-
 1. `$artifact_dir/intake.md`
 2. `$artifact_dir/inputs/approach-proposal.md`
-3. `$artifact_dir/inputs/approach-alignment.md` when it already exists
-4. Additional authoritative docs only when explicitly cited by the proposal
-5. No other files unless explicitly listed above
+3. `$artifact_dir/inputs/approach-alignment.md` when present
 
 ## Allowed Tools
 
-For this stage, you may use ONLY:
-
-- `read_file` — to read the specific files listed in Required Reading
-- `write_file` — to create or update `$artifact_dir/inputs/approach-alignment.md` and `$artifact_dir/intake.md`
-- `grep` — only within files already read
+- `read_file`
+- `write_file`
+- `grep` (scoped)
 
 ## Forbidden
 
-DO NOT use:
-
-- `web_fetch` or `web_search`
-- `glob` with broad patterns
-- `shell` commands
-- `edit_file` or `apply_patch`
+- Web browsing/search
+- Broad repository scans
+- Updating `ticket.md` in this stage
 
 ## Output
 
-1. Write or update: `$artifact_dir/inputs/approach-alignment.md`
-2. Update: `$artifact_dir/intake.md`
+- Write/update `$artifact_dir/inputs/approach-alignment.md`
+- Preserve the same `Verbatim Operator Intent (immutable)` block from `intake.md`
 
-## Requirements
+## TimeGuesser Repo Overrides
 
-In `approach-alignment.md`, capture:
-
-- Chosen direction
-- Accepted tradeoffs
-- Rejected directions
-- Open questions that remain intentionally unresolved
-- What Design should treat as fixed
-
-In `intake.md`, record:
-
-- Aligned approach status
-- Whether `inputs/` needs further review
-- What is fixed for downstream phases
-- What remains intentionally unresolved
-- Updated machine-readable metadata
-
-Do not create or normalize `ticket.md` in this stage.
-Do not implement code changes in this stage.
+- Keep scoring constants and hint costs unchanged unless explicitly approved (`constants/scoring.ts`, `lib/scoring.ts`).
+- Do not modify `app.json` or `eas.json` without explicit approval.
+- Do not grow `app/(tabs)/game.tsx`; extract additional logic into other files.
+- Use `TYPESCRIPT_CODING_STANDARDS.md` (`TGS-###`) as the coding-rule citation source.
