@@ -12,7 +12,8 @@ TimeGuesser is an Expo React Native iOS game where players guess where and when 
 - Run mobile QA full suite (Maestro): `npm run test:maestro`
 - Auto-start Metro + run smoke (keeps Metro running): `npm run test:maestro:smoke:auto`
 - Auto-start Metro + run full suite (keeps Metro running): `npm run test:maestro:auto`
-- Launch the Fabro Design wrapper: `npm run fabro:design -- <TICKET_ID> <SOURCE_FILE>`
+- Launch the Fabro Intake wrapper: `npm run fabro:intake -- <TICKET_ID> <INTAKE_FILE>`
+- Launch the Fabro Design wrapper: `npm run fabro:design -- <TICKET_ID> <TICKET_FILE>`
 - Launch the Fabro Delivery wrapper: `npm run fabro:delivery -- <TICKET_ID> <GOAL_FILE>`
 
 ## Maestro QA Flows
@@ -47,10 +48,10 @@ Provider chain (load-bearing):
 2. Read `TIMEGUESSER_SPEC.md` and `TIMEGUESSER_DESIGN_SYSTEM.md`.
 3. Map request to files via `AGENT_TASK_INDEX.md`.
 4. For non-trivial work, seed `../artifacts/tickets/<ID>/intake.md` from the selected backlog item.
-5. Run the Fabro Design workflow from `./scripts/run_fabro_design.sh`.
-6. Review `ticket.md`, `shape.md`, `design-review.md`, and `design-approval.md` in the Fabro UI.
-7. Complete the latest review cycle in `design-approval.md` before selecting the design approval branch.
-8. Run the Fabro Delivery workflow from `./scripts/run_fabro_delivery.sh` using `ticket.md` after the design package is approved as-is and published.
+5. Run the Fabro Intake workflow from `./scripts/run_fabro_intake.sh`.
+6. If `execution_path=design_then_delivery`, run the Fabro Design workflow from `./scripts/run_fabro_design.sh` using `ticket.md`.
+7. Review `ticket.md`, `shape.md`, `design-review.md`, and `design-approval.md` in the Fabro UI when design is applicable.
+8. Run the Fabro Delivery workflow from `./scripts/run_fabro_delivery.sh` using `ticket.md` after intake classifies the ticket as `delivery_only`, or after design is approved and published for `design_then_delivery`.
 9. Use the control plane operator shell to approve the plan and inspect the run.
 10. Make minimal scoped changes.
 11. Run `npm run check` before handing off.
