@@ -17,7 +17,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#6A3DE8"
-      }
+      },
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "ios": {
       "supportsTablet": true,
@@ -52,6 +53,12 @@
         "projectId": "a088eb07-5f57-4115-9f11-f78a26d54748"
       }
     },
-    "owner": "edubber11"
+    "owner": "edubber11",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a088eb07-5f57-4115-9f11-f78a26d54748"
+    }
   }
 }
