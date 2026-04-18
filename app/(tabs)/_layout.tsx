@@ -52,6 +52,8 @@ export default function TabLayout() {
           title: 'Game',
           tabBarIcon: ({ color }) => <TabBarIcon name="gamepad" color={color} />,
           href: null,
+          headerShown: false,
+          tabBarStyle: { display: 'none' },
         }}
       />
       <Tabs.Screen

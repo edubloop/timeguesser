@@ -31,12 +31,19 @@ Each active item should stay lightweight:
 - Execution path: `design_then_delivery`
 - Summary: Settings hierarchy and spacing feel inconsistent. Needs a clearer, calmer layout with stronger visual rhythm.
 
-### TG-009 — TimeGuesser intake-first workflow migration
+### TG-010 — Full-bleed photo treatment (YouTube Shorts-inspired)
 
 - Status: `Queued`
-- Lane: `Internal tooling`
+- Lane: `Experience / UX`
 - Execution path: `design_then_delivery`
-- Summary: Split Intake from Design in TimeGuesser's Fabro runner surface, keep Design and Delivery separate downstream, and preserve `ticket.md` as the canonical bridge artifact before Delivery.
+- Summary: Implement a full-bleed image presentation layer that follows the ephemeral visual approach used in YouTube Shorts, based on `../design-references/youtube-image-fullscreen-with-functions.png`.
+
+### TG-011 — Result surface: decouple CTA from card, adopt scrim/blur chrome
+
+- Status: `Queued`
+- Lane: `Experience / UX`
+- Execution path: `design_then_delivery`
+- Summary: Follow-up to TG-010. The result-state CTA currently overlaps the result card (clipping the total score) and the top/bottom chrome is opaque white, breaking the full-bleed promise. Two changes: (1) float the primary CTA outside the card bounds so score + title are never occluded (Shorts pattern: controls in free space, content beneath); (2) replace opaque surfaces (top status-bar region, bottom result card) with gradient scrims or `BlurView` so the photo/map reads edge-to-edge. Also align the right-rail (map toggle / hint / refresh / details) with the reference's vertical action stack. Reference: `../design-references/youtube-image-fullscreen-with-functions.png`.
 
 ## Recently Completed
 
