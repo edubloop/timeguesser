@@ -65,7 +65,7 @@ These need explicit decision because they can alter runtime behavior beyond pure
 
 ## Untracked Cleanup Notes (not part of phase 1 scope)
 
-- Duplicate files with ` 2` suffix exist in multiple locations (docs/scripts/workflow artifacts).
+- Duplicate files with `2` suffix exist in multiple locations (docs/scripts/workflow artifacts).
 - Workspace/process artifacts are mixed with app work (`CHANGELOG.md`, `PERFORMANCE_PLAN*.md`, `WORKSPACE_KIT_ADOPTION_LOG*.md`, templates).
 - Keep these out of phase 1 experiment work to reduce branch noise.
 
