@@ -2,12 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router } from 'expo-router';
+import { setStatusBarStyle, StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ModeChip from '@/components/GameScreen/ModeChip';
-import PhotoSurface from '@/components/GameScreen/PhotoSurface';
+import FullBleedPhotoSurface from '@/components/GameScreen/FullBleedPhotoSurface';
 import RoundMediaStage from '@/components/GameScreen/RoundMediaStage';
-import GuessButton from '@/components/GuessButton';
+import FloatingControlRail from '@/components/GameScreen/FloatingControlRail';
+import EphemeralContext from '@/components/GameScreen/EphemeralContext';
+import FloatingCTABar from '@/components/GameScreen/FloatingCTABar';
 import GameMapView, { MapProviderRef } from '@/components/MapView';
 import ScoreReveal from '@/components/ScoreReveal';
 import SearchBar from '@/components/SearchBar';
@@ -38,7 +41,7 @@ export default function GameScreen() {
     totalScore,
   } = useGame();
   const {
-    roundTimer,
+    roundTimer: _roundTimer,
     hintsEnabled,
     publicImageSource,
     publicSelectionFilters,
@@ -56,12 +59,13 @@ export default function GameScreen() {
   const [revealLocationHint, setRevealLocationHint] = useState(false);
   const [revealedYear, setRevealedYear] = useState<number | null>(null);
   const [lockedGuessPin, setLockedGuessPin] = useState<Coordinate | null>(null);
-  const [timerPaused, setTimerPaused] = useState(false);
+  const [, setTimerPaused] = useState(false);
   const [refreshUsed, setRefreshUsed] = useState(0);
   const [refreshLoading, setRefreshLoading] = useState(false);
   const [showScoreOverlay, setShowScoreOverlay] = useState(false);
   const [showHintModal, setShowHintModal] = useState(false);
   const [showHintHistory, setShowHintHistory] = useState(false);
+  const [ephemeralContextVisible, setEphemeralContextVisible] = useState(true);
 
   const mapRef = useRef<MapProviderRef | null>(null);
   const lastTapRef = useRef(0);
@@ -104,11 +108,17 @@ export default function GameScreen() {
     setShowScoreOverlay(false);
     setShowHintModal(false);
     setShowHintHistory(false);
+    setEphemeralContextVisible(true);
     pendingGuessPinRef.current = null;
     mapRef.current?.resetView();
   }, [clearRevealOverlayTimer, state.currentRound]);
 
   useEffect(() => clearRevealOverlayTimer, [clearRevealOverlayTimer]);
+
+  useEffect(() => {
+    setStatusBarStyle('light', true);
+    return () => setStatusBarStyle('auto', true);
+  }, []);
 
   useEffect(() => {
     if (state.status === 'finished') {
@@ -162,6 +172,14 @@ export default function GameScreen() {
   const returnPhotoMode = useCallback(() => {
     setPresentationMode((currentMode) => reducePresentationMode(currentMode, 'return-photo'));
   }, []);
+
+  const handleToggleMapMode = useCallback(() => {
+    if (presentationMode === 'photo') {
+      enterMapMode();
+    } else {
+      returnPhotoMode();
+    }
+  }, [presentationMode, enterMapMode, returnPhotoMode]);
 
   const handlePinPlaced = useCallback((coord: Coordinate) => {
     setPinCoordinate(coord);
@@ -266,7 +284,7 @@ export default function GameScreen() {
     return mapRef.current.searchLocation(query);
   }, []);
 
-  const handleRefreshPhoto = useCallback(async () => {
+  const _handleRefreshPhoto = useCallback(async () => {
     if (
       !currentRoundData ||
       showResult ||
@@ -311,6 +329,7 @@ export default function GameScreen() {
     setShowScoreOverlay(false);
     setShowHintModal(false);
     setShowHintHistory(false);
+    setEphemeralContextVisible(true);
     pendingGuessPinRef.current = null;
     mapRef.current?.resetView();
   }, [
@@ -381,7 +400,7 @@ export default function GameScreen() {
     }
   }, [currentRoundData, hintsUsed]);
 
-  const handleTimerUp = useCallback(() => {
+  const _handleTimerUp = useCallback(() => {
     if (!currentRoundData || showResult || showYearPicker || state.status !== 'playing') return;
 
     setTimerPaused(true);
@@ -421,7 +440,7 @@ export default function GameScreen() {
     submitTimeoutRound,
   ]);
 
-  const handlePhotoTap = useCallback(() => {
+  const _handlePhotoTap = useCallback(() => {
     if (!currentRoundData) return;
 
     const now = Date.now();
@@ -462,7 +481,7 @@ export default function GameScreen() {
     [showResult, state.results]
   );
 
-  const canRefreshPhoto = useMemo(
+  const _canRefreshPhoto = useMemo(
     () =>
       Boolean(
         currentRoundData &&
@@ -488,7 +507,7 @@ export default function GameScreen() {
     [hintsUsed, nextTier]
   );
 
-  const modeChip =
+  const _modeChip =
     presentation.showModeChip && presentation.modeChipLabel && presentation.modeChipAction ? (
       <ModeChip
         label={presentation.modeChipLabel}
@@ -497,7 +516,7 @@ export default function GameScreen() {
       />
     ) : null;
 
-  const yearRevealBanner =
+  const _yearRevealBanner =
     !showResult && revealedYear !== null ? (
       <View style={[styles.yearRevealBanner, { backgroundColor: cardBg, borderColor }]}>
         <Text style={styles.yearRevealTitle}>Year Revealed (Hint Tier 5)</Text>
@@ -676,24 +695,15 @@ export default function GameScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
       <RoundMediaStage
         mode={presentationMode}
         topInset={insets.top}
-        currentRound={state.currentRound}
-        totalRounds={ROUNDS_PER_GAME}
-        totalScore={totalScore}
-        roundTimer={roundTimer}
-        timerPaused={timerPaused || showYearPicker || showResult || showHintModal}
-        onTimeUp={handleTimerUp}
         photoSurface={
-          <PhotoSurface
+          <FullBleedPhotoSurface
             imageUri={currentRoundData.imageUri}
-            canRefreshPhoto={canRefreshPhoto}
-            refreshLoading={refreshLoading}
-            isPersonalPhoto={currentRoundData.source === 'personal'}
-            onPhotoTap={handlePhotoTap}
+            onPhotoTap={openPhotoViewer}
             onPhotoLongPress={openPhotoViewer}
-            onRefreshPhoto={handleRefreshPhoto}
           />
         }
         mapSurface={
@@ -707,19 +717,42 @@ export default function GameScreen() {
             mapRef={mapRef}
           />
         }
-        yearRevealBanner={yearRevealBanner}
-        modeChip={modeChip}
+        floatingControlRail={
+          <FloatingControlRail
+            mode={presentationMode}
+            hintsEnabled={hintsEnabled}
+            hintsUsed={hintsUsed}
+            maxHints={MAX_HINTS}
+            showResult={showResult}
+            guessLocked={guessLocked}
+            onMapToggle={handleToggleMapMode}
+            onHintPress={handleHintButtonPress}
+            topInset={insets.top}
+          />
+        }
+        ephemeralContext={
+          <EphemeralContext
+            currentRound={state.currentRound}
+            totalRounds={ROUNDS_PER_GAME}
+            totalScore={totalScore}
+            topInset={insets.top}
+            visible={ephemeralContextVisible}
+            onDismiss={() => setEphemeralContextVisible(false)}
+            onRestore={() => setEphemeralContextVisible(true)}
+          />
+        }
+        floatingCTA={
+          <FloatingCTABar
+            disabled={presentation.primaryCta.disabled}
+            onPress={handlePrimaryCtaPress}
+            label={presentation.primaryCta.label}
+            testID={showResult ? 'next-round-button' : 'guess-button'}
+            bottomInset={insets.bottom}
+          />
+        }
         mapOverlays={mapOverlays}
         resultOverlay={resultOverlay}
         prioritizeMapSurface={showResult}
-      />
-
-      <GuessButton
-        disabled={presentation.primaryCta.disabled}
-        onPress={handlePrimaryCtaPress}
-        label={presentation.primaryCta.label}
-        testID={showResult ? 'next-round-button' : 'guess-button'}
-        bottomInset={insets.bottom}
       />
 
       <YearPicker
@@ -800,6 +833,7 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000',
   },
   centered: {
     flex: 1,
