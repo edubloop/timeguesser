@@ -39,146 +39,24 @@ If output is `[DUE]`, run `bash ../.workspace-notes/harness_healthcheck.sh` and 
 
 **Reading order**: For any change, read the spec first (`TIMEGUESSER_SPEC.md`), then the file(s) for the area you're touching, then check the hard constraints below.
 
-| Area           | File                           | Why                                                                                            |
-| -------------- | ------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Spec           | `TIMEGUESSER_SPEC.md`          | Authoritative product/technical spec                                                           |
-| Design         | `TIMEGUESSER_DESIGN_SYSTEM.md` | Colors, typography, spacing, component specs                                                   |
-| Scoring        | `constants/scoring.ts`         | All scoring constants and hint costs                                                           |
-| Scoring logic  | `lib/scoring.ts`               | Haversine distance, score formulas                                                             |
-| Game state     | `lib/gameState.tsx`            | Reducer actions, RoundData/RoundResult types                                                   |
-| Photo pipeline | `lib/photos.ts`                | Wikimedia fetch, cache, diversity, filters                                                     |
-| Hints          | `lib/hints.ts`                 | Tier logic, macro-regions, circle generation                                                   |
-| Settings       | `lib/SettingsContext.tsx`      | All persisted settings, defaults, migration                                                    |
-| Design tokens  | `constants/theme.ts`           | Spacing, Radius, Layout, TypeScale                                                             |
-| Colors         | `constants/Colors.ts`          | Light/dark palettes                                                                            |
-| Game screen    | `app/(tabs)/game.tsx`          | Main gameplay (940 lines, most complex screen — refactoring candidate, avoid making it larger) |
-| Deferred work  | `future_roadmap.md`            | Items intentionally out of scope                                                               |
+| Area           | File                             | Why                                                                                            |
+| -------------- | -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Spec           | `TIMEGUESSER_SPEC.md`            | Authoritative product/technical spec                                                           |
+| Design         | `TIMEGUESSER_DESIGN_SYSTEM.md`   | Colors, typography, spacing, component specs                                                   |
+| Scoring        | `constants/scoring.ts`           | All scoring constants and hint costs                                                           |
+| Scoring logic  | `lib/scoring.ts`                 | Haversine distance, score formulas                                                             |
+| Game state     | `lib/gameState.tsx`              | Reducer actions, RoundData/RoundResult types                                                   |
+| Photo pipeline | `lib/photos.ts`                  | Wikimedia fetch, cache, diversity, filters                                                     |
+| Hints          | `lib/hints.ts`                   | Tier logic, macro-regions, circle generation                                                   |
+| Settings       | `lib/SettingsContext.tsx`        | All persisted settings, defaults, migration                                                    |
+| Design tokens  | `constants/theme.ts`             | Spacing, Radius, Layout, TypeScale                                                             |
+| Colors         | `constants/Colors.ts`            | Light/dark palettes                                                                            |
+| Standards      | `TYPESCRIPT_CODING_STANDARDS.md` | Citation-ready TypeScript standards catalog for reviews, specs, and agent guidance             |
+| Game screen    | `app/(tabs)/game.tsx`            | Main gameplay (940 lines, most complex screen — refactoring candidate, avoid making it larger) |
+| Deferred work  | `future_roadmap.md`              | Items intentionally out of scope                                                               |
 
----
+## Further Reading
 
-## Hard Constraints
-
-These values are load-bearing for game balance, UX consistency, or spec compliance. **Do not change without explicit approval.**
-
-### Scoring formula (`constants/scoring.ts`, `lib/scoring.ts`)
-
-- `MAX_LOCATION_SCORE = 5000`, `MAX_TIME_SCORE = 5000`, `MAX_ROUND_SCORE = 10000`
-- `ROUNDS_PER_GAME = 5`, `MAX_GAME_SCORE = 50000`
-- `MAX_DISTANCE_KM = 12000`, `LOCATION_SCORE_CURVE_POWER = 2`
-- `MAX_YEARS_DIFF = 120`, `TIME_SCORE_CURVE_POWER = 2.0`
-- Location score: `5000 * max(0, 1 - (distance / 12000))^2`
-- Time score: `5000 * max(0, 1 - (yearDiff / 120))^2`
-- Score floor: round total never below 0
-
-### Hint tier costs (`constants/scoring.ts`)
-
-- `HINT_TIER_COSTS = [0, 1000, 1000, 1000, 1000]`
-- Tier 4 → location score forced to 0
-- Tier 5 → round total forced to 0
-- `HINT_TIER2_RADIUS_KM = 1000`, `HINT_TIER3_RADIUS_KM = 250`
-
-### Diversity thresholds (`lib/photos.ts`)
-
-- `ROUND_DIVERSITY_STAGES`: strict 30y/1000km → relaxed 20y/700km → 10y/400km → fallback
-- `MIN_CONSECUTIVE_YEAR_GAP = 30`
-- `GEO_BUCKET_DEGREES = 1.5`
-- `DIVERSITY_YEAR_WEIGHT = 120`
-- `MAX_CACHE_PER_ERA = 12` (per era bucket out of 50-image cache)
-- `MAX_CACHE_OLDER_BAND = 14`, `MAX_CACHE_NEWER_BAND = 20`
-- Era buckets: pre-1950, 1950–1979, 1980–1999, 2000–2014, 2015+
-- `PUBLIC_CACHE_MAX = 50`
-
-### Design tokens (`constants/theme.ts`, `constants/Colors.ts`)
-
-- Spacing scale: xs(4) sm(8) md(12) buttonY(14) lg(16) xl(24) xxl(32) xxxl(48) — 4px base unit (buttonY is the sole exception)
-- Radius: sm(4) md(6) lg(8) sheet(12) pill(999)
-- TypeScale: 13 named sizes from displayLg(52px) to caption2(11px) — do not add or remove levels
-- Layout: `photoMaxHeight = '40%'`, `minTouchTarget = 44`
-- Accent tint: light `#1A8A7D`, dark `#2BBFAD`
-
-### Architecture invariants
-
-- No backend — all logic runs on-device
-- No LLM/AI API calls in current scope (deterministic hints only)
-- Portrait locked globally, landscape only in photo-viewer
-- Apple Maps is the default map provider (Google Maps requires API key)
-
----
-
-## Don't Do Without Asking
-
-These actions require explicit approval before proceeding:
-
-- **Adding dependencies** — no new packages in `package.json` without approval
-- **Creating top-level directories** — the current structure (`app/`, `components/`, `lib/`, `constants/`, `assets/`) is intentional; don't add new top-level dirs. The Fabro delivery runtime directory (`.fabro/`) is the approved exception for this repo.
-- **Changing the provider chain** — the order in `app/_layout.tsx` (Theme → Settings → Game → NavTheme → Stack) is load-bearing
-- **Modifying `eas.json` or `app.json`** — build config and app identity; changes affect CI/CD and App Store
-- **Adding external API calls** — the app is fully on-device by design; no new network calls beyond the approved allowlist (Wikimedia Commons, Library of Congress, Europeana, Open-Meteo, Nominatim) without explicit approval
-- **Changing AsyncStorage keys** — key changes break existing users' persisted data (`timeguesser.settings.v1`, `timeguesser.public.cache.v3`, `timeguesser.theme.preference`)
-- **Growing `game.tsx`** — this file is already 940 lines and is a refactoring candidate; extract new logic into components or lib modules instead
-
----
-
-## Fabro Workflows
-
-For non-trivial feature work, use the Fabro-backed two-workflow model.
-
-### Design workflow
-
-Canonical stages:
-
-1. `Select / Load Backlog Item`
-2. `Intake` — writes `artifacts/tickets/{ID}/ticket.md`
-3. `Design Explore` — writes `artifacts/tickets/{ID}/shape.md`
-4. `Design Review` — writes `artifacts/tickets/{ID}/design-review.md`
-5. `Stage Review Form` — writes or updates `artifacts/tickets/{ID}/design-approval.md`
-6. `Human Approval Decision` — human gate in the Fabro local web UI
-7. `Revise Per Reviewer Decision` — applies required reviewer changes when the gate selects revision
-8. `Publish Ticket` — normalizes `ticket.md` for Delivery only after approval as-is
-
-`artifacts/tickets/{ID}/design-approval.md` is the authoritative reviewer decision log for the design chain. If the reviewer chooses revision, that artifact must contain required changes before the workflow can continue, and later design stages must treat its latest review cycle as binding input.
-
-Preferred entrypoint:
-
-- `./scripts/run_fabro_design.sh <TICKET_ID> <SOURCE_FILE> [fabro args...]`
-
-### Delivery workflow
-
-Canonical stages:
-
-1. `Spec` — `artifacts/tickets/{ID}/spec.md` (labeled requirements)
-2. `Plan` — `artifacts/tickets/{ID}/plan.md` (traceable implementation steps)
-3. `Approve` — plan approval and ask-first gate in the Fabro local web UI
-4. `Implement` — execute the approved plan
-5. `Verify` — run repo-defined checks and QA
-6. `Review` — `artifacts/tickets/{ID}/review.md` (intent-aligned review)
-7. `Handoff` — `artifacts/tickets/{ID}/handoff.md`
-
-Preferred entrypoint:
-
-- `./scripts/run_fabro_delivery.sh <TICKET_ID> <GOAL_FILE> [fabro args...]`
-
-`ticket.md` is the canonical goal file for Delivery.
-
-Legacy `/spec`, `/plan`, `/implement`, and `/pr-review` flows are migration fallbacks only.
-
-Artifacts live at workspace level (`../artifacts/`). See `.workspace-kit/docs/delivery-chain.md`.
-
-## Reference Documents
-
-- **Product & Technical Spec**: [`TIMEGUESSER_SPEC.md`](./TIMEGUESSER_SPEC.md)
-- **Design System**: [`TIMEGUESSER_DESIGN_SYSTEM.md`](./TIMEGUESSER_DESIGN_SYSTEM.md)
-- **Future Roadmap**: [`future_roadmap.md`](./future_roadmap.md)
-
-## QA Execution Defaults
-
-- For UI validation during implementation, use smoke flow first: `npm run test:maestro:smoke:auto`
-- Before final handoff for UI/navigation changes, run full suite: `npm run test:maestro:auto`
-- These scripts auto-start Metro when needed and keep it running for iterative QA loops
-
-## CI Pipeline
-
-- **`validate`** job runs on every push to `main` and every PR: typecheck, lint, tests, `npm audit`
-- **`maestro-smoke`** job runs **only on release tags** (`v*`): builds a release iOS app on simulator and runs Maestro photo-viewer flow
-- Maestro does **not** run on regular pushes or PRs — run it locally during development with the commands above
-- To trigger a release CI run: `git tag v1.x.x && git push origin v1.x.x`
+- Hard constraints and ask-first boundaries: `TimeGuesser/AGENTS-constraints.md`
+- Fabro intake/design/delivery workflows: `TimeGuesser/AGENTS-workflows.md`
+- QA defaults and CI pipeline: `TimeGuesser/AGENTS-operations.md`
