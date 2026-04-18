@@ -1,51 +1,40 @@
+<!-- workspace-kit-source: .workspace-kit/templates/fabro/prompts/implement.md -->
+<!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
+
 # Implement Stage
 
 ## Session Context Override
 
-The workspace CLAUDE.md contains session-start hooks (cadence checks, health checks).
-For this Fabro workflow stage, DO NOT run any session-start hooks, cadence checks,
-healthchecks, or exploratory validation. These have already been completed before
-this stage began. Proceed directly to the task below using only the specific files
-and tools listed.
-
----
-
-## Goal
-
-Implement the approved plan.
-
-## Hard Constraints
-
-- Do not change scoring constants, formulas, or hint costs without explicit approval
-- Do not add dependencies without explicit approval
-- Do not change `app.json` or `eas.json` without explicit approval
-- Do not change AsyncStorage keys without explicit approval
-- Do not change the provider order in `app/_layout.tsx`
-- Do not add new external APIs beyond the approved allowlist
-- Do not grow `app/(tabs)/game.tsx` if new logic can be extracted
+Skip session-start hooks. Execute only approved plan scope.
 
 ## Required Reading
 
-Read exactly these files in order:
-
-1. `$artifact_dir/plan.md` (the approved implementation plan)
-2. `$artifact_dir/spec.md` (for requirement traceability)
-3. `$workspace_root/TimeGuesser/AGENTS.md`
-4. Each file explicitly listed in plan.md as a target for modification
-5. No other files unless explicitly required for implementation
+1. `$artifact_dir/plan.md`
+2. `$artifact_dir/spec.md`
+3. `$artifact_dir/ticket.md`
+4. Files touched by approved plan steps
 
 ## Allowed Tools
 
-You may use the full tool suite as needed:
+- `read_file`
+- `write_file`
+- `edit_file` / `apply_patch`
+- scoped shell commands needed for implementation and verification
 
-- `read_file`, `write_file`, `edit_file`/`apply_patch` — file operations
-- `grep`, `glob` — discovery and search (use sparingly, prefer explicit paths)
-- `shell` — commands as specified in plan.md
+## Forbidden
+
+- Web browsing/search unless explicitly approved
+- Scope expansion beyond approved plan
+- Policy-boundary changes without ask-first approval
 
 ## Output
 
-- Implement all steps from the approved plan.md
-- Keep changes minimal and traceable
-- Update existing files before creating new ones where practical
-- Do not run repo-wide verification commands in this stage
-- If an ask-first boundary is required, stop and summarize it
+- Implement approved changes
+- Keep plan progress and deviations documented in ticket artifacts
+
+## TimeGuesser Repo Overrides
+
+- Keep scoring constants and hint costs unchanged unless explicitly approved (`constants/scoring.ts`, `lib/scoring.ts`).
+- Do not modify `app.json` or `eas.json` without explicit approval.
+- Do not grow `app/(tabs)/game.tsx`; extract additional logic into other files.
+- Use `TYPESCRIPT_CODING_STANDARDS.md` (`TGS-###`) as the coding-rule citation source.

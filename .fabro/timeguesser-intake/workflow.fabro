@@ -1,15 +1,18 @@
+// workspace-kit-source: .workspace-kit/templates/fabro/workflow.fabro
+// workspace-kit-sync: v1.5.0 | synced: 2026-04-18
+// timeguesser-overrides: model_stylesheet values, prompt roots, and repo-specific verification nodes
 digraph TimeGuesserIntake {
     graph [
         goal="Execute TimeGuesser Intake mode in Fabro to propose an approach, refine it in chat, classify the path, and normalize the next phase",
         default_max_retry=3,
         model_stylesheet="
           * { model: gpt-5-mini; reasoning_effort: low; }
-          .route_design { model: gpt-5.4; reasoning_effort: medium; }
-          .route_gate { model: gpt-5-mini; reasoning_effort: low; }
-          .route_implement { model: gpt-5.3-codex; reasoning_effort: high; }
-          .route_verify_fixup { model: gpt-5.2-codex; reasoning_effort: medium; }
-          .route_review { model: gpt-5.4; reasoning_effort: medium; }
-          .route_draft { model: gpt-5-mini; reasoning_effort: low; }
+          .route-design { model: gpt-5.4; reasoning_effort: medium; }
+          .route-gate { model: gpt-5-mini; reasoning_effort: low; }
+          .route-implement { model: gpt-5.3-codex; reasoning_effort: high; }
+          .route-verify-fixup { model: gpt-5.2-codex; reasoning_effort: medium; }
+          .route-review { model: gpt-5.4; reasoning_effort: medium; }
+          .route-draft { model: gpt-5-mini; reasoning_effort: low; }
         "
     ]
     rankdir=LR
@@ -18,9 +21,9 @@ digraph TimeGuesserIntake {
     exit  [shape=Msquare, label="Exit"]
 
     load_source        [label="Load Intake Context", shape=parallelogram, script="mkdir -p \"$artifact_dir\" \"$artifact_dir/inputs\" && test -f \"$source_file\""]
-    propose_approach   [label="Propose Approach", class="route_draft", prompt="Read .fabro/timeguesser-intake/prompts/propose-approach.md, then read $source_file and only any additional files explicitly required by that prompt before writing $artifact_dir/inputs/approach-proposal.md and updating $artifact_dir/intake.md."]
-    refine_approach    [label="Refine Approach In Chat", class="route_gate", prompt="Read .fabro/timeguesser-intake/prompts/refine-approach.md, then read $artifact_dir/intake.md, $artifact_dir/inputs/approach-proposal.md, and $artifact_dir/inputs/approach-alignment.md when it exists before updating the aligned approach pack after manual chat refinement."]
-    classify_path      [label="Classify Execution Path", class="route_design", prompt="Read .fabro/timeguesser-intake/prompts/classify.md, then read $artifact_dir/intake.md and $artifact_dir/inputs/approach-alignment.md before classifying the ticket, updating machine-readable metadata, and normalizing $artifact_dir/ticket.md only when the next phase can proceed."]
+    propose_approach   [label="Propose Approach", class="route-draft", prompt="Read .fabro/timeguesser-intake/prompts/propose-approach.md, then read $source_file and only any additional files explicitly required by that prompt before writing $artifact_dir/inputs/approach-proposal.md and updating $artifact_dir/intake.md."]
+    refine_approach    [label="Refine Approach In Chat", class="route-gate", prompt="Read .fabro/timeguesser-intake/prompts/refine-approach.md, then read $artifact_dir/intake.md, $artifact_dir/inputs/approach-proposal.md, and $artifact_dir/inputs/approach-alignment.md when it exists before updating the aligned approach pack after manual chat refinement."]
+    classify_path      [label="Classify Execution Path", class="route-design", prompt="Read .fabro/timeguesser-intake/prompts/classify.md, then read $artifact_dir/intake.md and $artifact_dir/inputs/approach-alignment.md before classifying the ticket, updating machine-readable metadata, and normalizing $artifact_dir/ticket.md only when the next phase can proceed."]
 
     start -> load_source -> propose_approach -> refine_approach -> classify_path -> exit
 }

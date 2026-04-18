@@ -1,55 +1,37 @@
+<!-- workspace-kit-source: .workspace-kit/templates/fabro/prompts/plan.md -->
+<!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
+
 # Plan Stage
 
 ## Session Context Override
 
-The workspace CLAUDE.md contains session-start hooks (cadence checks, health checks).
-For this Fabro workflow stage, DO NOT run any session-start hooks, cadence checks,
-healthchecks, or exploratory validation. These have already been completed before
-this stage began. Proceed directly to the task below using only the specific files
-and tools listed.
-
----
-
-## Goal
-
-Create or update the implementation plan for this ticket.
+Skip session-start hooks and unrelated checks. Build the plan from approved spec context.
 
 ## Required Reading
 
-Read exactly these files in order:
-
 1. `$artifact_dir/spec.md`
-2. `$goal_file` (the ticket.md bridge artifact)
-3. ADRs only when spec.md explicitly lists them under "Related ADRs"
-4. `$workspace_root/TimeGuesser/AGENTS.md` only when policy-boundary confirmation is needed
-5. No other files unless explicitly listed above
+2. `$artifact_dir/ticket.md`
+3. Relevant referenced ADRs/policy docs cited in spec
 
 ## Allowed Tools
 
-For this stage, you may use ONLY:
-
-- `read_file` — to read the specific files listed in Required Reading
-- `write_file` — to create or update `$artifact_dir/plan.md`
-- `grep` — only within files already read
+- `read_file`
+- `write_file`
+- `grep` (scoped)
 
 ## Forbidden
 
-DO NOT use:
-
-- `web_fetch` or `web_search`
-- `glob` with broad patterns
-- `shell` commands
-- `edit_file` or `apply_patch`
+- Web browsing/search
+- Implementing code in this stage
 
 ## Output
 
-Write the implementation plan to: `$artifact_dir/plan.md`
+- Write/update `$artifact_dir/plan.md`
+- Keep step ordering, traceability, verification checkpoints, and ask-first boundaries explicit
 
-## Requirements
+## TimeGuesser Repo Overrides
 
-- Include traceable implementation steps (P001, P002, etc.)
-- Include file touchpoints, validation checkpoints, and decision boundaries
-- Call out ask-first items explicitly
-- Keep the plan specific enough that implementation can proceed without improvising
-- Keep scoped to the approved experiment only
-- Do not implement changes in this stage
+- Keep scoring constants and hint costs unchanged unless explicitly approved (`constants/scoring.ts`, `lib/scoring.ts`).
+- Do not modify `app.json` or `eas.json` without explicit approval.
+- Do not grow `app/(tabs)/game.tsx`; extract additional logic into other files.
+- Use `TYPESCRIPT_CODING_STANDARDS.md` (`TGS-###`) as the coding-rule citation source.

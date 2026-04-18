@@ -1,5 +1,7 @@
 # TypeScript Coding Standards — TimeGuesser
 
+<!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
+
 This catalog provides citation-ready TypeScript standards for `TimeGuesser/`.
 
 Use these IDs in specs, reviews, and implementation notes when you need to cite a repo rule precisely. Each entry declares its authority level so citations do not overstate what is mandatory.
