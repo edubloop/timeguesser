@@ -5,7 +5,7 @@ It captures rationale, decisions, implementation progress, and measured outcomes
 
 Primary input:
 
-- Expo blog: https://expo.dev/blog/best-practices-for-reducing-lag-in-expo-apps
+- Expo blog: <https://expo.dev/blog/best-practices-for-reducing-lag-in-expo-apps>
 
 ## Purpose
 

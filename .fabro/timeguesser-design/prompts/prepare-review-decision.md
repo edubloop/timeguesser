@@ -1,53 +1,73 @@
+# Prepare Review Decision Stage
+
+## Session Context Override
+
+The workspace CLAUDE.md contains session-start hooks (cadence checks, health checks).
+For this Fabro workflow stage, DO NOT run any session-start hooks, cadence checks,
+healthchecks, or exploratory validation. These have already been completed before
+this stage began. Proceed directly to the task below using only the specific files
+and tools listed.
+
+---
+
+## Goal
+
 Create or update the durable human review decision log for this ticket.
 
-Requirements:
+## Required Reading
 
-- Read `ticket.md`, `shape.md`, and `design-review.md` before writing.
-- Read the repo policy anchor from `ticket.md` only when policy context is needed to explain a decision boundary or conflict.
-- Read `Workspace policy anchor` only when `ticket.md` explicitly includes one.
-- Read `$workspace_root/.workspace-notes/mode-handoff-schema.md` before writing.
-- Write to `$artifact_dir/design-approval.md`.
-- Treat `design-approval.md` as the authoritative reviewer decision log for the design workflow.
-- Preserve all prior review cycles. Do not delete or rewrite older cycle sections except for minor factual corrections.
-- Append exactly one new review cycle section for the current package if the latest cycle does not already correspond to the current `design-review.md` update.
-- In the new review cycle, prefill:
-  - ticket id
-  - updated date
-  - package reviewed paths
-  - current package summary
-  - current recommended direction
-  - current design-review verdict and delivery-readiness recommendation
-- Leave the human-owned decision fields clearly marked for operator completion.
-- Decision semantics must be explicit in the artifact:
-  - `Approve as-is` means the package is approved including issues raised in the latest
-    `design-review.md` for that cycle.
-  - `Revise with required changes` means actionable items remain under `### Required changes before approval`.
-  - `Stop with guidance only` means design should not proceed to delivery until a new decision cycle changes that state.
-- Use this structure for each cycle:
-  - `## Review cycle N`
-  - `- Updated:`
-  - `- Package reviewed:`
-  - `- Current package summary:`
-  - `- Current recommended direction:`
-  - `- Design review verdict:`
-  - `- Delivery readiness recommendation:`
-  - `- Gate note:`
-  - `- Decision status:`
-  - `- Approved direction:`
-  - `### Locked decisions`
-  - `### Required changes before approval`
-  - `### Explicitly rejected options / decisions`
-  - `### Allowed flexibility for next pass`
-  - `### Guidance for Delivery`
-  - `### Guidance before stopping`
-  - `### Notes`
-- Set default placeholders so validation can distinguish incomplete reviewer input:
-  - `Gate note`: `Optional supplementary note from Fabro UI; this artifact remains authoritative.`
-  - `Decision status`: `Pending human decision`
-  - `Approved direction`: `Pending human decision`
-  - `Required changes before approval`: `- None`
-  - `Guidance for Delivery`: `- None`
-  - `Guidance before stopping`: `- None`
-- Add a short instruction near the top of the file telling the human to complete the latest cycle before selecting a branch in the Fabro UI.
+Read exactly these files in order:
+
+1. `$goal_file` (the ticket.md bridge artifact)
+2. `$artifact_dir/shape.md`
+3. `$artifact_dir/artifact-scope.md`
+4. All files in `$artifact_dir/drafts/` when present
+5. `$artifact_dir/design-review.md`
+6. No other files unless explicitly listed above
+
+## Allowed Tools
+
+For this stage, you may use ONLY:
+
+- `read_file` — to read the specific files listed in Required Reading
+- `write_file` — to create or update `$artifact_dir/design-approval.md`
+- `glob` — only to list `$artifact_dir/drafts/*`
+- `grep` — only within files already read
+
+## Forbidden
+
+DO NOT use:
+
+- `web_fetch` or `web_search`
+- Broad `glob` patterns
+- `shell` commands
+- `edit_file` or `apply_patch`
+
+## Output
+
+Write to: `$artifact_dir/design-approval.md`
+
+## Requirements
+
+Treat `design-approval.md` as the authoritative reviewer decision log.
+Preserve all prior review cycles. Append exactly one new review cycle section.
+
+Each cycle must include:
+
+- `## Review cycle N`
+- Ticket id, updated date, package reviewed, artifacts reviewed
+- Current package summary and recommended direction
+- Design review verdict and delivery-readiness recommendation
+- Gate note, decision status, approved direction
+- `### Locked decisions`
+- `### Required changes before approval`
+- `### Explicitly rejected options`
+- `### Allowed flexibility for next pass`
+
+Decision semantics:
+
+- `Approve as-is` — package approved including raised issues
+- `Revise with required changes` — actionable items remain
+- `Stop with guidance only` — design should not proceed to delivery
 
 Do not implement code changes in this stage.

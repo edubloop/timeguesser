@@ -9,14 +9,15 @@ digraph TimeGuesserDeliveryApproved {
     exit  [shape=Msquare, label="Exit"]
 
     validate_delivery_start [label="Validate Approved Delivery Start", shape=parallelogram, script="$workspace_root/TimeGuesser/.fabro/timeguesser-delivery/scripts/validate_delivery_approval.sh \"$goal_file\" \"$artifact_dir/plan.md\" \"$artifact_dir/delivery-approval.md\""]
-    implement   [label="Implement", class="route_implement", prompt="Read .fabro/timeguesser-delivery/prompts/implement.md, then read $artifact_dir/plan.md and the minimum authoritative docs cited by the ticket/spec/plan before implementing the approved changes."]
+    implement   [label="Implement", class="route_implement", prompt="Read .fabro/timeguesser-delivery/prompts/implement.md, then read $artifact_dir/plan.md and only the additional artifacts and implementation files explicitly required by that prompt before implementing the approved changes."]
     choose_verify [shape=hexagon, label="Choose Verification"]
     verify_standard [label="Verify Standard", shape=parallelogram, script="npm run check 2>&1", goal_gate=true, retry_target="fixup"]
     verify_smoke    [label="Verify UI Smoke", shape=parallelogram, script="npm run check 2>&1 && npm run test:maestro:smoke:auto 2>&1", goal_gate=true, retry_target="fixup"]
     verify_full     [label="Verify UI Full", shape=parallelogram, script="npm run check 2>&1 && npm run test:maestro:auto 2>&1", goal_gate=true, retry_target="fixup"]
-    fixup        [label="Fixup", class="route_verify_fixup", prompt="A verification step failed. Read .fabro/timeguesser-delivery/prompts/implement.md, the command output from context, $artifact_dir/plan.md, and the minimum authoritative docs cited by the ticket/spec/plan. Fix the issues without broadening scope and preserve the approved plan intent.", max_visits=3]
-    review       [label="Review", class="route_review", prompt="Read .fabro/timeguesser-delivery/prompts/review.md, then read $artifact_dir/spec.md, $artifact_dir/plan.md, verification context, and any ADRs explicitly cited there before writing or updating $artifact_dir/review.md."]
-    handoff      [label="Handoff", class="route_draft", prompt="Read .fabro/timeguesser-delivery/prompts/handoff.md, then read the current ticket artifact chain, verification context, and any ADRs explicitly cited by spec.md or plan.md before writing or updating $artifact_dir/handoff.md."]
+    fixup        [label="Fixup", class="route_verify_fixup", prompt="A verification step failed. Read .fabro/timeguesser-delivery/prompts/implement.md, the command output from context, $artifact_dir/plan.md, and only the additional artifacts and implementation files explicitly required by that prompt. Fix the issues without broadening scope and preserve the approved plan intent.", max_visits=3]
+    review              [label="Review", class="route_review", prompt="Read .fabro/timeguesser-delivery/prompts/review.md, then read $artifact_dir/spec.md, $artifact_dir/plan.md, verification context, and any ADRs explicitly cited there before writing or updating $artifact_dir/review.md."]
+    semantic_cycle_gate [label="Semantic Cycle Gate", shape=parallelogram, script="python3 -c \"import re,sys; txt=open('$artifact_dir/review.md').read(); c=re.search(r'Semantic cycle: ([0-9]+)',txt); m=re.search(r'Semantic cycle max: ([0-9]+)',txt); sys.exit(0 if c and m and int(c.group(1)) < int(m.group(1)) else 1)\""]
+    handoff             [label="Handoff", class="route_draft", prompt="Read .fabro/timeguesser-delivery/prompts/handoff.md, then read the current ticket artifact chain, verification context, and any ADRs explicitly cited by spec.md or plan.md before writing or updating $artifact_dir/handoff.md."]
 
     start -> validate_delivery_start
     validate_delivery_start -> implement [condition="outcome=success"]
@@ -32,5 +33,10 @@ digraph TimeGuesserDeliveryApproved {
     verify_full -> review [condition="outcome=success"]
     verify_full -> fixup
     fixup -> choose_verify
-    review -> handoff -> exit
+    review -> handoff             [label="[P] Proceed"]
+    review -> semantic_cycle_gate [label="[RR] Revise and Re-verify"]
+    review -> blocked             [label="[E] Escalate"]
+    semantic_cycle_gate -> implement [condition="outcome=success"]
+    semantic_cycle_gate -> blocked
+    handoff -> exit
 }
