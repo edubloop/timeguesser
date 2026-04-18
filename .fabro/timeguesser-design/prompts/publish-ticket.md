@@ -1,28 +1,65 @@
+# Publish Ticket Stage
+
+## Session Context Override
+
+The workspace CLAUDE.md contains session-start hooks (cadence checks, health checks).
+For this Fabro workflow stage, DO NOT run any session-start hooks, cadence checks,
+healthchecks, or exploratory validation. These have already been completed before
+this stage began. Proceed directly to the task below using only the specific files
+and tools listed.
+
+---
+
+## Goal
+
 Publish the approved design outcome into a delivery-ready goal file.
 
-Requirements:
+## Required Reading
 
-- Read `ticket.md`, `shape.md`, `design-review.md`, and `design-approval.md` before writing.
-- Read the repo policy anchor from `ticket.md` when policy constraints affect the delivery-ready contract.
-- Read `Workspace policy anchor` only when `ticket.md` explicitly includes one.
-- Read `Related ADRs` only when `ticket.md` explicitly lists them; if it says `None`, do not read architecture docs.
-- Read `$workspace_root/.workspace-notes/mode-handoff-schema.md` before normalizing delivery handoff fields.
-- Update `ticket.md` in place so it becomes the canonical goal file for the Delivery workflow.
-- Treat the latest review cycle in `design-approval.md` as the authoritative human decision.
-- Preserve the original problem framing, but normalize the document for execution readiness.
-- Ensure the final `ticket.md` includes:
-  - ticket title and status (`Ready for Delivery`)
-  - `Policy anchor: AGENTS.md`
-  - optional `Workspace policy anchor: <path>` only when relevant
-  - `Related ADRs:` with explicit paths or `None`
-  - concise summary of the approved direction
-  - constraints and non-goals
-  - success criteria and validation expectations
-  - relevant evidence paths (design references, explorations, Maestro taste flow, pipeline-inspector evidence when applicable)
-  - explicit ask-first boundaries
-  - Delivery handoff fields aligned to `$workspace_root/.workspace-notes/mode-handoff-schema.md`
-- Only use locked decisions and approved direction from the latest review cycle when normalizing the delivery goal.
-- Do not reopen already locked questions or restore explicitly rejected options unless the latest review cycle explicitly reopens them.
-- If the latest review cycle is not `Approve as-is`, or if the design review recommended guidance-only output or re-scope, do not silently mark the ticket ready.
+Read exactly these files in order:
 
+1. `$goal_file` (the ticket.md bridge artifact)
+2. `$artifact_dir/shape.md`
+3. `$artifact_dir/design-review.md`
+4. `$artifact_dir/design-approval.md`
+5. No other files unless explicitly listed above
+
+## Allowed Tools
+
+For this stage, you may use ONLY:
+
+- `read_file` — to read the specific files listed in Required Reading
+- `write_file` — to update `$goal_file`
+- `grep` — only within files already read
+
+## Forbidden
+
+DO NOT use:
+
+- `web_fetch` or `web_search`
+- `glob` with broad patterns
+- `shell` commands
+- `edit_file` or `apply_patch`
+
+## Output
+
+Update `$goal_file` in place so it becomes the canonical goal file for Delivery.
+
+## Requirements
+
+Treat the latest review cycle in `design-approval.md` as the authoritative human decision.
+Preserve the original problem framing, but normalize for execution readiness.
+
+Ensure the final ticket.md includes:
+
+- Ticket title and status (`Ready for Delivery`)
+- Policy anchor references
+- Concise summary of the approved direction
+- Constraints and non-goals
+- Success criteria and validation expectations
+- Explicit ask-first boundaries
+
+Only use locked decisions and approved direction from the latest review cycle.
+Do not reopen locked questions or restore rejected options.
+If latest review cycle is not `Approve as-is`, do not silently mark ready.
 Do not implement code changes in this stage.

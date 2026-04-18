@@ -4,12 +4,12 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/run_fabro_design.sh <TICKET_ID> <INTAKE_FILE> [fabro args...]
+  ./scripts/run_fabro_design.sh <TICKET_ID> <TICKET_FILE> [fabro args...]
 
 Examples:
-  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/intake.md --preflight
-  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/intake.md --dry-run
-  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/intake.md
+  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/ticket.md --preflight
+  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/ticket.md --dry-run
+  ./scripts/run_fabro_design.sh TG-101 ../artifacts/tickets/TG-101/ticket.md
 EOF
 }
 
@@ -19,7 +19,7 @@ if [[ $# -lt 2 ]]; then
 fi
 
 ticket_id="$1"
-intake_file="$2"
+goal_file="$2"
 shift 2
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -65,17 +65,23 @@ if [[ -z "$fabro_bin" ]]; then
   fi
 fi
 
-if [[ ! -f "$intake_file" ]]; then
-  echo "intake file not found: $intake_file" >&2
+if [[ ! -f "$goal_file" ]]; then
+  echo "goal file not found: $goal_file" >&2
   exit 1
 fi
 
 run_operator_preflight
 
 mkdir -p "$artifact_dir"
-intake_file="$(cd "$(dirname "$intake_file")" && pwd)/$(basename "$intake_file")"
+goal_file="$(cd "$(dirname "$goal_file")" && pwd)/$(basename "$goal_file")"
 artifact_dir="$(cd "$artifact_dir" && pwd)"
-goal_file="$artifact_dir/ticket.md"
+expected_ticket_file="$artifact_dir/ticket.md"
+
+if [[ "$goal_file" != "$expected_ticket_file" ]]; then
+  echo "design workflow requires canonical ticket bridge file: $expected_ticket_file" >&2
+  echo "received: $goal_file" >&2
+  exit 1
+fi
 
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/timeguesser-fabro-design-${ticket_id}.XXXXXX")"
 tmp_toml="$tmp_dir/run.toml"
@@ -87,7 +93,7 @@ trap cleanup EXIT
 cat >"$tmp_toml" <<EOF
 version = 1
 graph = "$workflow_dir/workflow.fabro"
-goal = "Run Intake and Design mode for ticket $ticket_id in TimeGuesser"
+goal = "Run Design mode for ticket $ticket_id in TimeGuesser"
 directory = "$repo_root"
 
 [sandbox]
@@ -100,7 +106,6 @@ worktree_mode = "always"
 ticket_id = "$ticket_id"
 workspace_root = "$workspace_root"
 artifact_dir = "$artifact_dir"
-source_file = "$intake_file"
 goal_file = "$goal_file"
 
 [checkpoint]

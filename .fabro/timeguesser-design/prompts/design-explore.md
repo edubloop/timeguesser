@@ -1,31 +1,60 @@
+# Design Explore Stage
+
+## Session Context Override
+
+The workspace CLAUDE.md contains session-start hooks (cadence checks, health checks).
+For this Fabro workflow stage, DO NOT run any session-start hooks, cadence checks,
+healthchecks, or exploratory validation. These have already been completed before
+this stage began. Proceed directly to the task below using only the specific files
+and tools listed.
+
+---
+
+## Goal
+
 Create or update the design exploration brief for this ticket.
 
-Requirements:
+## Required Reading
 
-- Read `ticket.md` first.
-- Read the repo policy anchor from `ticket.md` only when policy constraints materially affect the design output.
-- Read `Workspace policy anchor` only when `ticket.md` explicitly includes one.
-- Read `Related ADRs` only when `ticket.md` explicitly lists them; if it says `None`, do not read architecture docs.
-- Read `TIMEGUESSER_DESIGN_SYSTEM.md`, `design-references/`, `design-explorations/`, and `.maestro/design-taste.yaml` when relevant to the selected ticket.
-- Read `$workspace_root/.workspace-notes/mode-handoff-schema.md` before writing handoff fields.
-- Read `tools/pipeline-inspector/` only when the ticket touches content quality or internal tooling.
-- Read `design-approval.md` when it exists.
-- Write to `$artifact_dir/shape.md`.
-- Prefer repo-native outputs as the durable artifact. OpenPencil may be referenced or recommended, but the workflow must remain valid without it.
-- Produce 2-3 plausible directions or one refined direction when the scope is already narrow.
-- If `design-approval.md` exists and its latest review cycle chose `Revise with required changes`, treat that cycle as binding reviewer input:
-  - preserve the approved direction unless the reviewer explicitly changed it
-  - preserve locked decisions as fixed
-  - keep rejected options closed
-  - only use `Allowed flexibility for next pass` as the permitted space for reinterpretation
-- Add a concise section in `shape.md` explaining how the current brief responds to the latest reviewer decision when applicable.
-- Record:
-  - design intent and target user moment
-  - relevant references/evidence paths
-  - candidate directions and tradeoffs
-  - recommended direction
-  - risks, unresolved questions, and what should carry forward
-  - handoff fields for Design Review aligned to `$workspace_root/.workspace-notes/mode-handoff-schema.md`
-- If the work is not primarily visual, keep this artifact compact and focus on interaction, evidence, and UX implications.
+Read exactly these files in order:
 
-Do not implement code changes in this stage.
+1. `$goal_file` (the ticket.md bridge artifact)
+2. `$artifact_dir/intake.md` when the ticket references unresolved intake evidence
+3. `$artifact_dir/inputs/approach-alignment.md` when present (treat as authoritative)
+4. `$workspace_root/TimeGuesser/AGENTS.md`
+5. `$workspace_root/TimeGuesser/TIMEGUESSER_DESIGN_SYSTEM.md`
+6. `$workspace_root/TimeGuesser/TIMEGUESSER_SPEC.md`
+7. Each file explicitly cited by ticket.md under "Required Reading" or "References"
+8. ADRs only when ticket.md explicitly lists them
+9. No other files unless explicitly listed above
+
+## Allowed Tools
+
+For this stage, you may use ONLY:
+
+- `read_file` — to read the specific files listed in Required Reading
+- `write_file` — to create or update `$artifact_dir/shape.md`
+- `glob` — only to list specific directories when explicitly needed
+- `grep` — only within files already read
+
+## Forbidden
+
+DO NOT use:
+
+- `web_fetch` or `web_search`
+- `glob` with broad patterns like `**/*.md`
+- `shell` commands
+- `edit_file` or `apply_patch`
+
+## Output
+
+Write the design brief to: `$artifact_dir/shape.md`
+
+## Requirements
+
+- Produce 2-3 plausible directions or one refined direction when scope is narrow
+- Record: design intent, candidate directions, tradeoffs, recommended direction
+- Record: recommended artifact types for Artifact Scoping gate
+- Record: risks, unresolved questions, what should carry forward
+- If design-approval.md exists with "Revise" decision, treat that cycle as binding
+- Do not implement code changes in this stage
