@@ -1,5 +1,6 @@
-// workspace-kit-source: .workspace-kit/templates/fabro/workflow.fabro
+// workspace-kit-source: .workspace-kit/packages/design/repos/timeguesser/.fabro/timeguesser-design/workflow.fabro
 // workspace-kit-sync: v1.5.0 | synced: 2026-04-18
+
 // timeguesser-overrides: model_stylesheet values, prompt roots, and repo-specific verification nodes
 digraph TimeGuesserDesign {
     graph [

@@ -1,4 +1,4 @@
-<!-- workspace-kit-source: .workspace-kit/templates/fabro/prompts/publish-ticket.md -->
+<!-- workspace-kit-source: .workspace-kit/packages/design/repos/timeguesser/.fabro/timeguesser-design/prompts/publish-ticket.md -->
 <!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
 
 # Publish Ticket Stage

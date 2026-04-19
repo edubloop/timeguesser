@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# workspace-kit-source: .workspace-kit/templates/fabro/scripts/validate_artifact_scope.sh.tpl
+# workspace-kit-source: .workspace-kit/packages/design/repos/timeguesser/.fabro/timeguesser-design/scripts/validate_artifact_scope.sh
 # workspace-kit-sync: v1.5.0 | synced: 2026-04-18
 set -euo pipefail
 

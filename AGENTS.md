@@ -1,6 +1,6 @@
 # AGENTS.md — TimeGuesser
 
-<!-- workspace-kit-sync: v1.4.0 | synced: 2026-04-02 -->
+<!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
 
 ## Architecture
 

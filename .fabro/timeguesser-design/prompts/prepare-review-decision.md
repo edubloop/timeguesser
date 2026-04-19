@@ -1,4 +1,4 @@
-<!-- workspace-kit-source: .workspace-kit/templates/fabro/prompts/prepare-review-decision.md -->
+<!-- workspace-kit-source: .workspace-kit/packages/design/repos/timeguesser/.fabro/timeguesser-design/prompts/prepare-review-decision.md -->
 <!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
 
 # Prepare Review Decision Stage

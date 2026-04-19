@@ -1,4 +1,4 @@
-<!-- workspace-kit-source: .workspace-kit/templates/fabro/prompts/generate-artifacts.md -->
+<!-- workspace-kit-source: .workspace-kit/packages/design/repos/timeguesser/.fabro/timeguesser-design/prompts/generate-artifacts.md -->
 <!-- workspace-kit-sync: v1.5.0 | synced: 2026-04-18 -->
 
 # Generate Artifacts Stage
