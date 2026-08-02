@@ -45,12 +45,16 @@ The primary accent evokes maps, water, exploration. Used sparingly for interacti
 
 ### Scoring & Feedback
 
-| Token             | Value     | Usage                    |
-| ----------------- | --------- | ------------------------ |
-| `score.excellent` | `#1A8A7D` | High score (>80% of max) |
-| `score.good`      | `#5B9E4D` | Good score (50-80%)      |
-| `score.fair`      | `#C4953A` | Fair score (20-50%)      |
-| `score.poor`      | `#B85A3A` | Low score (<20%)         |
+| Token              | Light     | Dark      | Usage                                       |
+| ------------------ | --------- | --------- | ------------------------------------------- |
+| `score.excellent`  | `#1A8A7D` | `#2BBFAD` | High score (>80% of max)                    |
+| `score.good`       | `#5B9E4D` | `#73B765` | Good score (50-80%)                         |
+| `score.fair`       | `#C4953A` | `#E8B04A` | Fair score (20-50%)                         |
+| `score.poor`       | `#B85A3A` | `#D97B5A` | Low score (<20%)                            |
+| `score.fairSubtle` | `#FFF4E8` | `#2F281A` | Subtle fill behind a `score.fair` icon/chip |
+| `score.poorSubtle` | `#FFEEF0` | `#2F211C` | Subtle fill behind a `score.poor` icon/chip |
+
+The `*Subtle` pair mirrors `accent.primary` / `accent.subtle`: a saturated foreground colour with a low-contrast background fill of the same hue, one per theme.
 
 ### Map UI
 

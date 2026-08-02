@@ -108,6 +108,8 @@ function buildCss(tokens) {
   lines.push(formatCssVar('--color-score-good:', colorsLight.scoreGood));
   lines.push(formatCssVar('--color-score-fair:', colorsLight.scoreFair));
   lines.push(formatCssVar('--color-score-poor:', colorsLight.scorePoor));
+  lines.push(formatCssVar('--color-score-fair-subtle:', colorsLight.scoreFairSubtle));
+  lines.push(formatCssVar('--color-score-poor-subtle:', colorsLight.scorePoorSubtle));
   lines.push('');
   lines.push(formatCssVar('--color-map-pin-player:', colorsLight.mapPinPlayer));
   lines.push(formatCssVar('--color-map-pin-answer:', colorsLight.mapPinAnswer));
@@ -175,6 +177,8 @@ function buildCss(tokens) {
   lines.push(formatCssVar('--color-score-good:', colorsDark.scoreGood, 26));
   lines.push(formatCssVar('--color-score-fair:', colorsDark.scoreFair, 26));
   lines.push(formatCssVar('--color-score-poor:', colorsDark.scorePoor, 26));
+  lines.push(formatCssVar('--color-score-fair-subtle:', colorsDark.scoreFairSubtle, 26));
+  lines.push(formatCssVar('--color-score-poor-subtle:', colorsDark.scorePoorSubtle, 26));
   lines.push(formatCssVar('--color-map-pin-player:', colorsDark.mapPinPlayer, 26));
   lines.push(formatCssVar('--color-map-pin-answer:', colorsDark.mapPinAnswer, 26));
   lines.push(formatCssVar('--color-map-distance-line:', colorsDark.mapDistanceLine, 26));
@@ -210,6 +214,8 @@ function buildPrototypeTokens(tokens) {
         scoreGood: colorsLight.scoreGood,
         scoreFair: colorsLight.scoreFair,
         scorePoor: colorsLight.scorePoor,
+        scoreFairSubtle: colorsLight.scoreFairSubtle,
+        scorePoorSubtle: colorsLight.scorePoorSubtle,
         card: colorsLight.card,
         border: colorsLight.border,
       },

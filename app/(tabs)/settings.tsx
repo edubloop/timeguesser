@@ -163,7 +163,12 @@ export default function SettingsScreen() {
   const secondaryText = useThemeColor({}, 'secondaryText');
   const tertiaryText = useThemeColor({}, 'tertiaryText');
   const tint = useThemeColor({}, 'tint');
+  const tintSubtle = useThemeColor({}, 'tintSubtle');
+  const scoreFair = useThemeColor({}, 'scoreFair');
   const scorePoor = useThemeColor({}, 'scorePoor');
+  const inverseText = useThemeColor({}, 'inverseText');
+  const scoreFairSubtle = useThemeColor({}, 'scoreFairSubtle');
+  const scorePoorSubtle = useThemeColor({}, 'scorePoorSubtle');
 
   const [cacheSummary, setCacheSummary] = useState({
     imagesInCache: 0,
@@ -314,8 +319,8 @@ export default function SettingsScreen() {
       >
         <View style={[styles.groupCard, { backgroundColor: card }]}>
           <View style={styles.row}>
-            <View style={[styles.rowIconChip, { backgroundColor: '#F0EEFF' }]}>
-              <FontAwesome name="home" size={18} color="#7B6CF0" />
+            <View style={[styles.rowIconChip, { backgroundColor: tintSubtle }]}>
+              <FontAwesome name="home" size={18} color={tint} />
             </View>
             <RNView style={styles.rowMain}>
               <Text style={styles.rowTitle}>Theme</Text>
@@ -326,8 +331,8 @@ export default function SettingsScreen() {
 
         <View style={[styles.groupCard, { backgroundColor: card }]}>
           <View style={styles.row}>
-            <View style={[styles.rowIconChip, { backgroundColor: '#E8F5F3' }]}>
-              <FontAwesome name="map-marker" size={18} color="#1A8A7D" />
+            <View style={[styles.rowIconChip, { backgroundColor: tintSubtle }]}>
+              <FontAwesome name="map-marker" size={18} color={tint} />
             </View>
             <RNView style={styles.rowMain}>
               <Text style={styles.rowTitle}>Map Provider</Text>
@@ -344,24 +349,24 @@ export default function SettingsScreen() {
               title: 'Wikimedia Commons',
               subtitle: 'Public domain & Creative Commons',
               icon: 'upload',
-              iconBg: '#E8F5F3',
-              iconColor: '#1A8A7D',
+              iconBg: tintSubtle,
+              iconColor: tint,
             },
             {
               key: 'loc',
               title: 'Library of Congress',
               subtitle: 'Historical US photos & records',
               icon: 'clock-o',
-              iconBg: '#FFF4E8',
-              iconColor: '#C4953A',
+              iconBg: scoreFairSubtle,
+              iconColor: scoreFair,
             },
             {
               key: 'europeana',
               title: 'Europeana',
               subtitle: 'European cultural heritage collections',
               icon: 'map-marker',
-              iconBg: '#FFEEF0',
-              iconColor: '#B85A3A',
+              iconBg: scorePoorSubtle,
+              iconColor: scorePoor,
             },
           ].map((item, index) => {
             const checked = publicProviders.includes(item.key as PublicProviderOption);
@@ -392,15 +397,15 @@ export default function SettingsScreen() {
                   ]}
                   onPress={() => togglePublicProvider(item.key as PublicProviderOption)}
                 >
-                  {checked ? <FontAwesome name="check" size={12} color="#fff" /> : null}
+                  {checked ? <FontAwesome name="check" size={12} color={inverseText} /> : null}
                 </Pressable>
               </View>
             );
           })}
 
           <View style={[styles.listRow, { borderTopWidth: 1, borderTopColor: borderColor }]}>
-            <RNView style={[styles.listIconChip, { backgroundColor: '#F0EEFF' }]}>
-              <FontAwesome name="home" size={18} color="#7B6CF0" />
+            <RNView style={[styles.listIconChip, { backgroundColor: tintSubtle }]}>
+              <FontAwesome name="home" size={18} color={tint} />
             </RNView>
             <RNView style={styles.listMeta}>
               <Text style={[styles.listTitle, { color: text }]}>My Photos</Text>
@@ -420,7 +425,7 @@ export default function SettingsScreen() {
                 void toggleMyPhotos();
               }}
             >
-              {myPhotosEnabled ? <FontAwesome name="check" size={12} color="#fff" /> : null}
+              {myPhotosEnabled ? <FontAwesome name="check" size={12} color={inverseText} /> : null}
             </Pressable>
           </View>
         </View>
@@ -525,8 +530,8 @@ export default function SettingsScreen() {
 
         <View style={[styles.groupCard, { backgroundColor: card }]}>
           <View style={styles.row}>
-            <View style={[styles.rowIconChip, { backgroundColor: '#FFF4E8' }]}>
-              <FontAwesome name="lightbulb-o" size={18} color="#C4953A" />
+            <View style={[styles.rowIconChip, { backgroundColor: scoreFairSubtle }]}>
+              <FontAwesome name="lightbulb-o" size={18} color={scoreFair} />
             </View>
             <RNView style={styles.rowMain}>
               <Text style={styles.rowTitle}>Hints</Text>
@@ -535,13 +540,13 @@ export default function SettingsScreen() {
               value={hintsEnabled}
               onValueChange={setHintsEnabled}
               trackColor={{ false: borderColor, true: tint }}
-              thumbColor="#FFFFFF"
+              thumbColor={inverseText}
               ios_backgroundColor={borderColor}
             />
           </View>
           <View style={[styles.row, { borderTopWidth: 1, borderTopColor: borderColor }]}>
-            <View style={[styles.rowIconChip, { backgroundColor: '#E8F5F3' }]}>
-              <FontAwesome name="clock-o" size={18} color="#1A8A7D" />
+            <View style={[styles.rowIconChip, { backgroundColor: tintSubtle }]}>
+              <FontAwesome name="clock-o" size={18} color={tint} />
             </View>
             <RNView style={styles.rowMain}>
               <Text style={styles.rowTitle}>Round Timer</Text>

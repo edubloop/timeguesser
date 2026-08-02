@@ -19,6 +19,8 @@ const Colors = {
     scoreGood: '#5B9E4D',
     scoreFair: '#C4953A',
     scorePoor: '#B85A3A',
+    scoreFairSubtle: '#FFF4E8',
+    scorePoorSubtle: '#FFEEF0',
 
     mapPinPlayer: '#1A8A7D',
     mapPinAnswer: '#C4953A',
@@ -50,6 +52,8 @@ const Colors = {
     scoreGood: '#73B765',
     scoreFair: '#E8B04A',
     scorePoor: '#D97B5A',
+    scoreFairSubtle: '#2F281A',
+    scorePoorSubtle: '#2F211C',
 
     mapPinPlayer: '#2BBFAD',
     mapPinAnswer: '#E8B04A',

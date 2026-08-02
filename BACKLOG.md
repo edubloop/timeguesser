@@ -24,6 +24,19 @@ Each active item should stay lightweight:
 - Execution path: `design_then_delivery`
 - Summary: The bottom tab bar takes too much vertical space. Explore smaller treatment, auto-hide behavior, or hiding it entirely during active rounds.
 
+### TG-013 — Add the documented shadow scale to `constants/theme.ts`
+
+- Status: `Queued`
+- Lane: `Design system / taste QA`
+- Execution path: `delivery_only`
+- Summary: `TIMEGUESSER_DESIGN_SYSTEM.md` documents a shadow scale (`shadow.sm` / `md` / `lg` / `xl`, with values like `0 4px 12px rgba(0,0,0,0.10)`), but `constants/theme.ts` exports only `Spacing`, `Radius`, `Layout`, and `TypeScale` — there are no shadow tokens in code at all. The doc describes something that does not exist, so every shadow in the app is hand-rolled.
+
+Two known consumers today: `app/(tabs)/settings.tsx` uses `shadowColor: '#000'` in two StyleSheet entries. Others likely exist elsewhere.
+
+Scope: add the documented scale to `theme.ts`, decide whether shadow colour belongs in `Colors.ts` (it needs a dark-theme answer — `#000` at the same opacity reads differently on a dark surface), adopt it at existing call sites, and run `npm run design:tokens:build` if the scale becomes a generated token.
+
+Related: the token generator (`scripts/design/export-design-tokens.mjs`) uses an explicit per-token allowlist rather than iterating the source object, so any new token must be added there too or it silently never reaches the design system artifacts. `design:tokens:check` cannot detect that omission — it only compares generated output against what the generator emits.
+
 ### TG-012 — Upgrade Expo SDK 54 → 57
 
 - Status: `Queued`
