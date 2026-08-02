@@ -11,6 +11,8 @@ interface FloatingCTABarProps {
   bottomInset: number;
 }
 
+export const FLOATING_CTA_HEIGHT = 52;
+
 export default function FloatingCTABar({
   label,
   disabled = false,
@@ -19,7 +21,7 @@ export default function FloatingCTABar({
   bottomInset,
 }: FloatingCTABarProps) {
   const tint = useThemeColor({}, 'tint');
-  const tintPressed = useThemeColor({}, 'tint'); // Same color, opacity handled by press
+  const tintPressed = useThemeColor({}, 'tintPressed');
   const inverseText = useThemeColor({}, 'inverseText');
 
   return (
@@ -55,6 +57,7 @@ const styles = StyleSheet.create({
   },
   button: {
     minWidth: 200,
+    minHeight: FLOATING_CTA_HEIGHT,
     paddingHorizontal: Spacing.xxl,
     paddingVertical: Spacing.buttonY,
     borderRadius: Radius.sheet,

@@ -1,0 +1,14 @@
+# Generated design artifacts — written by scripts/design/export-design-tokens.mjs.
+# Prettier must not reformat these: `npm run design:tokens:check` compares them
+# byte-for-byte against generator output, so any reformat is reported as drift.
+TimeGuesser Design System/colors_and_type.css
+TimeGuesser Design System/ui_kits/mobile_app/tokens.json
+TimeGuesser Design System/ui_kits/mobile_app/tokens.js
+
+# Dependencies and build output
+node_modules/
+dist/
+.expo/
+ios/
+android/
+.maestro/artifacts/

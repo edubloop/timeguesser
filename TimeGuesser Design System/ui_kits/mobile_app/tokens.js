@@ -1,0 +1,29 @@
+// GENERATED FILE — DO NOT EDIT MANUALLY
+window.__TG_TOKENS__ = {
+  "bg": "#FFFFFF",
+  "bgSecondary": "#F5F5F7",
+  "bgTertiary": "#EBEBED",
+  "text": "#1A1A1C",
+  "textSec": "#6B6B70",
+  "textTer": "#98989D",
+  "accent": "#1A8A7D",
+  "accentPress": "#15756A",
+  "accentSubtle": "#E8F5F3",
+  "accentMuted": "#B0D9D4",
+  "scoreEx": "#1A8A7D",
+  "scoreGood": "#5B9E4D",
+  "scoreFair": "#C4953A",
+  "scorePoor": "#B85A3A",
+  "card": "#F5F5F7",
+  "border": "#EBEBED"
+};
+window.__TG_CONVENTIONS__ = {
+  "settingsOrder": [
+    "Theme",
+    "Map Provider",
+    "Photo Sources",
+    "Image Cache",
+    "Hints",
+    "Round Timer"
+  ]
+};

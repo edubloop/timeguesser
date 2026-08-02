@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; padding: 16px 20px; }
+  .row { display: flex; align-items: center; gap: 16px; padding: 7px 0; border-bottom: 1px solid #f0f0f2; }
+  .row:last-child { border-bottom: none; }
+  .dot { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+  .name { font-size: 12px; font-weight: 600; color: #1A1A1C; width: 100px; }
+  .sample { font-size: 15px; flex: 1; }
+  .hex { font-size: 10px; color: #98989D; width: 70px; text-align: right; }
+  .divider { font-size: 10px; font-weight: 600; color: #98989D; letter-spacing: 0.5px; text-transform: uppercase; padding: 8px 0 4px; }
+</style>
+</head>
+<body>
+<div class="divider">Text — Light Mode</div>
+<div class="row">
+  <div class="dot" style="background:#1A1A1C;"></div>
+  <div class="name">Primary</div>
+  <div class="sample" style="color:#1A1A1C;">Guess where and when</div>
+  <div class="hex">#1A1A1C</div>
+</div>
+<div class="row">
+  <div class="dot" style="background:#6B6B70;"></div>
+  <div class="name">Secondary</div>
+  <div class="sample" style="color:#6B6B70;">347 km away · 7 years off</div>
+  <div class="hex">#6B6B70</div>
+</div>
+<div class="row">
+  <div class="dot" style="background:#98989D;"></div>
+  <div class="name">Tertiary</div>
+  <div class="sample" style="color:#98989D;">Round 1/5 · 2:30</div>
+  <div class="hex">#98989D</div>
+</div>
+<div class="row">
+  <div class="dot" style="background:#1A8A7D;"></div>
+  <div class="name">Inverse (on accent)</div>
+  <div class="sample" style="color:#fff; background:#1A8A7D; padding: 2px 8px; border-radius:4px; display:inline-block;">GUESS</div>
+  <div class="hex">#FFFFFF</div>
+</div>
+<div class="divider">Text — Dark Mode</div>
+<div class="row" style="background:#121214; border-radius:6px; padding: 7px 8px; border-bottom:none; margin-bottom:4px;">
+  <div class="dot" style="background:#F5F5F7;"></div>
+  <div class="name" style="color:#F5F5F7;">Primary</div>
+  <div class="sample" style="color:#F5F5F7;">Guess where and when</div>
+  <div class="hex" style="color:#6B6B70;">#F5F5F7</div>
+</div>
+<div class="row" style="background:#121214; border-radius:6px; padding: 7px 8px; border-bottom:none;">
+  <div class="dot" style="background:#98989D;"></div>
+  <div class="name" style="color:#F5F5F7;">Secondary</div>
+  <div class="sample" style="color:#98989D;">347 km away · 7 years off</div>
+  <div class="hex" style="color:#6B6B70;">#98989D</div>
+</div>
+</body>
+</html>

@@ -7,6 +7,8 @@ TimeGuesser is an Expo React Native iOS game where players guess where and when 
 - Install deps: `npm install`
 - Run app: `npm run ios` (or `npm run start`)
 - Run static checks + unit tests: `npm run check`
+- Regenerate derived design tokens: `npm run design:tokens:build`
+- Verify design token + prototype guardrails: `npm run design:tokens:check` and `npm run design:guardrails:check`
 - Run tests only: `npm run test`
 - Run mobile QA smoke flow (Maestro): `npm run test:maestro:smoke`
 - Run mobile QA full suite (Maestro): `npm run test:maestro`
@@ -45,7 +47,7 @@ Provider chain (load-bearing):
 ## Agent Workflow
 
 1. Read `AGENTS.md` first for hard constraints.
-2. Read `TIMEGUESSER_SPEC.md` and `TIMEGUESSER_DESIGN_SYSTEM.md`.
+2. Read `TIMEGUESSER_SPEC.md`, then `TimeGuesser Design System/README.md`, then `TIMEGUESSER_DESIGN_SYSTEM.md`.
 3. Map request to files via `AGENT_TASK_INDEX.md`.
 4. For non-trivial work, seed `../artifacts/tickets/<ID>/intake.md` from the selected backlog item.
 5. Run the Fabro Intake workflow from `./scripts/run_fabro_intake.sh`.
@@ -75,9 +77,19 @@ Provider chain (load-bearing):
 
 - Constraints and guardrails: `AGENTS.md`
 - Product and technical spec: `TIMEGUESSER_SPEC.md`
-- Design tokens and rules: `TIMEGUESSER_DESIGN_SYSTEM.md`
+- Canonical design package entrypoint: `TimeGuesser Design System/README.md`
+- Canonical source/derived contract: `TimeGuesser Design System/CANONICAL.md`
+- Full design rationale and component spec narrative: `TIMEGUESSER_DESIGN_SYSTEM.md`
 - Fabro runtime docs: `.fabro/README.md`
 - Repo backlog: `BACKLOG.md`
 - Active performance plan and rationale: `PERFORMANCE_PLAN.md`
 - Future non-scope items: `future_roadmap.md`
 - Task-to-file routing: `AGENT_TASK_INDEX.md`
+
+## Design Sync Workflow
+
+1. Update canonical TS tokens in `constants/Colors.ts` and/or `constants/theme.ts`.
+2. Run `npm run design:tokens:build`.
+3. Validate prototype and ordering guardrails with `npm run design:guardrails:check`.
+4. Run `npm run check`.
+5. Commit token sources and regenerated design artifacts together.

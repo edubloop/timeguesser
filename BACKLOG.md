@@ -24,29 +24,38 @@ Each active item should stay lightweight:
 - Execution path: `design_then_delivery`
 - Summary: The bottom tab bar takes too much vertical space. Explore smaller treatment, auto-hide behavior, or hiding it entirely during active rounds.
 
-### TG-007 — Settings page visual redesign
+### TG-012 — Upgrade Expo SDK 54 → 57
 
 - Status: `Queued`
-- Lane: `Experience / UX`
-- Execution path: `design_then_delivery`
-- Summary: Settings hierarchy and spacing feel inconsistent. Needs a clearer, calmer layout with stronger visual rhythm.
+- Lane: `Internal tooling`
+- Execution path: `delivery_only`
+- Summary: Move from Expo SDK 54 to 57 (React Native 0.81.5 → 0.86.2, React 19.1.0 → 19.2.3). Clears 3 of 4 remaining high-severity advisories. Investigated 2026-08-02 — findings below; no code changes were made.
 
-### TG-010 — Full-bleed photo treatment (YouTube Shorts-inspired)
+**Why it is smaller than it looks.** SDK 57 renumbered every `expo-*` package to match the SDK version, so `expo-constants` 18 → 57 and `expo-router` 6 → 57 are mostly renumbering, not 40+ majors of breaking change.
 
-- Status: `Queued`
-- Lane: `Experience / UX`
-- Execution path: `design_then_delivery`
-- Summary: Implement a full-bleed image presentation layer that follows the ephemeral visual approach used in YouTube Shorts, based on `../design-references/youtube-image-fullscreen-with-functions.png`.
+**Verified safe (static analysis):**
 
-### TG-011 — Result surface: decouple CTA from card, adopt scrim/blur chrome
+- Strict `npm install` at the SDK 57 versions from Expo's `bundledNativeModules.json` resolves with **zero peer conflicts** — no `--force`, no `--legacy-peer-deps`.
+- `expo-file-system@57` still exports `./legacy`, so the `expo-file-system/legacy` import in `lib/photos.ts` and its seven `FileSystem.*` calls keep working.
+- `react-native-gesture-handler` is not imported anywhere in `app/`, `lib/`, or `components/`. SDK 57 wants `~2.32.0`, not the 3.x major.
+- Most `Animated.*` usage is React Native's own Animated API, not Reanimated. Only 4 files use Reanimated; that bump is minor (4.1 → 4.5).
+- `expo-router` surface in use is small and stable: `router.push/replace/back`, `Tabs`, `Stack`, `useLocalSearchParams`, one `<Link>`.
+- No custom native code — `ios/` is standard prebuild output, `newArchEnabled` is already `true`, and all three config plugins are first-party.
 
-- Status: `Queued`
-- Lane: `Experience / UX`
-- Execution path: `design_then_delivery`
-- Summary: Follow-up to TG-010. The result-state CTA currently overlaps the result card (clipping the total score) and the top/bottom chrome is opaque white, breaking the full-bleed promise. Two changes: (1) float the primary CTA outside the card bounds so score + title are never occluded (Shorts pattern: controls in free space, content beneath); (2) replace opaque surfaces (top status-bar region, bottom result card) with gradient scrims or `BlurView` so the photo/map reads edge-to-edge. Also align the right-rail (map toggle / hint / refresh / details) with the reference's vertical action stack. Reference: `../design-references/youtube-image-fullscreen-with-functions.png`.
+**Actual risk is the native rebuild and runtime, not the code:**
 
-## Recently Completed
+- RN 0.81 → 0.86 needs `ios/` regenerated and pods reinstalled.
+- `experiments.reactCompiler: true` in `app.json` is experimental and is the most likely source of a surprising runtime regression across three SDKs.
+- Top-level `"splash"` in `app.json` is deprecated in newer SDKs — moves into the `expo-splash-screen` plugin config.
+- Verify: `npm run check`, a full Maestro pass, and manual QA of maps, image picker, and the updates channel.
 
+**Does not fully fix the audit gate.** SDK 57 leaves `postcss` (high) in Expo's build tooling, so CI cannot return to `--audit-level=high` on this upgrade alone. Do not treat that as the completion criterion.
+
+### Recently Completed
+
+- **TG-007** — Settings page visual redesign. Grouped cards, icon chips, segmented controls, self-drawn header; multi-select public image sources. Delivered without a design phase — no ticket artifacts exist under `../artifacts/tickets/TG-007/`. (2026-04-30)
+- **TG-011** — Result surface: decoupled CTA from card, scrim/blur chrome, vertical action rail. (2026-04-21)
+- **TG-010** — Full-bleed photo treatment (YouTube Shorts-inspired). (2026-04-18)
 - **TG-008** — Cache fill progress indicator + haptics. Truthful progress reporting, inline status treatment, haptic feedback on fill completion. (2026-04-02)
 - **TG-005** — Screen real estate rethink. Photo-first → map-first two-state gameplay flow. (2026-04-06)
 - Done: Reverse geocoding fallback for `"Unknown location"` images

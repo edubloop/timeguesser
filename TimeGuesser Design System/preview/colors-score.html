@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; padding: 16px 20px; }
+  .row { display: flex; gap: 10px; }
+  .item { flex: 1; text-align: center; }
+  .swatch { height: 60px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+  .label { font-size: 10px; font-weight: 600; color: #6B6B70; margin-top: 6px; }
+  .range { font-size: 9px; color: #98989D; margin-top: 2px; }
+  .section-label { font-size: 10px; font-weight: 600; color: #98989D; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="section-label">Score Feedback Colors</div>
+<div class="row">
+  <div class="item">
+    <div class="swatch" style="background:#1A8A7D;">4,800</div>
+    <div class="label">Excellent</div>
+    <div class="range">&gt;80% of max</div>
+  </div>
+  <div class="item">
+    <div class="swatch" style="background:#5B9E4D;">3,200</div>
+    <div class="label">Good</div>
+    <div class="range">50–80%</div>
+  </div>
+  <div class="item">
+    <div class="swatch" style="background:#C4953A;">1,500</div>
+    <div class="label">Fair</div>
+    <div class="range">20–50%</div>
+  </div>
+  <div class="item">
+    <div class="swatch" style="background:#B85A3A;">400</div>
+    <div class="label">Poor</div>
+    <div class="range">&lt;20%</div>
+  </div>
+</div>
+</body>
+</html>

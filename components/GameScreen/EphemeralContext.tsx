@@ -26,10 +26,6 @@ export default function EphemeralContext({
   onDismiss,
   onRestore,
 }: EphemeralContextProps) {
-  const cardBg = useThemeColor({}, 'card');
-  const borderColor = useThemeColor({}, 'border');
-  const textColor = useThemeColor({}, 'text');
-  const secondaryText = useThemeColor({}, 'secondaryText');
   const tint = useThemeColor({}, 'tint');
 
   const [isDismissed, setIsDismissed] = useState(false);
@@ -147,13 +143,19 @@ export default function EphemeralContext({
       pointerEvents="box-none"
     >
       <Pressable onPress={handleDismiss}>
-        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={[styles.roundText, { color: textColor }]}>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: 'rgba(8, 11, 16, 0.56)',
+              borderColor: 'rgba(255, 255, 255, 0.24)',
+            },
+          ]}
+        >
+          <Text style={styles.roundText}>
             Round {currentRound + 1} of {totalRounds}
           </Text>
-          <Text style={[styles.scoreText, { color: secondaryText }]}>
-            {totalScore.toLocaleString()} pts
-          </Text>
+          <Text style={styles.scoreText}>{totalScore.toLocaleString()} pts</Text>
         </View>
       </Pressable>
     </Animated.View>
@@ -182,10 +184,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.4,
     textTransform: 'uppercase',
+    color: '#F8FAFC',
   },
   scoreText: {
     ...TypeScale.footnote,
     marginTop: 2,
+    color: 'rgba(241, 245, 249, 0.82)',
   },
   restoreTrigger: {
     position: 'absolute',

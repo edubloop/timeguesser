@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #F5F5F7; padding: 16px 20px; display: flex; justify-content: center; }
+  .card { background: #fff; border-radius: 8px; padding: 20px 24px; box-shadow: 0 16px 48px rgba(0,0,0,0.18); width: 100%; max-width: 340px; }
+  .score { font-size: 52px; line-height: 62px; font-weight: 800; font-variant-numeric: tabular-nums; color: #1A8A7D; }
+  .pts { font-size: 22px; font-weight: 600; color: #1A8A7D; }
+  .stats { display: flex; gap: 24px; margin-top: 4px; margin-bottom: 16px; }
+  .stat-val { font-size: 15px; color: #6B6B70; }
+  .divider { height: 1px; background: #F0F0F2; margin: 12px 0; }
+  .breakdown { display: flex; flex-direction: column; gap: 6px; }
+  .breakdown-row { display: flex; justify-content: space-between; align-items: center; }
+  .b-label { font-size: 12px; font-weight: 500; color: #98989D; letter-spacing: 0.5px; }
+  .b-val { font-size: 12px; font-weight: 600; color: #1A1A1C; font-variant-numeric: tabular-nums; }
+  .b-val.deduct { color: #B85A3A; }
+  .b-val.total { font-size: 14px; color: #1A8A7D; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="score">8,240 <span class="pts">pts</span></div>
+  <div class="stats">
+    <span class="stat-val">347 km away</span>
+    <span class="stat-val">7 years off</span>
+  </div>
+  <div class="divider"></div>
+  <div class="breakdown">
+    <div class="breakdown-row"><span class="b-label">LOCATION</span><span class="b-val">4,620</span></div>
+    <div class="breakdown-row"><span class="b-label">TIME</span><span class="b-val">4,620</span></div>
+    <div class="breakdown-row"><span class="b-label">HINT PENALTY</span><span class="b-val deduct">−1,000</span></div>
+    <div class="divider"></div>
+    <div class="breakdown-row"><span class="b-label">ROUND TOTAL</span><span class="b-val total">8,240</span></div>
+  </div>
+</div>
+</body>
+</html>

@@ -70,6 +70,7 @@ export default function TabLayout() {
           title: 'Settings',
           tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
           tabBarButtonTestID: 'tab-settings',
+          headerShown: false,
         }}
       />
     </Tabs>

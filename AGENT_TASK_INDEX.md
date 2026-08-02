@@ -10,6 +10,8 @@ Use this index to route common requests quickly.
 - Persisted settings and defaults -> `lib/SettingsContext.tsx`
 - Theme tokens and layout scales -> `constants/theme.ts`
 - Color palettes -> `constants/Colors.ts`
+- Canonical design package entrypoint -> `TimeGuesser Design System/README.md`
+- Design source/derived contract -> `TimeGuesser Design System/CANONICAL.md`
 - Main game screen behavior -> `app/(tabs)/game.tsx`
 - Results and end-of-game flow -> `app/(tabs)/results.tsx`
 - Settings UI and controls -> `app/(tabs)/settings.tsx`
@@ -21,5 +23,6 @@ Use this index to route common requests quickly.
 
 1. `AGENTS.md`
 2. `TIMEGUESSER_SPEC.md`
-3. `TIMEGUESSER_DESIGN_SYSTEM.md`
-4. Area files from the index above
+3. `TimeGuesser Design System/README.md`
+4. `TIMEGUESSER_DESIGN_SYSTEM.md`
+5. Area files from the index above

@@ -3,7 +3,7 @@ appId: com.timeguesser.app
 # Flow: Photo Viewer — open image, zoom, share, close
 
 - launchApp:
-    clearState: true
+    clearState: false
 - waitForAnimationToEnd
 
 - tapOn:

@@ -21,7 +21,10 @@
     "lint:fix": "eslint . --fix --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run typecheck && npm run lint && npm run test:unit"
+    "design:tokens:build": "node scripts/design/export-design-tokens.mjs",
+    "design:tokens:check": "node scripts/design/export-design-tokens.mjs --check",
+    "design:guardrails:check": "node scripts/design/check-design-guardrails.mjs",
+    "check": "npm run design:tokens:check && npm run design:guardrails:check && npm run typecheck && npm run lint && npm run test:unit"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

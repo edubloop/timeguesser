@@ -13,6 +13,8 @@ interface ScoreRevealProps {
   onRevealComplete: () => void;
   /** Bottom safe area inset — pass from useSafeAreaInsets().bottom */
   bottomInset?: number;
+  /** Reserved vertical space for floating CTA so content never gets occluded */
+  ctaClearance?: number;
 }
 
 const COUNTER_DURATION = 600;
@@ -21,13 +23,11 @@ export default function ScoreReveal({
   result,
   onRevealComplete,
   bottomInset = 0,
+  ctaClearance = 0,
 }: ScoreRevealProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const tint = useThemeColor({}, 'tint');
-  const cardBg = useThemeColor({}, 'card');
-  const borderColor = useThemeColor({}, 'border');
-  const secondaryText = useThemeColor({}, 'secondaryText');
   const scoreExcellent = useThemeColor({}, 'scoreExcellent');
   const scoreGood = useThemeColor({}, 'scoreGood');
   const scoreFair = useThemeColor({}, 'scoreFair');
@@ -58,27 +58,35 @@ export default function ScoreReveal({
         styles.container,
         {
           backgroundColor: 'transparent',
-          paddingBottom: Math.max(Spacing.md, bottomInset + Spacing.sm),
+          paddingBottom: Math.max(Spacing.md, bottomInset + Spacing.sm) + ctaClearance,
         },
       ]}
     >
-      <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: 'rgba(8, 11, 16, 0.64)',
+            borderColor: 'rgba(255, 255, 255, 0.24)',
+          },
+        ]}
+      >
         {/* Header: title + toggle button */}
         <View style={[styles.headerRow, { backgroundColor: 'transparent' }]}>
-          <Text style={styles.locationName} numberOfLines={2}>
+          <Text style={[styles.locationName, styles.chromePrimaryText]} numberOfLines={2}>
             {result.roundData.label}
           </Text>
           <Pressable
-            style={[styles.toggleButton, { borderColor }]}
+            style={[styles.toggleButton, { borderColor: 'rgba(255, 255, 255, 0.24)' }]}
             onPress={() => setIsExpanded((prev) => !prev)}
           >
-            <Text style={styles.toggleButtonText}>
+            <Text style={[styles.toggleButtonText, styles.chromeSecondaryText]}>
               {isExpanded ? 'Hide details' : 'Show details'}
             </Text>
           </Pressable>
         </View>
 
-        <Text style={[styles.metaLine, { color: secondaryText }]} numberOfLines={1}>
+        <Text style={[styles.metaLine, styles.chromeSecondaryText]} numberOfLines={1}>
           {locationYearLabel}
         </Text>
 
@@ -87,22 +95,22 @@ export default function ScoreReveal({
           <Animated.View entering={FadeIn.duration(200)}>
             {/* Distance */}
             <View style={[styles.row, { backgroundColor: 'transparent' }]}>
-              <Text style={[styles.rowLabel, { color: secondaryText }]}>Distance</Text>
-              <Text style={styles.rowValue}>
+              <Text style={[styles.rowLabel, styles.chromeSecondaryText]}>Distance</Text>
+              <Text style={[styles.rowValue, styles.chromePrimaryText]}>
                 {result.timedOut ? 'No pin placed' : `${formatWholeNumber(result.distanceKm)} km`}
               </Text>
             </View>
 
             {/* Year comparison */}
             <View style={[styles.row, { backgroundColor: 'transparent' }]}>
-              <Text style={[styles.rowLabel, { color: secondaryText }]}>Year</Text>
-              <Text style={styles.rowValue}>
+              <Text style={[styles.rowLabel, styles.chromeSecondaryText]}>Year</Text>
+              <Text style={[styles.rowValue, styles.chromePrimaryText]}>
                 {result.timedOut ? (
-                  <Text style={{ color: secondaryText }}>Timed out</Text>
+                  <Text style={styles.chromeSecondaryText}>Timed out</Text>
                 ) : (
                   <>
                     {result.guessYear} → {result.roundData.year}
-                    <Text style={{ color: secondaryText }}>
+                    <Text style={styles.chromeSecondaryText}>
                       {'  '}
                       {result.yearDiff} yr{result.yearDiff !== 1 ? 's' : ''} off
                     </Text>
@@ -113,10 +121,10 @@ export default function ScoreReveal({
 
             {/* Score breakdown */}
             <Animated.View entering={SlideInDown.duration(200)}>
-              <View style={[styles.divider, { backgroundColor: borderColor }]} />
+              <View style={[styles.divider, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]} />
 
               <View style={[styles.scoreRow, { backgroundColor: 'transparent' }]}>
-                <Text style={[styles.scoreLabel, { color: secondaryText }]}>Location</Text>
+                <Text style={[styles.scoreLabel, styles.chromeSecondaryText]}>Location</Text>
                 <AnimatedCounter
                   value={result.locationScore}
                   duration={COUNTER_DURATION}
@@ -125,7 +133,7 @@ export default function ScoreReveal({
               </View>
 
               <View style={[styles.scoreRow, { backgroundColor: 'transparent' }]}>
-                <Text style={[styles.scoreLabel, { color: secondaryText }]}>Time</Text>
+                <Text style={[styles.scoreLabel, styles.chromeSecondaryText]}>Time</Text>
                 <AnimatedCounter
                   value={result.timeScore}
                   duration={COUNTER_DURATION}
@@ -143,10 +151,10 @@ export default function ScoreReveal({
                 </View>
               )}
 
-              <View style={[styles.divider, { backgroundColor: borderColor }]} />
+              <View style={[styles.divider, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]} />
 
               <View style={[styles.scoreRow, { backgroundColor: 'transparent' }]}>
-                <Text style={styles.totalLabel}>Total</Text>
+                <Text style={[styles.totalLabel, styles.chromePrimaryText]}>Total</Text>
                 <AnimatedCounter
                   value={result.totalScore}
                   duration={COUNTER_DURATION}
@@ -159,7 +167,7 @@ export default function ScoreReveal({
         ) : (
           /* ---- Collapsed: just the total ---- */
           <View style={[styles.collapsedRow, { backgroundColor: 'transparent' }]}>
-            <Text style={[styles.collapsedLabel, { color: secondaryText }]}>Total</Text>
+            <Text style={[styles.collapsedLabel, styles.chromeSecondaryText]}>Total</Text>
             <Text style={[styles.collapsedValue, { color: tint }]}>
               {formatWholeNumber(result.totalScore)}
             </Text>
@@ -210,6 +218,12 @@ const styles = StyleSheet.create({
   },
   toggleButtonText: {
     ...TypeScale.caption2,
+  },
+  chromePrimaryText: {
+    color: '#F8FAFC',
+  },
+  chromeSecondaryText: {
+    color: 'rgba(241, 245, 249, 0.82)',
   },
   metaLine: {
     ...TypeScale.caption1,

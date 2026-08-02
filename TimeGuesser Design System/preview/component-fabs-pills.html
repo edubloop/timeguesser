@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #8a9a8a; padding: 20px; }
+  .section { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .row { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .fab { width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.10); }
+  .fab-default { background: rgba(255,255,255,0.95); }
+  .fab-active  { background: #E8F5F3; }
+  .fab-label   { font-size: 10px; color: rgba(255,255,255,0.8); }
+  svg { width: 20px; height: 20px; }
+  /* Status pills */
+  .pill { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.25); padding: 6px 12px; border-radius: 999px; }
+  .pill-text { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.9); }
+  .pills-row { display: flex; gap: 8px; }
+</style>
+</head>
+<body>
+<div class="section">Floating Action Buttons</div>
+<div class="row">
+  <div class="fab fab-default">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1A8A7D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </div>
+  <div class="fab-label">Search · default</div>
+  <div class="fab fab-active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1A8A7D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </div>
+  <div class="fab-label">Search · active</div>
+</div>
+<div class="row">
+  <div class="fab fab-default">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1A8A7D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.4-1.2 4.5-3 5.7V17H8v-2.3C6.2 13.5 5 11.4 5 9a7 7 0 017-7z"/></svg>
+  </div>
+  <div class="fab-label">Hint · default</div>
+  <div class="fab fab-active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1A8A7D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.4-1.2 4.5-3 5.7V17H8v-2.3C6.2 13.5 5 11.4 5 9a7 7 0 017-7z"/></svg>
+  </div>
+  <div class="fab-label">Hint · active</div>
+</div>
+<div class="section">Status Pills (on media)</div>
+<div class="pills-row">
+  <div class="pill"><div class="pill-text">Round 1/5</div></div>
+  <div class="pill"><div class="pill-text">2:30</div></div>
+</div>
+</body>
+</html>

@@ -110,7 +110,7 @@ const DEFAULTS: PersistedSettings = {
   mapProvider: 'apple',
   roundTimer: 0,
   photoSource: 'public',
-  publicImageSource: DEV_USE_TEST_PUBLIC_SOURCE ? 'test' : 'wikimedia',
+  publicImageSource: DEV_USE_TEST_PUBLIC_SOURCE ? 'test' : 'wikimedia+loc+europeana',
   personalRounds: [],
   hintProvider: 'google',
   hintModel: PROVIDER_MODELS.google[0],
@@ -247,9 +247,13 @@ function normalizeLoadedSettings(value: unknown): PersistedSettings {
     publicImageSource:
       raw.publicImageSource === 'test' && DEV_USE_TEST_PUBLIC_SOURCE
         ? 'test'
-        : raw.publicImageSource === 'wikimedia+loc+europeana' && __DEV__
+        : raw.publicImageSource === 'wikimedia+loc+europeana'
           ? 'wikimedia+loc+europeana'
-          : 'wikimedia',
+          : raw.publicImageSource === 'loc'
+            ? 'loc'
+            : raw.publicImageSource === 'europeana'
+              ? 'europeana'
+              : 'wikimedia',
     personalRounds,
     hintProvider: ALLOW_AI_RUNTIME_SWITCHING ? hintProvider : ENV_PROVIDER,
     hintModel: ALLOW_AI_RUNTIME_SWITCHING ? hintModel : ENV_MODEL,
