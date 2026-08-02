@@ -1,23 +1,35 @@
-import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Pressable, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View as RNView,
+} from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text, View, useThemeColor } from '@/components/Themed';
-import { Spacing, Radius, TypeScale } from '@/constants/theme';
-import { useTheme, ThemePreference } from '@/lib/ThemeContext';
-import { useSettings, MapProvider, TimerOption } from '@/lib/SettingsContext';
+import { Radius, Spacing, TypeScale } from '@/constants/theme';
+import { useSettings, type MapProvider, type TimerOption } from '@/lib/SettingsContext';
+import { useTheme, type ThemePreference } from '@/lib/ThemeContext';
 import {
-  PhotoSourcePreference,
-  PublicSelectionFilters,
-  PublicImageSource,
   PUBLIC_CACHE_TARGET,
-  FillPublicCachePhase,
+  type FillPublicCachePhase,
+  type PublicImageSource,
 } from '@/lib/photos';
-import {
-  EXPERIMENT_CATEGORY_LABELS,
-  EXPERIMENT_DEFINITIONS,
-  ExperimentCategory,
-} from '@/lib/experiments';
+
+type PublicProviderOption = 'wikimedia' | 'loc' | 'europeana';
+type CacheFillStatus = 'idle' | 'starting' | 'in_progress' | 'success' | 'partial' | 'failure';
+
+interface CacheFillUiState {
+  status: CacheFillStatus;
+  phase: FillPublicCachePhase | null;
+  targetUnseen: number;
+  unseenImagesAvailable: number | null;
+}
 
 const themeOptions: { label: string; value: ThemePreference }[] = [
   { label: 'System', value: 'system' },
@@ -26,50 +38,39 @@ const themeOptions: { label: string; value: ThemePreference }[] = [
 ];
 
 const mapOptions: { label: string; value: MapProvider }[] = [
-  { label: 'Apple Maps', value: 'apple' },
-  { label: 'Google Maps', value: 'google' },
+  { label: 'Apple', value: 'apple' },
+  { label: 'Google', value: 'google' },
 ];
 
 const timerOptions: { label: string; value: TimerOption }[] = [
   { label: 'Off', value: 0 },
-  { label: '30s', value: 30 },
   { label: '60s', value: 60 },
-  { label: '90s', value: 90 },
   { label: '120s', value: 120 },
 ];
 
-const photoSourceOptions: { label: string; value: PhotoSourcePreference }[] = [
-  { label: 'Public', value: 'public' },
-  { label: 'Personal', value: 'personal' },
-  { label: 'Mixed', value: 'mixed' },
-];
+function formatRelativeTime(timestamp: number | null): string {
+  if (!timestamp) return 'Never updated';
+  const elapsedMs = Date.now() - timestamp;
+  const elapsedMinutes = Math.max(1, Math.floor(elapsedMs / 60000));
+  if (elapsedMinutes < 60) return `Last updated ${elapsedMinutes} min ago`;
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  if (elapsedHours < 24) return `Last updated ${elapsedHours} hr ago`;
+  const elapsedDays = Math.floor(elapsedHours / 24);
+  return `Last updated ${elapsedDays} day${elapsedDays === 1 ? '' : 's'} ago`;
+}
 
-const publicFilterOptions: { label: string; key: keyof PublicSelectionFilters }[] = [
-  { label: 'Require street/public context', key: 'requireStreetScene' },
-  { label: 'Require people context', key: 'requirePeopleContext' },
-  { label: 'Require geographic clues', key: 'requireGeoClues' },
-  { label: 'Require temporal clues', key: 'requireTemporalClues' },
-  { label: 'Reject indoor-only', key: 'rejectIndoorOnly' },
-  { label: 'Reject low-signal objects', key: 'rejectLowSignalObjects' },
-  { label: 'Enforce guessability >= 70', key: 'enforceGuessabilityThreshold' },
-];
+function derivePublicProviders(source: PublicImageSource): PublicProviderOption[] {
+  if (source === 'wikimedia+loc+europeana') return ['wikimedia', 'loc', 'europeana'];
+  if (source === 'loc') return ['loc'];
+  if (source === 'europeana') return ['europeana'];
+  return ['wikimedia'];
+}
 
-const experimentCategoryOrder: ExperimentCategory[] = ['visual', 'interaction', 'data', 'qa'];
-
-const devPublicImageSourceOptions: { label: string; value: PublicImageSource }[] = [
-  { label: 'Wikimedia', value: 'wikimedia' },
-  { label: 'LOC', value: 'loc' },
-  { label: 'Europeana', value: 'europeana' },
-  { label: 'All Three', value: 'wikimedia+loc+europeana' },
-];
-
-type CacheFillStatus = 'idle' | 'starting' | 'in_progress' | 'success' | 'partial' | 'failure';
-
-interface CacheFillUiState {
-  status: CacheFillStatus;
-  phase: FillPublicCachePhase | null;
-  targetUnseen: number;
-  unseenImagesAvailable: number | null;
+function toPublicImageSource(providers: PublicProviderOption[]): PublicImageSource {
+  if (providers.length > 1) return 'wikimedia+loc+europeana';
+  if (providers[0] === 'loc') return 'loc';
+  if (providers[0] === 'europeana') return 'europeana';
+  return 'wikimedia';
 }
 
 function titleForFillState(status: CacheFillStatus, phase: FillPublicCachePhase | null) {
@@ -81,9 +82,9 @@ function titleForFillState(status: CacheFillStatus, phase: FillPublicCachePhase 
     case 'cleaning':
       return 'Preparing cache';
     case 'searching':
-      return 'Looking for eligible photos';
+      return 'Searching sources';
     case 'downloading':
-      return 'Downloading approved photos';
+      return 'Downloading images';
     case 'finalizing':
       return 'Finalizing cache';
     default:
@@ -91,66 +92,41 @@ function titleForFillState(status: CacheFillStatus, phase: FillPublicCachePhase 
   }
 }
 
-function detailForFillState(state: CacheFillUiState) {
-  if (state.status === 'success') {
-    return `${state.unseenImagesAvailable ?? state.targetUnseen} unseen photos available.`;
-  }
-  if (state.status === 'partial') {
-    const count = state.unseenImagesAvailable ?? 0;
-    return `Reached ${count} of ${state.targetUnseen} unseen. Source limits are currently restricting supply.`;
-  }
-  if (state.status === 'failure') {
-    return 'Could not refill the cache right now. Try again in a moment.';
-  }
-  if (state.unseenImagesAvailable != null) {
-    return `${state.unseenImagesAvailable} of ${state.targetUnseen} unseen available`;
-  }
-  if (state.phase === 'cleaning') {
-    return 'Removing stale entries before refill.';
-  }
-  if (state.phase === 'finalizing') {
-    return 'Saving the latest cache state.';
-  }
-  return 'Working through available public photos.';
-}
-
-function OptionRow<T extends string | number>({
+function Segmented<T extends string | number>({
   options,
   selected,
   onSelect,
+  minItemWidth = 52,
 }: {
   options: { label: string; value: T }[];
   selected: T;
-  onSelect: (v: T) => void;
+  onSelect: (value: T) => void;
+  minItemWidth?: number;
 }) {
-  const tint = useThemeColor({}, 'tint');
   const borderColor = useThemeColor({}, 'border');
-  const inverseText = useThemeColor({}, 'inverseText');
-  const textColor = useThemeColor({}, 'text');
+  const card = useThemeColor({}, 'card');
+  const text = useThemeColor({}, 'text');
+  const backgroundTertiary = useThemeColor({}, 'backgroundTertiary');
 
   return (
-    <View style={[styles.options, { backgroundColor: 'transparent' }]}>
+    <View style={[styles.segmented, { borderColor, backgroundColor: backgroundTertiary }]}>
       {options.map((option) => {
-        const isSelected = selected === option.value;
+        const active = selected === option.value;
         return (
           <Pressable
             key={String(option.value)}
             style={[
-              styles.option,
+              styles.segmentItem,
               {
-                backgroundColor: isSelected ? tint : 'transparent',
-                borderColor: isSelected ? tint : borderColor,
+                flex: 1,
+                backgroundColor: active ? card : 'transparent',
+                borderColor: active ? borderColor : 'transparent',
+                minWidth: minItemWidth,
               },
             ]}
             onPress={() => onSelect(option.value)}
           >
-            <Text
-              style={[
-                styles.optionText,
-                isSelected && styles.optionTextSelected,
-                { color: isSelected ? inverseText : textColor },
-              ]}
-            >
+            <Text numberOfLines={1} style={[styles.segmentText, { color: text }]}>
               {option.label}
             </Text>
           </Pressable>
@@ -173,33 +149,22 @@ export default function SettingsScreen() {
     setPublicImageSource,
     personalRounds,
     importPersonalPhotos,
-    clearPersonalPhotos,
     clearPublicCache,
     getPublicCacheSummary,
     fillPublicCache,
     hintsEnabled,
     setHintsEnabled,
-    publicSelectionFilters,
-    setPublicSelectionFilter,
-    resetPublicSelectionFilters,
-    photoDiagnosticsEnabled,
-    setPhotoDiagnosticsEnabled,
-    experimentFlags,
-    setExperimentFlag,
-    resetExperimentFlags,
   } = useSettings();
+
+  const background = useThemeColor({}, 'backgroundSecondary');
+  const card = useThemeColor({}, 'card');
   const borderColor = useThemeColor({}, 'border');
-  const cardColor = useThemeColor({}, 'card');
-  const tint = useThemeColor({}, 'tint');
+  const text = useThemeColor({}, 'text');
   const secondaryText = useThemeColor({}, 'secondaryText');
-  const inverseText = useThemeColor({}, 'inverseText');
-  const tintSubtle = useThemeColor({}, 'tintSubtle');
-  const backgroundColor = useThemeColor({}, 'background');
-  const scoreGood = useThemeColor({}, 'scoreGood');
-  const scoreFair = useThemeColor({}, 'scoreFair');
+  const tertiaryText = useThemeColor({}, 'tertiaryText');
+  const tint = useThemeColor({}, 'tint');
   const scorePoor = useThemeColor({}, 'scorePoor');
 
-  const [showImageCriteria, setShowImageCriteria] = useState(false);
   const [cacheSummary, setCacheSummary] = useState({
     imagesInCache: 0,
     seenImagesRecorded: 0,
@@ -214,19 +179,12 @@ export default function SettingsScreen() {
     unseenImagesAvailable: null,
   });
 
-  const experimentsByCategory = experimentCategoryOrder
-    .map((category) => ({
-      category,
-      items: EXPERIMENT_DEFINITIONS.filter((definition) => definition.category === category),
-    }))
-    .filter((group) => group.items.length > 0);
-
   const refreshCacheSummary = useCallback(async () => {
     try {
       const summary = await getPublicCacheSummary();
       setCacheSummary(summary);
     } catch {
-      // Ignore transient cache-read errors in settings UI.
+      // Ignore transient cache-read failures.
     }
   }, [getPublicCacheSummary]);
 
@@ -234,58 +192,58 @@ export default function SettingsScreen() {
     refreshCacheSummary();
   }, [refreshCacheSummary]);
 
-  const lastUpdatedLabel = cacheSummary.lastUpdatedAt
-    ? new Date(cacheSummary.lastUpdatedAt).toLocaleString('de-DE')
-    : 'Never';
+  const publicProviders = useMemo(
+    () => derivePublicProviders(publicImageSource),
+    [publicImageSource]
+  );
+  const myPhotosEnabled = photoSource === 'personal' || photoSource === 'mixed';
+  const refillActive =
+    cacheFillState.status === 'starting' || cacheFillState.status === 'in_progress';
+  const refillMessage = titleForFillState(cacheFillState.status, cacheFillState.phase);
+  const showCacheSection = publicProviders.length > 0;
+  const usageRatio =
+    PUBLIC_CACHE_TARGET > 0 ? Math.min(1, cacheSummary.imagesInCache / PUBLIC_CACHE_TARGET) : 0;
 
-  const handleImport = async () => {
-    const imported = await importPersonalPhotos();
-    if (imported.warnings.length > 0 && imported.rounds.length === 0) {
-      Alert.alert('Import complete', imported.warnings.join('\n'));
+  const setPhotoPreferences = useCallback(
+    (nextPublic: PublicProviderOption[], nextMyPhotos: boolean) => {
+      const hasPublic = nextPublic.length > 0;
+      if (hasPublic) {
+        setPublicImageSource(toPublicImageSource(nextPublic));
+      }
+      if (nextMyPhotos && hasPublic) setPhotoSource('mixed');
+      else if (nextMyPhotos) setPhotoSource('personal');
+      else setPhotoSource('public');
+    },
+    [setPhotoSource, setPublicImageSource]
+  );
+
+  const togglePublicProvider = (provider: PublicProviderOption) => {
+    const enabled = publicProviders.includes(provider);
+    const next = enabled
+      ? publicProviders.filter((item) => item !== provider)
+      : [...publicProviders, provider];
+    if (next.length === 0 && !myPhotosEnabled) return;
+    setPhotoPreferences(next, myPhotosEnabled);
+  };
+
+  const toggleMyPhotos = async () => {
+    if (!myPhotosEnabled) {
+      if (personalRounds.length === 0) {
+        const imported = await importPersonalPhotos();
+        if (imported.rounds.length === 0) {
+          Alert.alert('No photos imported', 'Grant access and try again to enable My Photos.');
+          return;
+        }
+      }
+      setPhotoPreferences(publicProviders, true);
       return;
     }
 
-    const lines = [
-      `${imported.rounds.length} photo${imported.rounds.length === 1 ? '' : 's'} added.`,
-      ...imported.warnings,
-    ];
-    Alert.alert('Import complete', lines.join('\n'));
+    if (publicProviders.length === 0) return;
+    setPhotoPreferences(publicProviders, false);
   };
 
-  const handleClear = () => {
-    clearPersonalPhotos();
-  };
-
-  const handleClearPublicCache = () => {
-    Alert.alert(
-      'Clear public cache?',
-      'This removes cached public images and seen history. New images will be fetched automatically when needed.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: async () => {
-            setCacheActionLoading(true);
-            try {
-              const summary = await clearPublicCache();
-              await refreshCacheSummary();
-              Alert.alert(
-                'Public cache cleared',
-                `Removed ${summary.removedImages} cached image${summary.removedImages === 1 ? '' : 's'} and ${summary.removedSeenEntries} seen record${summary.removedSeenEntries === 1 ? '' : 's'}.`
-              );
-            } catch {
-              Alert.alert('Clear failed', 'Could not clear the public cache right now.');
-            } finally {
-              setCacheActionLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleFillPublicCache = async () => {
+  const handleFillCache = async () => {
     setCacheActionLoading(true);
     setCacheFillState({
       status: 'starting',
@@ -312,595 +270,509 @@ export default function SettingsScreen() {
         unseenImagesAvailable: summary.unseenImagesAvailable,
       });
     } catch {
-      setCacheFillState((current) => ({
-        ...current,
-        status: 'failure',
-        phase: null,
-      }));
+      setCacheFillState((current) => ({ ...current, status: 'failure', phase: null }));
     } finally {
       setCacheActionLoading(false);
     }
   };
 
-  const cacheFillTitle = titleForFillState(cacheFillState.status, cacheFillState.phase);
-  const cacheFillDetail = detailForFillState(cacheFillState);
-  const fillIsActive =
-    cacheFillState.status === 'starting' || cacheFillState.status === 'in_progress';
-  const statusAccentColor =
-    cacheFillState.status === 'success'
-      ? scoreGood
-      : cacheFillState.status === 'partial'
-        ? scoreFair
-        : cacheFillState.status === 'failure'
-          ? scorePoor
-          : tint;
+  const handleClearCache = () => {
+    Alert.alert('Clear cache?', 'This removes cached public images and seen history.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: async () => {
+          setCacheActionLoading(true);
+          try {
+            await clearPublicCache();
+            await refreshCacheSummary();
+            setCacheFillState({
+              status: 'idle',
+              phase: null,
+              targetUnseen: PUBLIC_CACHE_TARGET,
+              unseenImagesAvailable: null,
+            });
+          } finally {
+            setCacheActionLoading(false);
+          }
+        },
+      },
+    ]);
+  };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionHeader}>Photos</Text>
-      <View style={[styles.card, { backgroundColor: cardColor, borderColor }]}>
-        <Text style={styles.label}>Photo Source</Text>
-        <OptionRow options={photoSourceOptions} selected={photoSource} onSelect={setPhotoSource} />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: card }]}>
+      <RNView style={[styles.header, { borderBottomColor: borderColor, backgroundColor: card }]}>
+        <Text style={[styles.title, { color: text }]}>Settings</Text>
+      </RNView>
 
-        {(photoSource === 'public' || photoSource === 'mixed') && (
-          <>
-            <Text style={[styles.label, styles.subLabel]}>Public Image Source</Text>
-            <OptionRow
-              options={devPublicImageSourceOptions}
-              selected={publicImageSource}
-              onSelect={setPublicImageSource}
-            />
-            <Text style={[styles.helper, { color: secondaryText }]}>
-              Public rounds cache up to {PUBLIC_CACHE_TARGET} images from the selected source(s).
-            </Text>
-
-            <View style={[styles.cacheStateCard, { borderColor, backgroundColor: tintSubtle }]}>
-              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}>
-                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>
-                  Images in cache
-                </Text>
-                <Text style={styles.cacheStateValue}>{cacheSummary.imagesInCache}</Text>
-              </View>
-              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}>
-                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>
-                  Seen images recorded
-                </Text>
-                <Text style={styles.cacheStateValue}>{cacheSummary.seenImagesRecorded}</Text>
-              </View>
-              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}>
-                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>
-                  Unseen currently available
-                </Text>
-                <Text style={styles.cacheStateValue}>{cacheSummary.unseenImagesAvailable}</Text>
-              </View>
-              <View style={[styles.cacheStateRow, { backgroundColor: 'transparent' }]}>
-                <Text style={[styles.cacheStateLabel, { color: secondaryText }]}>Last updated</Text>
-                <Text style={styles.cacheStateTimestamp}>{lastUpdatedLabel}</Text>
-              </View>
+      <ScrollView
+        style={[styles.container, { backgroundColor: background }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.groupCard, { backgroundColor: card }]}>
+          <View style={styles.row}>
+            <View style={[styles.rowIconChip, { backgroundColor: '#F0EEFF' }]}>
+              <FontAwesome name="home" size={18} color="#7B6CF0" />
             </View>
+            <RNView style={styles.rowMain}>
+              <Text style={styles.rowTitle}>Theme</Text>
+            </RNView>
+            <Segmented options={themeOptions} selected={preference} onSelect={setPreference} />
+          </View>
+        </View>
 
-            <View style={[styles.cacheActions, { backgroundColor: 'transparent' }]}>
-              <Pressable
+        <View style={[styles.groupCard, { backgroundColor: card }]}>
+          <View style={styles.row}>
+            <View style={[styles.rowIconChip, { backgroundColor: '#E8F5F3' }]}>
+              <FontAwesome name="map-marker" size={18} color="#1A8A7D" />
+            </View>
+            <RNView style={styles.rowMain}>
+              <Text style={styles.rowTitle}>Map Provider</Text>
+            </RNView>
+            <Segmented options={mapOptions} selected={mapProvider} onSelect={setMapProvider} />
+          </View>
+        </View>
+
+        <Text style={[styles.sectionLabel, { color: tertiaryText }]}>Photo Sources</Text>
+        <View style={[styles.groupCard, { backgroundColor: card }]}>
+          {[
+            {
+              key: 'wikimedia',
+              title: 'Wikimedia Commons',
+              subtitle: 'Public domain & Creative Commons',
+              icon: 'upload',
+              iconBg: '#E8F5F3',
+              iconColor: '#1A8A7D',
+            },
+            {
+              key: 'loc',
+              title: 'Library of Congress',
+              subtitle: 'Historical US photos & records',
+              icon: 'clock-o',
+              iconBg: '#FFF4E8',
+              iconColor: '#C4953A',
+            },
+            {
+              key: 'europeana',
+              title: 'Europeana',
+              subtitle: 'European cultural heritage collections',
+              icon: 'map-marker',
+              iconBg: '#FFEEF0',
+              iconColor: '#B85A3A',
+            },
+          ].map((item, index) => {
+            const checked = publicProviders.includes(item.key as PublicProviderOption);
+            return (
+              <View
+                key={item.key}
                 style={[
-                  styles.actionGhost,
-                  styles.singleAction,
-                  { borderColor, opacity: cacheActionLoading ? 0.6 : 1 },
+                  styles.listRow,
+                  index > 0 && { borderTopWidth: 1, borderTopColor: borderColor },
                 ]}
-                onPress={handleFillPublicCache}
-                disabled={cacheActionLoading}
               >
-                <Text style={styles.actionGhostText}>
-                  {fillIsActive ? 'Filling...' : `Fill Cache to ${PUBLIC_CACHE_TARGET} Unseen`}
-                </Text>
-              </Pressable>
-
-              {cacheFillState.status !== 'idle' && (
-                <View
+                <RNView style={[styles.listIconChip, { backgroundColor: item.iconBg }]}>
+                  <FontAwesome name={item.icon as never} size={18} color={item.iconColor} />
+                </RNView>
+                <RNView style={styles.listMeta}>
+                  <Text style={[styles.listTitle, { color: text }]}>{item.title}</Text>
+                  <Text style={[styles.listSubtitle, { color: tertiaryText }]}>
+                    {item.subtitle}
+                  </Text>
+                </RNView>
+                <Pressable
                   style={[
-                    styles.cacheFillStatus,
+                    styles.checkbox,
                     {
-                      borderColor,
-                      backgroundColor:
-                        cacheFillState.status === 'failure' ? backgroundColor : tintSubtle,
+                      borderColor: checked ? tint : borderColor,
+                      backgroundColor: checked ? tint : 'transparent',
                     },
                   ]}
+                  onPress={() => togglePublicProvider(item.key as PublicProviderOption)}
                 >
-                  <View
-                    style={[styles.cacheFillStatusIconWrap, { backgroundColor: 'transparent' }]}
-                  >
-                    {fillIsActive ? (
-                      <ActivityIndicator size="small" color={statusAccentColor} />
-                    ) : (
-                      <FontAwesome
-                        name={
-                          cacheFillState.status === 'success'
-                            ? 'check-circle'
-                            : cacheFillState.status === 'partial'
-                              ? 'exclamation-circle'
-                              : 'times-circle'
-                        }
-                        size={16}
-                        color={statusAccentColor}
-                      />
-                    )}
-                  </View>
-                  <View style={[styles.cacheFillStatusBody, { backgroundColor: 'transparent' }]}>
-                    <Text style={styles.cacheFillStatusTitle}>{cacheFillTitle}</Text>
-                    <Text style={[styles.cacheFillStatusDetail, { color: secondaryText }]}>
-                      {cacheFillDetail}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              <Pressable
-                style={[
-                  styles.actionGhost,
-                  styles.singleAction,
-                  { borderColor, opacity: cacheActionLoading ? 0.6 : 1 },
-                ]}
-                onPress={handleClearPublicCache}
-                disabled={cacheActionLoading}
-              >
-                <Text style={styles.actionGhostText}>Clear Public Cache</Text>
-              </Pressable>
-            </View>
-
-            <Pressable
-              style={[styles.criteriaToggle, { borderColor }]}
-              onPress={() => setShowImageCriteria((prev) => !prev)}
-            >
-              <Text style={styles.criteriaToggleText}>Image Selection Criteria</Text>
-              <FontAwesome
-                name={showImageCriteria ? 'chevron-up' : 'chevron-down'}
-                size={14}
-                color={secondaryText}
-              />
-            </Pressable>
-
-            {showImageCriteria && (
-              <>
-                <Text style={[styles.helper, { color: secondaryText }]}>
-                  Evaluation mode: all filters default OFF.
-                </Text>
-                <View style={[styles.filterList, { backgroundColor: 'transparent' }]}>
-                  {publicFilterOptions.map((filter) => {
-                    const enabled = publicSelectionFilters[filter.key];
-                    return (
-                      <View
-                        key={filter.key}
-                        style={[styles.filterRow, { backgroundColor: 'transparent' }]}
-                      >
-                        <Text style={styles.filterLabel}>{filter.label}</Text>
-                        <Pressable
-                          style={[
-                            styles.toggle,
-                            {
-                              backgroundColor: enabled ? tint : 'transparent',
-                              borderColor,
-                            },
-                          ]}
-                          onPress={() => setPublicSelectionFilter(filter.key, !enabled)}
-                        >
-                          <Text style={[styles.toggleText, enabled && { color: inverseText }]}>
-                            {enabled ? 'ON' : 'OFF'}
-                          </Text>
-                        </Pressable>
-                      </View>
-                    );
-                  })}
-
-                  <View style={[styles.filterRow, { backgroundColor: 'transparent' }]}>
-                    <Text style={styles.filterLabel}>Show diagnostics</Text>
-                    <Pressable
-                      style={[
-                        styles.toggle,
-                        {
-                          backgroundColor: photoDiagnosticsEnabled ? tint : 'transparent',
-                          borderColor,
-                        },
-                      ]}
-                      onPress={() => setPhotoDiagnosticsEnabled(!photoDiagnosticsEnabled)}
-                    >
-                      <Text
-                        style={[
-                          styles.toggleText,
-                          photoDiagnosticsEnabled && { color: inverseText },
-                        ]}
-                      >
-                        {photoDiagnosticsEnabled ? 'ON' : 'OFF'}
-                      </Text>
-                    </Pressable>
-                  </View>
-                </View>
-
-                <Pressable
-                  style={[styles.resetFiltersButton, { borderColor }]}
-                  onPress={resetPublicSelectionFilters}
-                >
-                  <Text style={styles.resetFiltersText}>Reset Filters (All Off)</Text>
+                  {checked ? <FontAwesome name="check" size={12} color="#fff" /> : null}
                 </Pressable>
-              </>
-            )}
-          </>
-        )}
+              </View>
+            );
+          })}
 
-        <View style={[styles.personalSection, { borderColor, backgroundColor: tintSubtle }]}>
-          <Text style={styles.personalTitle}>Personal Photos</Text>
-          <Text style={[styles.helper, { color: secondaryText }]}>
-            Personal photos available: {personalRounds.length}
-          </Text>
-
-          <View style={[styles.actionRow, { backgroundColor: 'transparent' }]}>
-            <Pressable
-              style={[styles.actionButton, { backgroundColor: tint }]}
-              onPress={handleImport}
-            >
-              <Text style={[styles.actionText, { color: inverseText }]}>
-                Import Personal Photos
+          <View style={[styles.listRow, { borderTopWidth: 1, borderTopColor: borderColor }]}>
+            <RNView style={[styles.listIconChip, { backgroundColor: '#F0EEFF' }]}>
+              <FontAwesome name="home" size={18} color="#7B6CF0" />
+            </RNView>
+            <RNView style={styles.listMeta}>
+              <Text style={[styles.listTitle, { color: text }]}>My Photos</Text>
+              <Text style={[styles.listSubtitle, { color: tertiaryText }]}>
+                From your device library ({personalRounds.length})
               </Text>
-            </Pressable>
-            <Pressable style={[styles.actionGhost, { borderColor }]} onPress={handleClear}>
-              <Text style={styles.actionGhostText}>Clear</Text>
+            </RNView>
+            <Pressable
+              style={[
+                styles.checkbox,
+                {
+                  borderColor: myPhotosEnabled ? tint : borderColor,
+                  backgroundColor: myPhotosEnabled ? tint : 'transparent',
+                },
+              ]}
+              onPress={() => {
+                void toggleMyPhotos();
+              }}
+            >
+              {myPhotosEnabled ? <FontAwesome name="check" size={12} color="#fff" /> : null}
             </Pressable>
           </View>
         </View>
-      </View>
 
-      <Text style={styles.sectionHeader}>Gameplay</Text>
-      <View style={[styles.card, { backgroundColor: cardColor, borderColor }]}>
-        <Text style={styles.label}>Round Timer</Text>
-        <OptionRow options={timerOptions} selected={roundTimer} onSelect={setRoundTimer} />
-      </View>
-
-      <Text style={styles.sectionHeader}>Map</Text>
-      <View style={[styles.card, { backgroundColor: cardColor, borderColor }]}>
-        <Text style={styles.label}>Map Provider</Text>
-        <OptionRow options={mapOptions} selected={mapProvider} onSelect={setMapProvider} />
-      </View>
-
-      <Text style={styles.sectionHeader}>Appearance</Text>
-      <View style={[styles.card, { backgroundColor: cardColor, borderColor }]}>
-        <Text style={styles.label}>Theme</Text>
-        <OptionRow options={themeOptions} selected={preference} onSelect={setPreference} />
-      </View>
-
-      <Text style={styles.sectionHeader}>Hints</Text>
-      <View style={[styles.card, { backgroundColor: cardColor, borderColor }]}>
-        <View style={[styles.toggleRow, { backgroundColor: 'transparent' }]}>
-          <Text style={styles.label}>Hints Enabled</Text>
-          <Pressable
-            style={[
-              styles.toggle,
-              {
-                backgroundColor: hintsEnabled ? tint : 'transparent',
-                borderColor,
-              },
-            ]}
-            onPress={() => setHintsEnabled(!hintsEnabled)}
-          >
-            <Text style={[styles.toggleText, hintsEnabled && { color: inverseText }]}>
-              {hintsEnabled ? 'ON' : 'OFF'}
-            </Text>
-          </Pressable>
-        </View>
-        <Text style={[styles.helper, { color: secondaryText }]}>
-          Deterministic map-based hints only: region, radius, exact location, and full answer tiers.
-        </Text>
-      </View>
-
-      <Text style={styles.sectionHeader}>Labs / Experiments</Text>
-      <View style={[styles.card, { backgroundColor: cardColor, borderColor }]}>
-        <Text style={[styles.helper, { color: secondaryText, marginTop: 0 }]}>
-          Experimental features are opt-in and can be reset at any time.
-        </Text>
-
-        {experimentsByCategory.map((group) => (
-          <View
-            key={group.category}
-            style={[styles.experimentGroup, { backgroundColor: 'transparent' }]}
-          >
-            <Text style={styles.experimentGroupTitle}>
-              {EXPERIMENT_CATEGORY_LABELS[group.category]}
-            </Text>
-            {group.items.map((experiment) => {
-              const enabled = experimentFlags[experiment.id];
-              return (
+        {showCacheSection ? (
+          <>
+            <Text style={[styles.sectionLabel, { color: tertiaryText }]}>Image Cache</Text>
+            <View style={[styles.groupCard, { backgroundColor: card }]}>
+              <RNView style={styles.cacheTopRow}>
+                <Text style={styles.cacheTitle}>Cached images</Text>
+                <Text style={styles.cacheCount}>
+                  {cacheSummary.imagesInCache} / {PUBLIC_CACHE_TARGET}
+                </Text>
+              </RNView>
+              <View style={[styles.progressTrack, { backgroundColor: borderColor }]}>
                 <View
-                  key={experiment.id}
-                  style={[styles.experimentRow, { backgroundColor: 'transparent', borderColor }]}
-                >
-                  <View style={[styles.experimentMeta, { backgroundColor: 'transparent' }]}>
-                    <Text style={styles.experimentTitle}>{experiment.title}</Text>
-                    <Text style={[styles.experimentDescription, { color: secondaryText }]}>
-                      {experiment.description}
-                    </Text>
-                    <Text style={[styles.experimentTag, { color: secondaryText }]}>
-                      Risk: {experiment.risk.toUpperCase()} - Review by {experiment.reviewBy}
-                    </Text>
-                  </View>
-                  <Pressable
-                    style={[
-                      styles.toggle,
-                      {
-                        backgroundColor: enabled ? tint : 'transparent',
-                        borderColor,
-                      },
-                    ]}
-                    onPress={() => setExperimentFlag(experiment.id, !enabled)}
-                  >
-                    <Text style={[styles.toggleText, enabled && { color: inverseText }]}>
-                      {enabled ? 'ON' : 'OFF'}
-                    </Text>
-                  </Pressable>
-                </View>
-              );
-            })}
-          </View>
-        ))}
+                  style={[
+                    styles.progressFill,
+                    { width: `${usageRatio * 100}%`, backgroundColor: tint },
+                  ]}
+                />
+              </View>
+              <RNView style={styles.cacheMetaRow}>
+                <Text style={[styles.cacheMetaLeft, { color: tertiaryText }]}>
+                  {formatRelativeTime(cacheSummary.lastUpdatedAt)}
+                </Text>
+                <Text style={[styles.cacheMetaRight, { color: tertiaryText }]}>
+                  {cacheSummary.imagesInCache === 0
+                    ? '0.0 MB'
+                    : `${(cacheSummary.imagesInCache * 0.11).toFixed(1)} MB`}
+                </Text>
+              </RNView>
 
-        <Pressable
-          style={[styles.resetFiltersButton, { borderColor }]}
-          onPress={resetExperimentFlags}
-        >
-          <Text style={styles.resetFiltersText}>Reset Experiments</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+              <View style={[styles.cacheStatRow, { borderTopColor: borderColor }]}>
+                <Text style={styles.cacheStatLabel}>Unseen available</Text>
+                <Text style={styles.cacheStatValue}>{cacheSummary.unseenImagesAvailable}</Text>
+              </View>
+              <View style={[styles.cacheStatRow, { borderTopColor: borderColor }]}>
+                <Text style={styles.cacheStatLabel}>Seen / played</Text>
+                <Text style={styles.cacheStatValue}>{cacheSummary.seenImagesRecorded}</Text>
+              </View>
+
+              {cacheFillState.status !== 'idle' ? (
+                <RNView style={styles.cacheStatusRow}>
+                  {refillActive ? (
+                    <ActivityIndicator size="small" color={tint} />
+                  ) : (
+                    <FontAwesome
+                      name={
+                        cacheFillState.status === 'failure' ? 'exclamation-circle' : 'check-circle'
+                      }
+                      size={15}
+                      color={cacheFillState.status === 'failure' ? scorePoor : tint}
+                    />
+                  )}
+                  <Text
+                    style={[
+                      styles.cacheStatusText,
+                      { color: cacheFillState.status === 'failure' ? scorePoor : secondaryText },
+                    ]}
+                  >
+                    {refillMessage}
+                  </Text>
+                </RNView>
+              ) : null}
+
+              <RNView style={[styles.cacheActionsRow, { borderTopColor: borderColor }]}>
+                <Pressable
+                  style={[
+                    styles.cacheActionButton,
+                    {
+                      borderColor: tint,
+                      backgroundColor: 'transparent',
+                      opacity: cacheActionLoading ? 0.6 : 1,
+                    },
+                  ]}
+                  disabled={cacheActionLoading}
+                  onPress={() => {
+                    void handleFillCache();
+                  }}
+                >
+                  <Text style={[styles.cacheActionText, { color: tint }]}>Refill Cache</Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.cacheActionButton,
+                    {
+                      borderColor,
+                      backgroundColor: 'transparent',
+                      opacity: cacheActionLoading ? 0.6 : 1,
+                    },
+                  ]}
+                  disabled={cacheActionLoading}
+                  onPress={handleClearCache}
+                >
+                  <Text style={[styles.cacheActionText, { color: scorePoor }]}>Clear Cache</Text>
+                </Pressable>
+              </RNView>
+            </View>
+          </>
+        ) : null}
+
+        <View style={[styles.groupCard, { backgroundColor: card }]}>
+          <View style={styles.row}>
+            <View style={[styles.rowIconChip, { backgroundColor: '#FFF4E8' }]}>
+              <FontAwesome name="lightbulb-o" size={18} color="#C4953A" />
+            </View>
+            <RNView style={styles.rowMain}>
+              <Text style={styles.rowTitle}>Hints</Text>
+            </RNView>
+            <Switch
+              value={hintsEnabled}
+              onValueChange={setHintsEnabled}
+              trackColor={{ false: borderColor, true: tint }}
+              thumbColor="#FFFFFF"
+              ios_backgroundColor={borderColor}
+            />
+          </View>
+          <View style={[styles.row, { borderTopWidth: 1, borderTopColor: borderColor }]}>
+            <View style={[styles.rowIconChip, { backgroundColor: '#E8F5F3' }]}>
+              <FontAwesome name="clock-o" size={18} color="#1A8A7D" />
+            </View>
+            <RNView style={styles.rowMain}>
+              <Text style={styles.rowTitle}>Round Timer</Text>
+            </RNView>
+            <Segmented
+              options={timerOptions}
+              selected={roundTimer}
+              onSelect={setRoundTimer}
+              minItemWidth={42}
+            />
+          </View>
+        </View>
+
+        <Text style={[styles.versionFootnote, { color: tertiaryText }]}>TimeGuesser · v0.1.0</Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
   content: {
-    padding: Spacing.md,
+    paddingTop: 20,
+    paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.xxl,
+    gap: 20,
   },
-  sectionHeader: {
-    ...TypeScale.footnote,
-    fontWeight: '600',
+  header: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  title: {
+    ...TypeScale.title1,
+    fontWeight: '700',
+  },
+  groupCard: {
+    borderRadius: Radius.sheet,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  row: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+  },
+  rowIconChip: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowMain: {
+    flex: 1,
+    minWidth: 72,
+  },
+  rowTitle: {
+    ...TypeScale.callout,
+    fontWeight: '400',
+  },
+  sectionLabel: {
+    ...TypeScale.caption1,
     textTransform: 'uppercase',
-    opacity: 0.5,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.xs,
+    letterSpacing: 1,
+    fontWeight: '700',
+    marginBottom: Spacing.sm,
     marginLeft: Spacing.xs,
   },
-  card: {
-    borderRadius: Radius.sheet,
-    borderWidth: 1,
-    padding: Spacing.md,
+  listRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    gap: Spacing.md,
   },
-  label: {
+  listIconChip: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listMeta: {
+    flex: 1,
+    gap: 2,
+  },
+  listTitle: {
     ...TypeScale.callout,
-    fontWeight: '500',
-    marginBottom: Spacing.sm,
+    fontWeight: '400',
   },
-  subLabel: {
-    marginTop: Spacing.md,
-    ...TypeScale.subhead,
-    marginBottom: Spacing.xs,
-  },
-  sourceBadge: {
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    alignSelf: 'flex-start',
-  },
-  sourceBadgeText: {
-    ...TypeScale.subhead,
-    fontWeight: '600',
-  },
-  lockedInfo: {
-    gap: 2,
-  },
-  options: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  option: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-  },
-  optionText: {
-    ...TypeScale.subhead,
-    fontWeight: '500',
-  },
-  optionTextSelected: {
-    fontWeight: '600',
-  },
-  helper: {
-    marginTop: Spacing.xs,
+  listSubtitle: {
     ...TypeScale.caption1,
+    fontWeight: '400',
   },
-  cacheStateCard: {
-    marginTop: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    padding: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  cacheStateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cacheStateLabel: {
-    ...TypeScale.caption1,
-  },
-  cacheStateValue: {
-    ...TypeScale.subhead,
-    fontWeight: '700',
-  },
-  cacheStateTimestamp: {
-    ...TypeScale.caption1,
-    fontWeight: '600',
-  },
-  cacheActions: {
-    marginTop: Spacing.sm,
-  },
-  cacheFillStatus: {
-    marginTop: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  cacheFillStatusIconWrap: {
-    minHeight: 18,
-    width: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 2,
-  },
-  cacheFillStatusBody: {
-    flex: 1,
-    gap: 2,
-  },
-  cacheFillStatusTitle: {
-    ...TypeScale.subhead,
-    fontWeight: '700',
-  },
-  cacheFillStatusDetail: {
-    ...TypeScale.caption1,
-    lineHeight: 17,
-  },
-  criteriaToggle: {
-    marginTop: Spacing.sm,
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  criteriaToggleText: {
-    ...TypeScale.subhead,
-    fontWeight: '600',
-  },
-  actionRow: {
-    marginTop: Spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  actionButton: {
-    flex: 1,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.xs,
+  checkbox: {
+    height: 22,
+    width: 22,
+    borderWidth: 1.5,
+    borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionText: {
-    ...TypeScale.subhead,
-    fontWeight: '700',
-  },
-  actionGhost: {
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.xs,
+  cacheTopRow: {
     paddingHorizontal: Spacing.md,
-  },
-  singleAction: {
-    marginTop: Spacing.sm,
+    paddingTop: Spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  actionGhostText: {
+  cacheTitle: {
+    ...TypeScale.subhead,
+    fontWeight: '400',
+  },
+  cacheCount: {
     ...TypeScale.subhead,
     fontWeight: '600',
   },
-  toggleRow: {
-    marginTop: Spacing.xs,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  toggle: {
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    minWidth: 58,
-    alignItems: 'center',
-    paddingVertical: Spacing.xs,
-  },
-  toggleText: {
-    ...TypeScale.caption1,
-    fontWeight: '700',
-  },
-  filterList: {
-    marginTop: Spacing.xs,
-    gap: Spacing.xs,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  filterLabel: {
-    flex: 1,
-    ...TypeScale.footnote,
-  },
-  resetFiltersButton: {
-    marginTop: Spacing.xs,
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.xs,
-    alignItems: 'center',
-  },
-  resetFiltersText: {
-    ...TypeScale.caption1,
-    fontWeight: '700',
-  },
-  personalSection: {
+  progressTrack: {
+    height: 8,
+    borderRadius: Radius.pill,
     marginTop: Spacing.md,
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    padding: Spacing.sm,
+    marginHorizontal: Spacing.md,
+    overflow: 'hidden',
   },
-  personalTitle: {
+  progressFill: {
+    height: '100%',
+    borderRadius: Radius.pill,
+  },
+  cacheMetaRow: {
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cacheMetaLeft: {
+    ...TypeScale.caption1,
+    fontWeight: '400',
+  },
+  cacheMetaRight: {
+    ...TypeScale.caption1,
+    fontWeight: '400',
+  },
+  cacheStatRow: {
+    borderTopWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cacheStatLabel: {
     ...TypeScale.subhead,
-    fontWeight: '700',
+    fontWeight: '400',
   },
-  experimentGroup: {
-    marginTop: Spacing.md,
-    gap: Spacing.xs,
+  cacheStatValue: {
+    ...TypeScale.subhead,
+    fontWeight: '600',
   },
-  experimentGroupTitle: {
-    ...TypeScale.footnote,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    opacity: 0.7,
-  },
-  experimentRow: {
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    padding: Spacing.sm,
+  cacheStatusRow: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: Spacing.sm,
   },
-  experimentMeta: {
+  cacheStatusText: {
+    ...TypeScale.subhead,
     flex: 1,
+  },
+  cacheActionsRow: {
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+  },
+  cacheActionButton: {
+    flex: 1,
+    height: 38,
+    borderWidth: 1.5,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cacheActionText: {
+    ...TypeScale.footnote,
+    fontWeight: '600',
+  },
+  segmented: {
+    borderWidth: 1,
+    borderRadius: Radius.sheet,
+    padding: 2,
+    flexDirection: 'row',
     gap: 2,
+    minWidth: 0,
+    maxWidth: 220,
   },
-  experimentTitle: {
-    ...TypeScale.subhead,
-    fontWeight: '700',
+  segmentItem: {
+    minHeight: 30,
+    paddingHorizontal: Spacing.xs,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
-  experimentDescription: {
+  segmentText: {
     ...TypeScale.caption1,
+    fontWeight: '600',
   },
-  experimentTag: {
-    ...TypeScale.caption2,
+  versionFootnote: {
+    ...TypeScale.caption1,
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });

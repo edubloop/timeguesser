@@ -24,15 +24,9 @@ Each active item should stay lightweight:
 - Execution path: `design_then_delivery`
 - Summary: The bottom tab bar takes too much vertical space. Explore smaller treatment, auto-hide behavior, or hiding it entirely during active rounds.
 
-### TG-007 — Settings page visual redesign
-
-- Status: `Queued`
-- Lane: `Experience / UX`
-- Execution path: `design_then_delivery`
-- Summary: Settings hierarchy and spacing feel inconsistent. Needs a clearer, calmer layout with stronger visual rhythm.
-
 ### Recently Completed
 
+- **TG-007** — Settings page visual redesign. Grouped cards, icon chips, segmented controls, self-drawn header; multi-select public image sources. Delivered without a design phase — no ticket artifacts exist under `../artifacts/tickets/TG-007/`. (2026-04-30)
 - **TG-011** — Result surface: decoupled CTA from card, scrim/blur chrome, vertical action rail. (2026-04-21)
 - **TG-010** — Full-bleed photo treatment (YouTube Shorts-inspired). (2026-04-18)
 - **TG-008** — Cache fill progress indicator + haptics. Truthful progress reporting, inline status treatment, haptic feedback on fill completion. (2026-04-02)
