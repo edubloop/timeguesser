@@ -24,6 +24,33 @@ Each active item should stay lightweight:
 - Execution path: `design_then_delivery`
 - Summary: The bottom tab bar takes too much vertical space. Explore smaller treatment, auto-hide behavior, or hiding it entirely during active rounds.
 
+### TG-012 — Upgrade Expo SDK 54 → 57
+
+- Status: `Queued`
+- Lane: `Internal tooling`
+- Execution path: `delivery_only`
+- Summary: Move from Expo SDK 54 to 57 (React Native 0.81.5 → 0.86.2, React 19.1.0 → 19.2.3). Clears 3 of 4 remaining high-severity advisories. Investigated 2026-08-02 — findings below; no code changes were made.
+
+**Why it is smaller than it looks.** SDK 57 renumbered every `expo-*` package to match the SDK version, so `expo-constants` 18 → 57 and `expo-router` 6 → 57 are mostly renumbering, not 40+ majors of breaking change.
+
+**Verified safe (static analysis):**
+
+- Strict `npm install` at the SDK 57 versions from Expo's `bundledNativeModules.json` resolves with **zero peer conflicts** — no `--force`, no `--legacy-peer-deps`.
+- `expo-file-system@57` still exports `./legacy`, so the `expo-file-system/legacy` import in `lib/photos.ts` and its seven `FileSystem.*` calls keep working.
+- `react-native-gesture-handler` is not imported anywhere in `app/`, `lib/`, or `components/`. SDK 57 wants `~2.32.0`, not the 3.x major.
+- Most `Animated.*` usage is React Native's own Animated API, not Reanimated. Only 4 files use Reanimated; that bump is minor (4.1 → 4.5).
+- `expo-router` surface in use is small and stable: `router.push/replace/back`, `Tabs`, `Stack`, `useLocalSearchParams`, one `<Link>`.
+- No custom native code — `ios/` is standard prebuild output, `newArchEnabled` is already `true`, and all three config plugins are first-party.
+
+**Actual risk is the native rebuild and runtime, not the code:**
+
+- RN 0.81 → 0.86 needs `ios/` regenerated and pods reinstalled.
+- `experiments.reactCompiler: true` in `app.json` is experimental and is the most likely source of a surprising runtime regression across three SDKs.
+- Top-level `"splash"` in `app.json` is deprecated in newer SDKs — moves into the `expo-splash-screen` plugin config.
+- Verify: `npm run check`, a full Maestro pass, and manual QA of maps, image picker, and the updates channel.
+
+**Does not fully fix the audit gate.** SDK 57 leaves `postcss` (high) in Expo's build tooling, so CI cannot return to `--audit-level=high` on this upgrade alone. Do not treat that as the completion criterion.
+
 ### Recently Completed
 
 - **TG-007** — Settings page visual redesign. Grouped cards, icon chips, segmented controls, self-drawn header; multi-select public image sources. Delivered without a design phase — no ticket artifacts exist under `../artifacts/tickets/TG-007/`. (2026-04-30)
