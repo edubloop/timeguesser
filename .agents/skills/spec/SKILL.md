@@ -29,7 +29,7 @@ Creates a ticket-level specification for implementation work, saved as `spec.md`
    - **Consult the ADR index:** If `artifacts/architecture/README.md` exists, treat it as the primary index.
      Identify ADRs whose titles or decisions relate to the ticket being specified and pre-populate
      the "Related ADRs" section of the spec with candidates.
-     - _Fallback / augmentation:_ If `README.md` is missing, empty, unparseable, or yields zero ADR
+     - *Fallback / augmentation:* If `README.md` is missing, empty, unparseable, or yields zero ADR
        candidates, also scan `artifacts/architecture/ADR-<NNN>-*.md` files directly to discover
        relevant ADRs. If ADR files are found that are not referenced in the README, note in the spec
        that the ADR index may be out of date.
@@ -60,7 +60,7 @@ For Fabro-backed stage prompts, align prompt structure with
 
 ### Architectural Decisions and ADRs
 
-- Specs should _reference_ relevant ADRs in the "Related ADRs" section.
+- Specs should *reference* relevant ADRs in the "Related ADRs" section.
 - If a new architectural decision is required, create an ADR under `artifacts/architecture/`.
   - Keep the decision details in the ADR; only link or list the ADR in the spec.
   - Use `adr` skill to draft the ADR before finalizing the spec.
@@ -103,7 +103,6 @@ If you have open questions, keep the spec self-contained by recording decisions 
 
 ```markdown
 ### Q001-QUESTION-TOPIC
-
 **Question:** [Original question]
 
 **Decision:** [Chosen answer]
@@ -115,7 +114,7 @@ If you have open questions, keep the spec self-contained by recording decisions 
 
 ## ID Reference Guide
 
-_Spec IDs (defined in this spec):_
+*Spec IDs (defined in this spec):*
 
 - **S001**: Success Criteria
 - **F001**: Functional Requirements
@@ -133,7 +132,7 @@ _Spec IDs (defined in this spec):_
 - **R001**: Risks
 - **Q001**: Questions
 
-_Code Quality IDs (cite in this spec):_
+*Code Quality IDs (cite in this spec):*
 
 - **Y100-Y9999**: Guidelines
 - **Z100-Z9999**: Anti-patterns to avoid

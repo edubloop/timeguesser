@@ -5,6 +5,12 @@ TimeGuesser Design System/colors_and_type.css
 TimeGuesser Design System/ui_kits/mobile_app/tokens.json
 TimeGuesser Design System/ui_kits/mobile_app/tokens.js
 
+# Skill mirrors synced from .workspace-kit by
+# .workspace-notes/sync_workspace_kit_assets.py. These are generated, and the
+# sync tool compares them byte-for-byte against the kit source — reformatting
+# them here makes every file report as drift across the whole workspace.
+.agents/skills/
+
 # Dependencies and build output
 node_modules/
 dist/

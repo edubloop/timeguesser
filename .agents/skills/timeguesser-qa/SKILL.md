@@ -2,10 +2,10 @@
 name: timeguesser-qa
 description: Review TimeGuesser experience quality, diagnose bugs and regressions, and propose fixes with verification steps. Use whenever the user reports a TimeGuesser bug, UI inconsistency, performance issue, or asks for QA coverage of gameplay flows.
 metadata:
-  version: '0.3.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-03-24'
+  version: "0.3.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-03-24"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/timeguesser-qa.SKILL.md -->
@@ -133,9 +133,9 @@ Use natural language assertions instead of coordinate checks for visual state:
 
 ```yaml
 # In any flow — assert visual state without pixel math
-- assertWithAI: 'The photo is centered on screen and fully visible'
-- assertWithAI: 'The score reveal card shows a round score greater than zero'
-- assertWithAI: 'No content is clipped or partially hidden'
+- assertWithAI: "The photo is centered on screen and fully visible"
+- assertWithAI: "The score reveal card shows a round score greater than zero"
+- assertWithAI: "No content is clipped or partially hidden"
 ```
 
 **Requires:** `maestro login` (free Maestro Cloud account). Run once: `maestro login`
@@ -298,15 +298,15 @@ npm run lint
 
 ### Common failure patterns
 
-| Symptom                         | Likely location                 | Check                                                    |
-| ------------------------------- | ------------------------------- | -------------------------------------------------------- |
-| Stale data after "play again"   | `gameReducer.ts` RESET action   | All fields reset to initial state?                       |
-| Score doesn't match expectation | `lib/scoring.ts`                | Formula constants unchanged? Hint override applied?      |
-| Animation jank                  | Component with `useSharedValue` | Is animation running on JS thread? Add `useNativeDriver` |
-| Photo doesn't load              | `lib/photos.ts`                 | AsyncStorage cache returning stale/invalid URI?          |
-| Map not showing                 | `components/MapView/`           | Provider selection (Apple vs Google), API key config     |
-| Theme color wrong               | Any component                   | Using `useThemeColor` hook? Or hardcoded hex?            |
-| ScrollView offset issue         | Any `ScrollView` with zoom      | Add `ref` + `scrollTo({x:0,y:0})` on mount               |
+| Symptom | Likely location | Check |
+|---------|----------------|-------|
+| Stale data after "play again" | `gameReducer.ts` RESET action | All fields reset to initial state? |
+| Score doesn't match expectation | `lib/scoring.ts` | Formula constants unchanged? Hint override applied? |
+| Animation jank | Component with `useSharedValue` | Is animation running on JS thread? Add `useNativeDriver` |
+| Photo doesn't load | `lib/photos.ts` | AsyncStorage cache returning stale/invalid URI? |
+| Map not showing | `components/MapView/` | Provider selection (Apple vs Google), API key config |
+| Theme color wrong | Any component | Using `useThemeColor` hook? Or hardcoded hex? |
+| ScrollView offset issue | Any `ScrollView` with zoom | Add `ref` + `scrollTo({x:0,y:0})` on mount |
 
 ---
 

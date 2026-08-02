@@ -26,7 +26,7 @@ Read `artifacts/architecture/README.md` if it exists. Identify ADRs relevant to 
 domain. Reference them in the Implementation Strategy and Related Documentation sections
 of the plan.
 
-- _Fallback:_ If `README.md` is absent, or if it is empty, contains only a placeholder
+- *Fallback:* If `README.md` is absent, or if it is empty, contains only a placeholder
   (e.g., "No ADRs recorded yet"), or yields no parseable ADR entries, and `ADR-<NNN>-*.md`
   files exist in `artifacts/architecture/`, scan those ADR files directly to discover
   relevant ADRs. If ADR files exist but are not reflected in the index, you may briefly

@@ -13,7 +13,6 @@ Load this skill with `use_skill("accessibility-review")` before revising drafts.
 ## Focus
 
 Review for:
-
 - unclear labels or instructions
 - poor semantic structure
 - color or emphasis choices that may depend on vision alone
@@ -29,7 +28,6 @@ Review for:
 ## Output
 
 Return concise findings with:
-
 - accessibility concern
 - likely impact
 - concrete revision

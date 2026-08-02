@@ -3,10 +3,10 @@ name: review-challenge
 description: Pressure-test implementation scope and quality against experiment intent before merge or handoff. Use when delivery work is complete and a skeptical go/no-go review is needed.
 compatibility: Designed for this workspace and assumes access to review and handoff standards.
 metadata:
-  version: '0.3.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-04-18'
+  version: "0.3.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-04-18"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/review-challenge.SKILL.md -->

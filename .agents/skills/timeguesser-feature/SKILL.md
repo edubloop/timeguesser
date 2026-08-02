@@ -2,10 +2,10 @@
 name: timeguesser-feature
 description: Build and ship TimeGuesser features with ambitious React Native UI, motion, gestures, and approved API integrations. Use whenever the user asks for TimeGuesser feature implementation, interaction design, map/photo gameplay updates, or API-driven game enhancements.
 metadata:
-  version: '0.3.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-03-24'
+  version: "0.3.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-03-24"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/timeguesser-feature.SKILL.md -->
@@ -78,21 +78,10 @@ The project uses Reanimated 4.1.1. Use the modern API:
 
 ```ts
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  withSequence,
-  withDelay,
-  interpolate,
-  Extrapolation,
-  FadeIn,
-  FadeOut,
-  SlideInDown,
-  SlideInUp,
-  ZoomIn,
-  runOnJS,
-  useAnimatedGestureHandler,
+  useSharedValue, useAnimatedStyle, withTiming, withSpring,
+  withSequence, withDelay, interpolate, Extrapolation,
+  FadeIn, FadeOut, SlideInDown, SlideInUp, ZoomIn,
+  runOnJS, useAnimatedGestureHandler,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 ```
@@ -176,20 +165,20 @@ These affect game balance and recorded player scores. Do not modify without expl
 
 ```ts
 // constants/scoring.ts
-MAX_LOCATION_SCORE = 5000;
-MAX_TIME_SCORE = 5000;
-MAX_SCORE_PER_ROUND = 10000; // = MAX_LOCATION_SCORE + MAX_TIME_SCORE
-ROUNDS_PER_GAME = 5;
-HINT_PENALTY = 1000; // per tier 2-5 hint
-LOCATION_DISTANCE_BASE = 12000; // km — denominator in location score formula
-TIME_YEAR_BASE = 120; // years — denominator in time score formula
+MAX_LOCATION_SCORE = 5000
+MAX_TIME_SCORE = 5000
+MAX_SCORE_PER_ROUND = 10000  // = MAX_LOCATION_SCORE + MAX_TIME_SCORE
+ROUNDS_PER_GAME = 5
+HINT_PENALTY = 1000          // per tier 2-5 hint
+LOCATION_DISTANCE_BASE = 12000  // km — denominator in location score formula
+TIME_YEAR_BASE = 120            // years — denominator in time score formula
 ```
 
 The scoring formula shapes are fixed:
 
 ```ts
-locationScore = 5000 * Math.max(0, 1 - distanceKm / 12000) ** 2;
-timeScore = 5000 * Math.max(0, 1 - Math.abs(yearDiff) / 120) ** 2;
+locationScore = 5000 * Math.max(0, 1 - (distanceKm / 12000)) ** 2
+timeScore     = 5000 * Math.max(0, 1 - (Math.abs(yearDiff) / 120)) ** 2
 ```
 
 ---
@@ -208,10 +197,7 @@ components/
 Use `useThemeColor` from `components/Themed.tsx` for all colors:
 
 ```ts
-const bgColor = useThemeColor(
-  { light: Colors.light.background, dark: Colors.dark.background },
-  'background'
-);
+const bgColor = useThemeColor({ light: Colors.light.background, dark: Colors.dark.background }, 'background');
 ```
 
 ### State changes that affect game logic

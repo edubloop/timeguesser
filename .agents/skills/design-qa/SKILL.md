@@ -3,10 +3,10 @@ name: design-qa
 description: Audit OpenPencil design files for regressions, inconsistency, and implementation risk, then provide prioritized fixes. Use when the user asks for design quality review, visual regression checks, token drift analysis, or readiness validation before release.
 compatibility: Requires OpenPencil CLI/MCP access and ability to inspect and export target `.fig` content.
 metadata:
-  version: '0.3.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-03-26'
+  version: "0.3.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-03-26"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/design-qa.SKILL.md -->

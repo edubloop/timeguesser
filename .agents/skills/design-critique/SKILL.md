@@ -13,7 +13,6 @@ Load this skill with `use_skill("design-critique")` before revising drafts.
 ## Focus
 
 Review for:
-
 - clear top-level story and operator takeaway
 - sensible information order
 - strong grouping and chunking
@@ -30,7 +29,6 @@ Review for:
 ## Output
 
 Return concise findings with:
-
 - hierarchy issue
 - why it harms comprehension
 - the revision to make

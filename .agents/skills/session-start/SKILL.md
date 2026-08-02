@@ -3,10 +3,10 @@ name: session-start
 description: Run startup cadence and preflight checks, then summarize current workspace status. Use at session start or when re-establishing workspace context before non-trivial work.
 compatibility: Designed for this workspace and assumes `.workspace-notes/` scripts are available.
 metadata:
-  version: '0.2.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-03-24'
+  version: "0.2.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-03-24"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/session-start.SKILL.md -->

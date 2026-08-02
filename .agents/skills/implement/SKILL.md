@@ -141,12 +141,12 @@ If the user wants to stop:
 
 ## Error Handling
 
-| Error                            | Action                       |
-| -------------------------------- | ---------------------------- |
-| Plan not found                   | List available plans         |
-| Step implementation fails        | Troubleshoot, ask user       |
-| Acceptance criteria can't verify | Document, ask user           |
-| Dependencies incomplete          | List missing, ask preference |
+| Error | Action |
+|-------|--------|
+| Plan not found | List available plans |
+| Step implementation fails | Troubleshoot, ask user |
+| Acceptance criteria can't verify | Document, ask user |
+| Dependencies incomplete | List missing, ask preference |
 
 For environment-specific errors, see [WORKTREE-SETUP.md](WORKTREE-SETUP.md).
 
