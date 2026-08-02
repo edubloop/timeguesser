@@ -14,6 +14,8 @@ window.__TG_TOKENS__ = {
   "scoreGood": "#5B9E4D",
   "scoreFair": "#C4953A",
   "scorePoor": "#B85A3A",
+  "scoreFairSubtle": "#FFF4E8",
+  "scorePoorSubtle": "#FFEEF0",
   "card": "#F5F5F7",
   "border": "#EBEBED"
 };

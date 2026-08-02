@@ -35,6 +35,8 @@
   --color-score-good:      #5B9E4D;
   --color-score-fair:      #C4953A;
   --color-score-poor:      #B85A3A;
+  --color-score-fair-subtle: #FFF4E8;
+  --color-score-poor-subtle: #FFEEF0;
 
   --color-map-pin-player:  #1A8A7D;
   --color-map-pin-answer:  #C4953A;
@@ -136,6 +138,8 @@
   --color-score-good:        #73B765;
   --color-score-fair:        #E8B04A;
   --color-score-poor:        #D97B5A;
+  --color-score-fair-subtle: #2F281A;
+  --color-score-poor-subtle: #2F211C;
   --color-map-pin-player:    #2BBFAD;
   --color-map-pin-answer:    #E8B04A;
   --color-map-distance-line: #D97B5A;
