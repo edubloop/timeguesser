@@ -19,7 +19,7 @@ ThemeProvider → SettingsProvider → GameProvider → NavThemeProvider → Sta
 
 **Settings** (`lib/SettingsContext.tsx`): Persisted to AsyncStorage under key `timeguesser.settings.v1`. Covers map provider, timer, photo source, filters, hint config, diagnostics.
 
-**Design system**: All spacing, radii, and type scales are tokens in `constants/theme.ts`. Colors in `constants/Colors.ts`. See `TIMEGUESSER_DESIGN_SYSTEM.md` for rationale, anti-patterns, composition rules, and visual references.
+**Design system**: Canonical tokens live in `constants/theme.ts` and `constants/Colors.ts`. Canonical design entrypoint for humans/agents is `TimeGuesser Design System/README.md` (ownership contract in `TimeGuesser Design System/CANONICAL.md`). `TIMEGUESSER_DESIGN_SYSTEM.md` is the full rationale/spec narrative.
 
 **Orientation**: Portrait locked globally. Only `app/photo-viewer.tsx` unlocks landscape.
 
@@ -39,21 +39,23 @@ If output is `[DUE]`, run `bash ../.workspace-notes/harness_healthcheck.sh` and 
 
 **Reading order**: For any change, read the spec first (`TIMEGUESSER_SPEC.md`), then the file(s) for the area you're touching, then check the hard constraints below.
 
-| Area           | File                             | Why                                                                                            |
-| -------------- | -------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Spec           | `TIMEGUESSER_SPEC.md`            | Authoritative product/technical spec                                                           |
-| Design         | `TIMEGUESSER_DESIGN_SYSTEM.md`   | Colors, typography, spacing, component specs                                                   |
-| Scoring        | `constants/scoring.ts`           | All scoring constants and hint costs                                                           |
-| Scoring logic  | `lib/scoring.ts`                 | Haversine distance, score formulas                                                             |
-| Game state     | `lib/gameState.tsx`              | Reducer actions, RoundData/RoundResult types                                                   |
-| Photo pipeline | `lib/photos.ts`                  | Wikimedia fetch, cache, diversity, filters                                                     |
-| Hints          | `lib/hints.ts`                   | Tier logic, macro-regions, circle generation                                                   |
-| Settings       | `lib/SettingsContext.tsx`        | All persisted settings, defaults, migration                                                    |
-| Design tokens  | `constants/theme.ts`             | Spacing, Radius, Layout, TypeScale                                                             |
-| Colors         | `constants/Colors.ts`            | Light/dark palettes                                                                            |
-| Standards      | `TYPESCRIPT_CODING_STANDARDS.md` | Citation-ready TypeScript standards catalog for reviews, specs, and agent guidance             |
-| Game screen    | `app/(tabs)/game.tsx`            | Main gameplay (940 lines, most complex screen — refactoring candidate, avoid making it larger) |
-| Deferred work  | `future_roadmap.md`              | Items intentionally out of scope                                                               |
+| Area            | File                                     | Why                                                                                            |
+| --------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Spec            | `TIMEGUESSER_SPEC.md`                    | Authoritative product/technical spec                                                           |
+| Design entry    | `TimeGuesser Design System/README.md`    | Canonical design package entrypoint, usage conventions, settings order                         |
+| Design contract | `TimeGuesser Design System/CANONICAL.md` | Source-of-truth vs generated artifacts workflow                                                |
+| Design spec     | `TIMEGUESSER_DESIGN_SYSTEM.md`           | Full rationale, anti-patterns, and component spec narrative                                    |
+| Scoring         | `constants/scoring.ts`                   | All scoring constants and hint costs                                                           |
+| Scoring logic   | `lib/scoring.ts`                         | Haversine distance, score formulas                                                             |
+| Game state      | `lib/gameState.tsx`                      | Reducer actions, RoundData/RoundResult types                                                   |
+| Photo pipeline  | `lib/photos.ts`                          | Wikimedia fetch, cache, diversity, filters                                                     |
+| Hints           | `lib/hints.ts`                           | Tier logic, macro-regions, circle generation                                                   |
+| Settings        | `lib/SettingsContext.tsx`                | All persisted settings, defaults, migration                                                    |
+| Design tokens   | `constants/theme.ts`                     | Spacing, Radius, Layout, TypeScale                                                             |
+| Colors          | `constants/Colors.ts`                    | Light/dark palettes                                                                            |
+| Standards       | `TYPESCRIPT_CODING_STANDARDS.md`         | Citation-ready TypeScript standards catalog for reviews, specs, and agent guidance             |
+| Game screen     | `app/(tabs)/game.tsx`                    | Main gameplay (940 lines, most complex screen — refactoring candidate, avoid making it larger) |
+| Deferred work   | `future_roadmap.md`                      | Items intentionally out of scope                                                               |
 
 ## Further Reading
 

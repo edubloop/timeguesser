@@ -12,6 +12,8 @@ Editorial premium meets native iOS. The aesthetic is refined and confident — m
 
 All colors are defined as design tokens. The app supports light and dark themes (plus system default). Colors should be implemented as React Native style constants or a theme context.
 
+> Canonical token sources are `constants/Colors.ts` and `constants/theme.ts`. Tables in this document are narrative/derived and must not be treated as the editable source of truth.
+
 ### Core Palette
 
 | Token                  | Light             | Dark              | Usage                             |

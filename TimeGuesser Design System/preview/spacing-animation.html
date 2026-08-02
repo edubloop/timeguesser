@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; padding: 16px 20px; }
+  .section { font-size: 10px; font-weight: 600; color: #98989D; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .anim-item { padding: 10px 12px; background: #F5F5F7; border-radius: 6px; }
+  .token { font-size: 11px; font-weight: 600; color: #1A1A1C; }
+  .detail { font-size: 10px; color: #6B6B70; margin-top: 2px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .anim-bar { height: 4px; background: #1A8A7D; border-radius: 2px; animation: none; }
+  .gap { height: 12px; }
+  .easing-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ease-pill { padding: 4px 10px; border-radius: 999px; background: #F5F5F7; font-size: 10px; font-weight: 500; color: #1A1A1C; }
+</style>
+</head>
+<body>
+<div class="section">Animation Tokens</div>
+<div class="grid">
+  <div class="anim-item">
+    <div class="token">instant</div>
+    <div class="detail">80ms · easeOut</div>
+    <div class="detail" style="color:#98989D;">Press feedback, color changes</div>
+    <div class="bar-row"><div class="anim-bar" style="width:8px;"></div></div>
+  </div>
+  <div class="anim-item">
+    <div class="token">fast</div>
+    <div class="detail">120ms · easeOut</div>
+    <div class="detail" style="color:#98989D;">Icon transitions, micro-interactions</div>
+    <div class="bar-row"><div class="anim-bar" style="width:12px;"></div></div>
+  </div>
+  <div class="anim-item">
+    <div class="token">standard</div>
+    <div class="detail">150ms · easeInOut</div>
+    <div class="detail" style="color:#98989D;">Cards, most transitions</div>
+    <div class="bar-row"><div class="anim-bar" style="width:15px;"></div></div>
+  </div>
+  <div class="anim-item">
+    <div class="token">entrance</div>
+    <div class="detail">200ms · easeOut</div>
+    <div class="detail" style="color:#98989D;">Elements entering screen</div>
+    <div class="bar-row"><div class="anim-bar" style="width:20px;"></div></div>
+  </div>
+  <div class="anim-item">
+    <div class="token">dramatic</div>
+    <div class="detail">400ms · easeInOut</div>
+    <div class="detail" style="color:#98989D;">Distance line draw only</div>
+    <div class="bar-row"><div class="anim-bar" style="width:40px;"></div></div>
+  </div>
+  <div class="anim-item">
+    <div class="token">score</div>
+    <div class="detail">600ms · easeOut</div>
+    <div class="detail" style="color:#98989D;">Score counter tick-up</div>
+    <div class="bar-row"><div class="anim-bar" style="width:60px;"></div></div>
+  </div>
+</div>
+<div class="gap"></div>
+<div class="section">Easing Curves</div>
+<div class="easing-row">
+  <div class="ease-pill">easeOut — exits</div>
+  <div class="ease-pill">easeIn — entrances</div>
+  <div class="ease-pill">easeInOut — most</div>
+  <div class="ease-pill">spring — pin drop (1.05 overshoot)</div>
+</div>
+</body>
+</html>

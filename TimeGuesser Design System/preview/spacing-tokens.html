@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; padding: 20px 24px; }
+  .grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .item { display: flex; align-items: center; gap: 10px; width: calc(50% - 6px); padding: 8px 0; }
+  .bar-wrap { width: 80px; flex-shrink: 0; }
+  .bar { background: #1A8A7D; border-radius: 2px; height: 8px; }
+  .token { font-size: 11px; font-weight: 600; color: #1A1A1C; }
+  .value { font-size: 10px; color: #98989D; }
+  .divider { width: 100%; border-top: 1px solid #F0F0F2; margin: 8px 0; }
+  .section { font-size: 10px; font-weight: 600; color: #98989D; letter-spacing: 0.5px; text-transform: uppercase; width: 100%; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="section">Spacing Scale</div>
+  <div class="item"><div class="bar-wrap"><div class="bar" style="width:4px;"></div></div><div><div class="token">xs</div><div class="value">4px</div></div></div>
+  <div class="item"><div class="bar-wrap"><div class="bar" style="width:8px;"></div></div><div><div class="token">sm</div><div class="value">8px</div></div></div>
+  <div class="item"><div class="bar-wrap"><div class="bar" style="width:12px;"></div></div><div><div class="token">md</div><div class="value">12px</div></div></div>
+  <div class="item"><div class="bar-wrap"><div class="bar" style="width:16px;"></div></div><div><div class="token">lg</div><div class="value">16px — standard padding</div></div></div>
+  <div class="item"><div class="bar-wrap"><div class="bar" style="width:24px;"></div></div><div><div class="token">xl</div><div class="value">24px — section spacing</div></div></div>
+  <div class="item"><div class="bar-wrap"><div class="bar" style="width:32px;"></div></div><div><div class="token">2xl</div><div class="value">32px — major breaks</div></div></div>
+  <div class="item"><div class="bar-wrap"><div class="bar" style="width:48px;"></div></div><div><div class="token">3xl</div><div class="value">48px — screen padding</div></div></div>
+  <div class="divider"></div>
+  <div class="section">Layout Constants</div>
+  <div class="item" style="width:100%;"><div><div class="token">safeAreaPadding</div><div class="value">16px horizontal from screen edges</div></div></div>
+  <div class="item" style="width:100%;"><div><div class="token">minTouchTarget</div><div class="value">44×44px (Apple HIG)</div></div></div>
+  <div class="item" style="width:100%;"><div><div class="token">photoMaxHeight</div><div class="value">40% of safe area height</div></div></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f0f2; padding: 16px; }
+  .row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .swatch { flex: 1; height: 56px; border-radius: 6px; display: flex; flex-direction: column; justify-content: flex-end; padding: 6px 8px; }
+  .swatch.border { border: 1px solid #e0e0e2; }
+  .label { font-size: 10px; font-weight: 500; color: #6B6B70; margin-top: 8px; }
+  .hex { font-size: 9px; color: #98989D; }
+  .group { margin-bottom: 4px; }
+  .section-label { font-size: 10px; font-weight: 600; color: #98989D; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="group">
+  <div class="section-label">Backgrounds — Light</div>
+  <div class="row">
+    <div><div class="swatch border" style="background:#FFFFFF;"></div><div class="label">Primary</div><div class="hex">#FFFFFF</div></div>
+    <div><div class="swatch" style="background:#F5F5F7;"></div><div class="label">Secondary</div><div class="hex">#F5F5F7</div></div>
+    <div><div class="swatch" style="background:#EBEBED;"></div><div class="label">Tertiary</div><div class="hex">#EBEBED</div></div>
+    <div><div class="swatch" style="background:rgba(0,0,0,0.5); border-radius:6px;"></div><div class="label">Overlay</div><div class="hex">rgba(0,0,0,.5)</div></div>
+  </div>
+</div>
+<div class="group">
+  <div class="section-label">Backgrounds — Dark</div>
+  <div class="row">
+    <div><div class="swatch" style="background:#121214;"></div><div class="label">Primary</div><div class="hex">#121214</div></div>
+    <div><div class="swatch" style="background:#1C1C1E;"></div><div class="label">Secondary</div><div class="hex">#1C1C1E</div></div>
+    <div><div class="swatch" style="background:#2C2C2E;"></div><div class="label">Tertiary</div><div class="hex">#2C2C2E</div></div>
+    <div><div class="swatch" style="background:rgba(0,0,0,0.7); border-radius:6px;"></div><div class="label">Overlay</div><div class="hex">rgba(0,0,0,.7)</div></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #F5F5F7; padding: 16px 20px; }
+  .section { font-size: 10px; font-weight: 600; color: #98989D; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .gap { height: 16px; }
+  /* Radii */
+  .radii-row { display: flex; gap: 10px; margin-bottom: 4px; }
+  .radius-item { flex: 1; text-align: center; }
+  .radius-box { height: 36px; background: #1A8A7D; display: flex; align-items: center; justify-content: center; }
+  .token { font-size: 10px; font-weight: 600; color: #1A1A1C; margin-top: 5px; }
+  .val { font-size: 9px; color: #98989D; }
+  /* Shadows */
+  .shadow-row { display: flex; gap: 10px; }
+  .shadow-item { flex: 1; }
+  .shadow-box { height: 40px; background: #fff; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+  .sm-box { box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .md-box { box-shadow: 0 4px 12px rgba(0,0,0,0.10); }
+  .lg-box { box-shadow: 0 8px 24px rgba(0,0,0,0.14); }
+  .xl-box { box-shadow: 0 16px 48px rgba(0,0,0,0.18); }
+</style>
+</head>
+<body>
+<div class="section">Border Radii</div>
+<div class="radii-row">
+  <div class="radius-item"><div class="radius-box" style="border-radius:4px;"></div><div class="token">sm</div><div class="val">4px · badges</div></div>
+  <div class="radius-item"><div class="radius-box" style="border-radius:6px;"></div><div class="token">md</div><div class="val">6px · buttons</div></div>
+  <div class="radius-item"><div class="radius-box" style="border-radius:8px;"></div><div class="token">lg</div><div class="val">8px · cards</div></div>
+  <div class="radius-item"><div class="radius-box" style="border-radius:12px;"></div><div class="token">sheet</div><div class="val">12px · sheets</div></div>
+  <div class="radius-item"><div class="radius-box" style="border-radius:999px;"></div><div class="token">pill</div><div class="val">999px · pills</div></div>
+</div>
+<div class="gap"></div>
+<div class="section">Shadow Scale</div>
+<div class="shadow-row">
+  <div class="shadow-item"><div class="shadow-box sm-box"></div><div class="token">sm</div><div class="val">inline cards</div></div>
+  <div class="shadow-item"><div class="shadow-box md-box"></div><div class="token">md</div><div class="val">FABs</div></div>
+  <div class="shadow-item"><div class="shadow-box lg-box"></div><div class="token">lg</div><div class="val">sheets</div></div>
+  <div class="shadow-item"><div class="shadow-box xl-box"></div><div class="token">xl</div><div class="val">score reveal</div></div>
+</div>
+</body>
+</html>
