@@ -130,7 +130,7 @@ metro_running() {
 
 start_metro() {
   echo "Metro not detected. Starting Expo dev server..."
-  (cd "$ROOT_DIR" && npx expo start --dev-client --non-interactive >/tmp/timeguesser-metro.log 2>&1) &
+  (cd "$ROOT_DIR" && CI=1 npx expo start --dev-client >/tmp/timeguesser-metro.log 2>&1) &
   METRO_PID=$!
   METRO_STARTED_BY_SCRIPT=1
 

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router } from 'expo-router';
 import { setStatusBarStyle, StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +9,7 @@ import FullBleedPhotoSurface from '@/components/GameScreen/FullBleedPhotoSurface
 import RoundMediaStage from '@/components/GameScreen/RoundMediaStage';
 import FloatingControlRail from '@/components/GameScreen/FloatingControlRail';
 import EphemeralContext from '@/components/GameScreen/EphemeralContext';
-import FloatingCTABar from '@/components/GameScreen/FloatingCTABar';
+import FloatingCTABar, { FLOATING_CTA_HEIGHT } from '@/components/GameScreen/FloatingCTABar';
 import GameMapView, { MapProviderRef } from '@/components/MapView';
 import ScoreReveal from '@/components/ScoreReveal';
 import SearchBar from '@/components/SearchBar';
@@ -79,7 +78,6 @@ export default function GameScreen() {
   const bgColor = useThemeColor({}, 'background');
   const overlayColor = useThemeColor({}, 'overlay');
   const scorePoor = useThemeColor({}, 'scorePoor');
-  const tintSubtle = useThemeColor({}, 'tintSubtle');
   const inverseText = useThemeColor({}, 'inverseText');
 
   const clearRevealOverlayTimer = useCallback(() => {
@@ -526,6 +524,8 @@ export default function GameScreen() {
     ) : null;
 
   const mapOverlayTop = insets.top + Spacing.xxxl + Spacing.md;
+  const railLeftEdge = Layout.safeAreaPadding + Layout.minTouchTarget;
+  const resultCtaClearance = FLOATING_CTA_HEIGHT + Spacing.lg + Spacing.md;
 
   const mapOverlays = (
     <>
@@ -544,106 +544,42 @@ export default function GameScreen() {
         </View>
       )}
 
-      {presentation.map.zoomVisible && (
+      {presentation.map.hintsVisible && showHintHistory && hintHistory.length > 0 && (
         <View
           style={[
-            styles.zoomOverlay,
+            styles.hintHistoryOverlay,
             {
-              backgroundColor: 'transparent',
-              right: Layout.safeAreaPadding,
-              bottom: Spacing.xl,
-            },
-          ]}
-        >
-          <Pressable
-            testID="map-zoom-in"
-            style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
-            accessibilityRole="button"
-            accessibilityLabel="Zoom in"
-            onPress={handleMapZoomIn}
-          >
-            <Text style={styles.zoomSymbol}>+</Text>
-          </Pressable>
-          <Pressable
-            testID="map-zoom-out"
-            style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
-            accessibilityRole="button"
-            accessibilityLabel="Zoom out"
-            onPress={handleMapZoomOut}
-          >
-            <Text style={styles.zoomSymbol}>-</Text>
-          </Pressable>
-          <Pressable
-            testID="map-reset-view"
-            style={[styles.zoomButton, { backgroundColor: cardBg, borderColor }]}
-            accessibilityRole="button"
-            accessibilityLabel="Reset map view"
-            onPress={handleMapResetView}
-          >
-            <FontAwesome name="globe" size={16} color={tint} />
-          </Pressable>
-        </View>
-      )}
-
-      {presentation.map.hintsVisible && hintsEnabled && !showResult && (
-        <View
-          style={[
-            styles.hintOverlay,
-            {
-              backgroundColor: 'transparent',
               top: mapOverlayTop,
-              right: Layout.safeAreaPadding,
+              right: railLeftEdge + Spacing.md,
             },
           ]}
         >
-          <View style={[styles.hintButtonRow, { backgroundColor: 'transparent' }]}>
-            <Pressable
-              style={[styles.hintButton, { backgroundColor: cardBg, borderColor }]}
-              onPress={handleHintButtonPress}
-              accessibilityRole="button"
-              accessibilityLabel="Get hint"
-              testID="hint-open"
-              disabled={hintsUsed >= MAX_HINTS || guessLocked}
+          <View
+            style={[
+              styles.hintCard,
+              {
+                backgroundColor: 'rgba(8, 11, 16, 0.58)',
+                borderColor: 'rgba(255, 255, 255, 0.24)',
+              },
+            ]}
+          >
+            <ScrollView
+              style={styles.hintHistoryScroll}
+              contentContainerStyle={styles.hintHistoryContent}
             >
-              <FontAwesome name="lightbulb-o" size={20} color={tint} />
-              <View style={[styles.hintBadge, { backgroundColor: tint }]}>
-                <Text style={[styles.hintBadgeText, { color: inverseText }]}>{hintsUsed}</Text>
-              </View>
-            </Pressable>
-
-            {hintHistory.length > 0 && (
-              <Pressable
-                style={[styles.hintToggle, { backgroundColor: cardBg, borderColor }]}
-                onPress={toggleHintHistory}
-                testID="hint-history-toggle"
-              >
-                <FontAwesome
-                  name={showHintHistory ? 'chevron-up' : 'chevron-down'}
-                  size={10}
-                  color={secondaryText}
-                />
-              </Pressable>
-            )}
+              {hintHistory.map((hint) => (
+                <View
+                  key={`${hint.tier}-${hint.type}`}
+                  style={[styles.hintItem, { borderTopColor: 'rgba(255, 255, 255, 0.16)' }]}
+                >
+                  <Text style={styles.hintTierLabel}>Tier {hint.tier}</Text>
+                  <Text style={[styles.hintText, { color: 'rgba(241, 245, 249, 0.86)' }]}>
+                    {hint.text}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
           </View>
-
-          {showHintHistory && hintHistory.length > 0 && (
-            <View style={[styles.hintCard, { backgroundColor: tintSubtle, borderColor }]}>
-              <ScrollView
-                style={styles.hintHistoryScroll}
-                contentContainerStyle={styles.hintHistoryContent}
-              >
-                {hintHistory.map((hint) => (
-                  <View
-                    key={`${hint.tier}-${hint.type}`}
-                    style={[styles.hintItem, { borderTopColor: borderColor }]}
-                  >
-                    <Text style={styles.hintTierLabel}>Tier {hint.tier}</Text>
-                    <Text style={[styles.hintText, { color: secondaryText }]}>{hint.text}</Text>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          )}
         </View>
       )}
     </>
@@ -655,6 +591,7 @@ export default function GameScreen() {
         result={lastResult}
         onRevealComplete={handleRevealComplete}
         bottomInset={insets.bottom}
+        ctaClearance={resultCtaClearance}
       />
     ) : null;
 
@@ -720,13 +657,20 @@ export default function GameScreen() {
         floatingControlRail={
           <FloatingControlRail
             mode={presentationMode}
+            mapToolsVisible={presentation.map.zoomVisible}
             hintsEnabled={hintsEnabled}
             hintsUsed={hintsUsed}
             maxHints={MAX_HINTS}
+            hintHistoryAvailable={hintHistory.length > 0}
+            hintHistoryVisible={showHintHistory}
             showResult={showResult}
             guessLocked={guessLocked}
             onMapToggle={handleToggleMapMode}
             onHintPress={handleHintButtonPress}
+            onToggleHintHistory={toggleHintHistory}
+            onZoomIn={handleMapZoomIn}
+            onZoomOut={handleMapZoomOut}
+            onResetView={handleMapResetView}
             topInset={insets.top}
           />
         }
@@ -888,60 +832,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 12,
   },
-  hintOverlay: {
+  hintHistoryOverlay: {
     position: 'absolute',
     zIndex: 12,
     alignItems: 'flex-end',
-    maxWidth: 220,
-  },
-  hintButtonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  hintButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  hintBadge: {
-    position: 'absolute',
-    right: -5,
-    top: -5,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  hintBadgeText: {
-    ...TypeScale.caption2,
-    fontWeight: '700',
-  },
-  hintToggle: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    maxWidth: 232,
   },
   hintCard: {
-    marginTop: Spacing.sm,
     borderRadius: Radius.lg,
     borderWidth: 1,
     padding: Spacing.lg,
@@ -960,33 +857,11 @@ const styles = StyleSheet.create({
     ...TypeScale.caption2,
     fontWeight: '800',
     letterSpacing: 0.4,
+    color: '#F8FAFC',
   },
   hintText: {
     ...TypeScale.caption1,
     marginTop: Spacing.xs,
-  },
-  zoomOverlay: {
-    position: 'absolute',
-    zIndex: 12,
-    gap: Spacing.sm,
-    alignItems: 'center',
-  },
-  zoomButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  zoomSymbol: {
-    ...TypeScale.headline,
-    fontWeight: '700',
   },
   modalBackdrop: {
     flex: 1,
