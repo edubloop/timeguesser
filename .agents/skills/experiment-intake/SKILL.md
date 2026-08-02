@@ -3,10 +3,10 @@ name: experiment-intake
 description: Run a short interview to convert a chosen direction into a hypothesis-driven experiment brief with constraints, signals, and decision boundaries. Use when direction is known and the team needs intake artifacts before delivery.
 compatibility: Designed for this workspace and assumes access to harness templates and policy docs.
 metadata:
-  version: '0.4.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-04-18'
+  version: "0.4.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-04-18"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/experiment-intake.SKILL.md -->

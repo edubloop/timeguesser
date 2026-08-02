@@ -3,10 +3,10 @@ name: design-production
 description: Convert an approved prototype direction into production-ready design outputs in OpenPencil with explicit consistency checks and handoff artifacts. Use when the user asks to finalize design systems, lock specs, prepare engineering handoff, or generate dependable production exports.
 compatibility: Requires OpenPencil CLI/MCP access and ability to export artifacts from `.fig` documents.
 metadata:
-  version: '0.2.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-03-24'
+  version: "0.2.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-03-24"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/design-production.SKILL.md -->

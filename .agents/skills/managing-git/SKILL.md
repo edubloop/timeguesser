@@ -29,13 +29,13 @@ Retrieve from `AGENTS.md` (see "Default Variables" section):
 
 **Prefix selection (choose one):**
 
-| Prefix  | Use for                         |
-| ------- | ------------------------------- |
-| `ft/`   | Feature / new capability        |
-| `rf/`   | Refactor (no functional change) |
-| `doc/`  | Documentation                   |
-| `test/` | Tests                           |
-| `conf/` | Configuration / tooling         |
+| Prefix | Use for |
+|--------|---------|
+| `ft/` | Feature / new capability |
+| `rf/` | Refactor (no functional change) |
+| `doc/` | Documentation |
+| `test/` | Tests |
+| `conf/` | Configuration / tooling |
 
 If unclear, ask the user which prefix they want. Default to `ft/` if they prefer not to decide.
 
@@ -104,15 +104,15 @@ git branch --show-current
 
 **Commit Types:**
 
-| Type       | Description                  |
-| ---------- | ---------------------------- |
-| `feat`     | New features                 |
-| `fix`      | Bug fixes                    |
-| `docs`     | Documentation changes        |
-| `refactor` | Code refactoring             |
-| `perf`     | Performance improvements     |
-| `test`     | Test additions/modifications |
-| `chore`    | Build/tooling changes        |
+| Type | Description |
+|------|-------------|
+| `feat` | New features |
+| `fix` | Bug fixes |
+| `docs` | Documentation changes |
+| `refactor` | Code refactoring |
+| `perf` | Performance improvements |
+| `test` | Test additions/modifications |
+| `chore` | Build/tooling changes |
 
 **Commit Process:**
 

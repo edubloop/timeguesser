@@ -3,10 +3,10 @@ name: concept-explorer
 description: Explore broad product reframes, generate direction options, and recommend a shortlist. Use when the user asks for concept mode, brainstorming, reframing, or multiple product directions before deciding scope.
 compatibility: Designed for this workspace and assumes access to workspace policy docs.
 metadata:
-  version: '0.3.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-03-24'
+  version: "0.3.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-03-24"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/concept-explorer.SKILL.md -->

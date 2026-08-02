@@ -3,10 +3,10 @@ name: design-prototype-production
 description: Orchestrate end-to-end design work in OpenPencil by routing between prototype exploration, production hardening, and QA validation. Use when the user asks for complete design delivery from concept through release-readiness.
 compatibility: Requires OpenPencil CLI/MCP access and local filesystem access for export artifacts.
 metadata:
-  version: '0.2.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-03-24'
+  version: "0.2.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-03-24"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/design-prototype-production.SKILL.md -->

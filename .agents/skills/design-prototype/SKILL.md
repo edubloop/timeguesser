@@ -3,10 +3,10 @@ name: design-prototype
 description: Rapidly prototype product UI directions in OpenPencil using CLI and MCP tools, then export review-ready artifacts. Use when the user asks to explore visual directions, iterate interaction concepts, or generate quick design options before production hardening.
 compatibility: Requires OpenPencil CLI/MCP access (`open-pencil` commands or openpencil-mcp) and a writable workspace.
 metadata:
-  version: '0.2.0'
-  status: 'stable'
-  owner: 'workspace-maintainer'
-  last_updated: '2026-03-24'
+  version: "0.2.0"
+  status: "stable"
+  owner: "workspace-maintainer"
+  last_updated: "2026-03-24"
 ---
 
 <!-- workspace-kit-source: .workspace-kit/packages/skills/design-prototype.SKILL.md -->

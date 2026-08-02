@@ -13,7 +13,6 @@ Load this skill with `use_skill("design-system")` before revising drafts.
 ## Focus
 
 Review for:
-
 - repeated patterns that should align
 - inconsistent labels, headings, or section structure
 - spacing, typography, or component naming drift
@@ -30,7 +29,6 @@ Review for:
 ## Output
 
 Return concise findings with:
-
 - inconsistent pattern
 - expected canonical pattern
 - exact normalization to apply

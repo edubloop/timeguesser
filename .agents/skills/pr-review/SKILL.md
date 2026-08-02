@@ -95,7 +95,6 @@ Modes:
 
    - If `viewer_login == pr_author_login`, default to `preflight`.
    - Otherwise default to `gate`.
-
 3. If PR context is not available yet, default to `preflight` (supports pre-PR local review).
 
 Display detected mode before review starts.
@@ -300,7 +299,7 @@ For each changed file:
 1. **Inspect the diff hunk(s)** for what changed. The diff is the primary signal for
    scope and intent of the change.
 2. **Read the full file** (using your repository file-browsing tools, not just the diff view). The diff tells you
-   _what_ changed; the full file tells you _what surrounds and interacts with_ the change.
+   *what* changed; the full file tells you *what surrounds and interacts with* the change.
    - Identify what the changed lines **depend on** (callers, imports, shared state above
      the hunk) and what **depends on them** (downstream consumers, return-value users
      below the hunk).
@@ -428,15 +427,14 @@ Semantic cycle: <integer>
 Semantic cycle max: 2
 High-risk lenses required: yes | no
 Lens outcomes:
-intent_scope=Proceed | Revise and Re-verify | Escalate | not_required
-architecture_simplification=Proceed | Revise and Re-verify | Escalate | not_required
-risk_policy=Proceed | Revise and Re-verify | Escalate | not_required
+  intent_scope=Proceed | Revise and Re-verify | Escalate | not_required
+  architecture_simplification=Proceed | Revise and Re-verify | Escalate | not_required
+  risk_policy=Proceed | Revise and Re-verify | Escalate | not_required
 Rationale: ...
 Required revisions before re-verify: ... | n/a
 Escalation reason: ... | n/a
 
 ## Metadata
-
 - Ticket Directory: artifacts/tickets/...
 - PR: #123 | N/A (preflight without PR)
 - PR URL: ... | N/A
@@ -455,17 +453,14 @@ Escalation reason: ... | n/a
   - plan.md: ...
 
 ## Context Resolution
-
 - How ticket/artifacts were detected (diff-first/fallback)
 - Warnings (missing spec/plan, multi-ticket ambiguity resolved, etc.)
 
 ## Strengths
-
 - [What is well-implemented: sound design decisions, good test coverage, clean
   separation, effective error handling — be specific with file:line references]
 
 ## Traceability Summary
-
 - Requirements evaluated: N
 - Met: N
 - Partial: N
@@ -473,36 +468,28 @@ Escalation reason: ... | n/a
 - Unverifiable: N
 
 ## Findings
-
 ### Critical
-
 - ...
 
 ### Major
-
 - ...
 
 ### Minor
-
 - ...
 
 ## Scope Assessment
-
 - In-scope changes:
 - Potential scope creep:
 
 ## CI / Validation Evidence
-
 - Check status summary
 - Test evidence summary
 
 ## Verdict
-
 - Proceed | Revise and Re-verify | Escalate | COMMENT
 - Required actions:
 
 ## Follow-up Delta (only when stale)
-
 - New commits since last review:
 - Newly introduced findings:
 - Resolved findings:
